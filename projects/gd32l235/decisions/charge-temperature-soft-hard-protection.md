@@ -13,8 +13,8 @@ source:
   from: GD32L235 charge temperature working-tree implementation and local validation captured 2026-08-12
   source_sha256: e82c7280a7a660f7ba3f7769ba9eed74057f39c7913272ffd13b3a93e9dae413
   temporary_source_retained: false
-review_after: '2026-09-12'
-review_status: manual-entry-pending-review
+review_after: '2026-11-07'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -32,7 +32,7 @@ evidence_refs:
 - projects/gd32l235/decisions/charge-temperature-soft-hard-protection.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-08-12'
-updated_at: '2026-08-12'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -49,6 +49,13 @@ related:
 - projects/gd32l235/README.md
 - indexes/obsidian-home.md
 - indexes/project-readiness.md
+successor_refs:
+- projects/gd32l235/decisions/charge-temperature-configurable-soft-hard-protection.md
+- projects/gd32l235/decisions/charge-temperature-thermal-governor-20260818.md
+quality_flags:
+- superseded-candidate
+- historical-policy-variant
+searchable: false
 ---
 
 # GD32L235 充电温度软硬保护策略决策候选

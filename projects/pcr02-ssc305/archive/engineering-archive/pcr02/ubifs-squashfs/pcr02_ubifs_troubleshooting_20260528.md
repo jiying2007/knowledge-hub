@@ -33,7 +33,7 @@
 主应用工程路径：
 
 ```text
-~/pcr02_ssc305_compile/SourceCode/sdk/verify/xcrz_sigmastar_demo
+~/pcr02_ssc305_compile/SourceCode/sdk/verify/gros
 ```
 
 设备调试方式：
@@ -288,7 +288,7 @@ libmbedx509.so.1
 在：
 
 ```text
-SourceCode/sdk/verify/xcrz_sigmastar_demo/pcr02/dep.mk
+SourceCode/sdk/verify/gros/pcr02/dep.mk
 ```
 
 补充 mbedtls 运行库及其 soname 链接：

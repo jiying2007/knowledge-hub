@@ -15,6 +15,15 @@ from .private_io import atomic_private_write
 from .snapshot_routing import bind_snapshot_route
 
 
+def _drop_uncaptured_head_paths(destination, captured_paths):
+    cached = run_rtk(destination, ['git', 'ls-files', '-z', '--cached'])['stdout'].split('\0')
+    removed = sorted(set(path for path in cached if path) - set(captured_paths))
+    if removed:
+        # Only the disposable index is changed. Missing-but-still-tracked source
+        # paths remain captured, retaining their existing missing manifest rows.
+        run_rtk(destination, ['git', 'update-index', '--force-remove', '--', *removed])
+
+
 def capture_snapshot(root, destination):
     destination = pathlib.Path(destination).resolve()
     if destination.exists():
@@ -32,6 +41,7 @@ def capture_snapshot(root, destination):
         run_rtk(root, ['git', 'clone', '--no-hardlinks', '--no-checkout', str(root), str(destination)], timeout=60)
         destination.chmod(0o700)
         run_rtk(destination, ['git', 'read-tree', head])
+        _drop_uncaptured_head_paths(destination, paths)
         manifest = []
         for relative in sorted(set(path for path in paths if path)):
             source = resolve_inside(root, relative)

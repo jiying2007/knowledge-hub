@@ -24,7 +24,7 @@ from .search_core import (
 )
 from .search_index import SearchIndex
 from .query_concepts import ConceptQuery, corpus_lexicon, extract_concepts, project_routes
-from .query_matching import ConceptMatcher
+from .query_matching import ConceptMatcher, TermMatcher
 from .query_intent_ranking import order_query_intent
 from .query_topic_roles import scoped_topics
 from .query_focus import focus_order
@@ -85,6 +85,39 @@ def _candidate_rows(index, query, candidate_limit, concept_plan, concept_method,
             seen.add(key)
             combined.append(row)
     return combined, authority_count
+
+
+def _order_historical_candidates(candidates, historical_paths, query):
+    if _archive_intent(query):
+        return candidates
+    current_candidates = [
+        row
+        for row in candidates
+        if str(row.get("path", "")) not in historical_paths
+    ]
+    historical_candidates = [
+        row
+        for row in candidates
+        if str(row.get("path", "")) in historical_paths
+    ]
+    current_ceiling = max(
+        (int(row.get("score", 0)) for row in current_candidates),
+        default=-10**9,
+    )
+    dominant_historical = [
+        row
+        for row in historical_candidates
+        if int(row.get("score", 0)) >= current_ceiling + 400
+    ]
+    fallback_historical = [
+        row for row in historical_candidates if row not in dominant_historical
+    ]
+    for row in dominant_historical:
+        row["why_selected"] = list(row.get("why_selected", [])) + [
+            "historical-dominant-match" if "historical-fallback-lane" in row["why_selected"]
+            else "body-only-dominant-match"
+        ]
+    return dominant_historical + current_candidates + fallback_historical
 
 
 def search(
@@ -164,8 +197,9 @@ def search(
         candidate_limit if index_state.get("mode") == "local-index" else None
     )
     terms = list(concept_plan.terms)
-    prepared_matcher = ConceptMatcher(terms) if concept_plan.enabled else None
+    prepared_matcher = ConceptMatcher(terms) if concept_plan.enabled else TermMatcher(terms)
     candidates: List[Dict[str, Any]] = []
+    historical_paths = set()
     filtered_reasons: Counter = Counter()
     excluded_registered_total = 0
     excluded_registered: List[Dict[str, Any]] = []
@@ -230,38 +264,20 @@ def search(
         )
         if scored is None:
             continue
+        if _historical_result(item, str(row["path"])):
+            historical_paths.add(str(row["path"]))
+        elif (item.get("source", {}).get("type") == "provider-candidate-archive"
+              and "body-only-distinctive-penalty" in scored[1]
+              and not any(reason.startswith("distinctive-metadata:") for reason in scored[1])):
+            # Capturing a candidate must not turn incidental body mentions into
+            # direct answers when its curated metadata does not match the topic.
+            historical_paths.add(str(row["path"]))
+            scored[1].append("candidate-body-only-fallback")
         candidates.append(search_result(row, item, scored, concept_plan, filters, physical_sources))
     candidates.sort(key=focus_order)
     candidates = deduplicate_paths(candidates)
     candidates = order_query_intent(candidates, concept_plan, query)
-    if not _archive_intent(query):
-        current_candidates = [
-            row
-            for row in candidates
-            if not _historical_result(row, str(row.get("path", "")))
-        ]
-        historical_candidates = [
-            row
-            for row in candidates
-            if _historical_result(row, str(row.get("path", "")))
-        ]
-        current_ceiling = max(
-            (int(row.get("score", 0)) for row in current_candidates),
-            default=-10**9,
-        )
-        dominant_historical = [
-            row
-            for row in historical_candidates
-            if int(row.get("score", 0)) >= current_ceiling + 400
-        ]
-        fallback_historical = [
-            row for row in historical_candidates if row not in dominant_historical
-        ]
-        for row in dominant_historical:
-            row["why_selected"] = list(row.get("why_selected", [])) + [
-                "historical-dominant-match"
-            ]
-        candidates = dominant_historical + current_candidates + fallback_historical
+    candidates = _order_historical_candidates(candidates, historical_paths, query)
     cursor_fingerprint = _cursor_fingerprint(query, filters, concept_plan)
     index_signature = str(index_state.get("signature", ""))
     if cursor and index_state.get("mode") != "local-index":

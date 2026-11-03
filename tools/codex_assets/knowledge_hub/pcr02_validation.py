@@ -22,7 +22,8 @@ MANAGED_START = "<!-- pcr02-owner-device-release-validation:start -->"
 MANAGED_END = "<!-- pcr02-owner-device-release-validation:end -->"
 MANIFEST_PATH = "artifacts/manifests/pcr02-owner-ready-validation-paths-20260713.md"
 OWNER_PACKET_PATH = "artifacts/manifests/knowledge-hub-pcr02-specialized-owner-boundary-packet-20260716.jsonl"
-OWNER_PACKET_SHA256 = "ed72da24c54207f6a52189cc2b11f88a7ac15a10dfce0166460023c9d0ca5e88"
+OWNER_PACKET_SHA256 = "13b95f532383804d2c2cf0a4da42853180330538c54a7cb68a1df9f5a3bf4f40"
+OWNER_PACKET_SOURCE_SHA256 = "ed72da24c54207f6a52189cc2b11f88a7ac15a10dfce0166460023c9d0ca5e88"
 OWNER_ATTESTATION_REF = "artifacts/manifests/knowledge-hub-pcr02-specialized-owner-attestation-20260716.md"
 OWNER_DECISION_STATUS = "accepted-boundary-evidence-pending"
 OWNER_ATTESTED_AT = "2026-07-16"
@@ -40,7 +41,7 @@ TARGETS = {
 
 ### 2. Source 与制品身份
 
-- 记录 remote key `robot/xcrz_sigmastar_demo`、source commit、分支、dirty 状态，以及实际使用的 kernel/DTS/config commit。
+- 记录 remote key `airobot/gros`、source commit、分支、dirty 状态，以及实际使用的 kernel/DTS/config commit。
 - 记录可复现构建入口、返回码、构建环境版本和 `uImage`/DTB/rootfs 或目标升级包 SHA256；不得只引用工作区目录或会话结论。
 - 将 36MHz、40/43MHz、54MHz 三档配置 diff 与制品一一对应；无法从当前 commit 重建的制品不得进入设备矩阵。
 
@@ -90,7 +91,7 @@ owner 在执行前填写产品规范中的温度、供电、样机数和时长�
 
 ### 2. Source 与运行态证据
 
-- 记录 remote key `robot/xcrz_sigmastar_demo`、source commit、kernel/DTS/config commit、应用 commit 和构建制品 SHA256。
+- 记录 remote key `airobot/gros`、source commit、kernel/DTS/config commit、应用 commit 和构建制品 SHA256。
 - 在同一目标制品上保存 `/proc/fb`、`/sys/class/graphics/fb*/name`、geometry/stride/smem_len，以及应用进程实际打开节点的 `/proc/<pid>/fd` 或等价证据。
 - 将 `DisplayProvider` 节点配置、两个 ST77912 DTS 节点、fbtft 驱动注册和 `mi_fb` 配置引用到确切 commit/line；目录存在或旧会话输出不能替代当前 source identity。
 
@@ -117,7 +118,7 @@ owner 在执行前填写产品规范中的温度、供电、样机数和时长�
 
 ### 2. Source、构建与制品身份
 
-- 记录 remote key `robot/xcrz_sigmastar_demo`、source commit、proto 生成器版本、依赖版本、dirty 状态及明确 source file list。
+- 记录 remote key `airobot/gros`、source commit、proto 生成器版本、依赖版本、dirty 状态及明确 source file list。
 - 复跑 proto 生成、目标构建和定向测试，保存命令、返回码、关键日志摘要及目标镜像/应用/协议制品 SHA256。
 - 单独关闭 `pcr02/dep.mk` 发布打包风险，证明目标镜像实际包含预期应用和库；源码 build pass 不能替代镜像内容验证。
 
@@ -298,6 +299,24 @@ def _require_owner_packet(root: pathlib.Path) -> None:
     packet_path = root / OWNER_PACKET_PATH
     if not packet_path.exists() or file_sha256(packet_path) != OWNER_PACKET_SHA256:
         raise KnowledgeHubError("PCR02 specialized owner Packet is missing or hash-mismatched")
+    # The original hash-bound statement is retained verbatim. Current bytes
+    # contain normalized project references, never a newly signed decision.
+    # Require the exact migration lineage instead of rewriting the statement's
+    # hash or silently accepting an unproven replacement packet.
+    import json
+    lineage = False
+    for path in (root / 'artifacts/manifests').glob('project-migration-*.json'):
+        if path.is_symlink() or path.stat().st_size > 8 * 1024 * 1024:
+            continue
+        record = json.loads(path.read_text())
+        if (record.get('protocol') == 'project-migration/v1'
+                and record.get('active_promoted') is False and record.get('owner_review_performed') is False
+                and record.get('before_writes', {}).get(OWNER_PACKET_PATH) == OWNER_PACKET_SOURCE_SHA256
+                and record.get('result_writes', {}).get(OWNER_PACKET_PATH) == OWNER_PACKET_SHA256):
+            lineage = True
+            break
+    if not lineage:
+        raise KnowledgeHubError('PCR02 specialized owner Packet migration lineage is missing')
     if not (root / OWNER_ATTESTATION_REF).exists():
         raise KnowledgeHubError("PCR02 specialized owner attestation is missing")
 

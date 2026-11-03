@@ -408,6 +408,9 @@ def test_owner_next_open_focus():
     )
 
 def test_stable_governance_command_examples():
+    import datetime as dt
+    from ..common import DEFAULT_MARKDOWN_MAX_BYTES, read_repository_bytes_bounded
+    from ..governance_command_evidence import instruction_occurrences, load_evidence
     scan_paths = [
         "README.md",
         "tools/README.md",
@@ -422,14 +425,19 @@ def test_stable_governance_command_examples():
         ("weak-validation-ref", 'validation_refs":["tools/knowledge-check.sh --dry-run'),
     ]
     findings = []
+    historical_records = []
+    classification_rejections = []
+    evidence = load_evidence(root, dt.date.today())
     for relative in scan_paths:
         path = root / relative
         paths = [path]
         if path.is_dir():
             paths = sorted(child for child in path.rglob("*") if child.is_file())
         for file_path in paths:
+            file_relative = str(file_path.relative_to(root))
             try:
-                text = file_path.read_text()
+                raw = read_repository_bytes_bounded(root, file_relative, DEFAULT_MARKDOWN_MAX_BYTES, 'command examples')
+                text = raw.decode('utf-8')
             except Exception as exc:
                 findings.append({
                     "file": str(file_path.relative_to(root)),
@@ -438,18 +446,15 @@ def test_stable_governance_command_examples():
                     "sample": str(exc),
                 })
                 continue
-            for line_no, line in enumerate(text.splitlines(), 1):
-                for pattern_id, needle in banned_patterns:
-                    if needle not in line:
-                        continue
-                    if needle == "knowledge-check --dry-run --json --diagnostics" and "rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics" in line:
-                        continue
-                    findings.append({
-                        "file": str(file_path.relative_to(root)),
-                        "pattern_id": pattern_id,
-                        "line": line_no,
-                        "sample": line.strip()[:240],
-                    })
+            if not any(needle in text for _, needle in banned_patterns):
+                continue
+            classified = evidence.classify(file_relative, raw)
+            record = classified['record']
+            if record:
+                historical_records.append(record)
+            else:
+                classification_rejections.append({'file': file_relative, 'reason': classified['rejection_reason']})
+            findings.extend({'file': file_relative, **row} for row in instruction_occurrences(text, banned_patterns, record))
     expect(
         not findings,
         "stable-governance-command-examples",
@@ -458,6 +463,8 @@ def test_stable_governance_command_examples():
             "scan_paths": scan_paths,
             "banned_patterns": [row[0] for row in banned_patterns],
             "findings": findings,
+            "historical_execution_records": historical_records,
+            "classification_rejections": classification_rejections,
         },
     )
 

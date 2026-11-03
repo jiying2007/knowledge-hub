@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "maintenance_kind": "owner-review-cycle-only",
+  "proposal_sha256": "c02da5b73d8274def3cb65b2ae9d672d3bcb1788bed1da20468844d5dc94bffd",
+  "owner_cycle_decision": {
+    "kind": "owner-cycle-decision",
+    "confirmed_by": "leiwenjun",
+    "authorized_owners": [
+      "leiwenjun"
+    ],
+    "confirmation_token": "KH-SCHEDULE-C02DA5B73D8274DEF3CB65B2",
+    "source_ref": "codex-thread:01a18d5d-eb3d-77c2-a480-6ae362e0336c/user-confirmation-and-identity",
+    "identity_basis": "explicit-human-declaration",
+    "human_identity_independently_verified": false,
+    "executor": "Codex",
+    "statements": [
+      {
+        "order": 1,
+        "source_ref": "codex-thread:01a18d5d-eb3d-77c2-a480-6ae362e0336c/user-confirmation-and-identity/decision",
+        "statement": "<send_user_message_question_reply>\n[{\"answer\":\"确认周期安排 KH-SCHEDULE-C02DA5B73D8274DEF3CB65B2；批准包中6条所列日期与pending/defer处理，保留内容、证据及责任待办；仅授权周期安排及其受限执行，不构成内容、设备或发布批准。\",\"question\":\"跨日后新增6条到期知识，旧245条确认包不覆盖它们。请确认新周期包 KH-SCHEDULE-C02DA5B73D8274DEF3CB65B2：NFS责任决定→2026-11-08；CPU/VENC、内存监测、音频AO三条缺证据项→2026-11-15；VIF带限制保留项→2026-12-01；Hub历史记录→2027-01-30。仅调整周期及pending/defer处理，保留原内容、证据状态和全部责任待办，不构成内容、设备或产品发布批准。\",\"questionItemId\":\"[\\\"request_user_input_async\\\",\\\"call_54ce871174214fc0bb734139503d35e9\\\",0]\"}]\n</send_user_message_question_reply>",
+        "sha256": "fb94e34e042e2c22c46036ea69f68ec063e2e5b4670478f0e07b7d5a3c952568"
+      },
+      {
+        "order": 2,
+        "source_ref": "codex-thread:01a18d5d-eb3d-77c2-a480-6ae362e0336c/user-confirmation-and-identity/identity",
+        "statement": "负责人身份：leiwenjun；权限范围：所有周期复核；",
+        "sha256": "7614d151520f0662dab17c6e9217bf3d6428fb39ddfa22e6a5ab7343b664a8dc"
+      }
+    ],
+    "content_approval_performed": false,
+    "human_content_review_performed": false
+  },
+  "exact_execution_scope": {
+    "actor": "local-user",
+    "action": "schedule-review",
+    "proposal_sha256": "c02da5b73d8274def3cb65b2ae9d672d3bcb1788bed1da20468844d5dc94bffd",
+    "item_ids": [
+      "knowledge-hub-p1-p3-optimization-closeout-20260731",
+      "pcr02-prog-pcr02-memory-growth-monitoring-20260731",
+      "pcr02-release-nfs-client-retention-20260804",
+      "pcr02-sensor-audio-queue-ao-retry-20260731",
+      "pcr02-ssc305-active-media-cpu-venc-timeout-20260731",
+      "pcr02-vi-fps-vif-sleep-optimization-20260731"
+    ],
+    "confirmation_sha256": "b5a1dfb0d265056f6348391c05540c5f693b1801e114b693ae151956e8280a63",
+    "visibility_change": false
+  },
+  "inputs": {
+    "registry/items.jsonl": "1488aafd52772a320ccc0eb765f3cf42e11125c3aa992a8ddf9605c3bdfb6853",
+    "registry/provider-operations.jsonl": "c4f65375949e2ed8d9fa4e36e9c96030b7a4eefc61f061094402053d4958a3b5",
+    "registry/provider-subject-policy.json": "563e62a601b3d913e229bfd74fd567e20ec2986cb3e4037df8e6f277604dca29",
+    "registry/owners.json": "cf9c625e287328a4324f92e8a131a87126971cb042b11dbb002dfb857389fc58",
+    "local/provider-principal.json": "f465ee94581a237bac9f1ca8d5f9c29f655af6a7bb8ce39d54453fe2142161f5",
+    "governance/product/validation/provider-5d9b959c4995b00d5d110c4872a1846b83398b044bc1a4e49e380d8e4dfd119f.md": "756f5afccea8fab6ac40de27ce0f6b349017843e1db62b452de03865c21f0ae8",
+    "indexes/by-owner.md": "bbd6203a267bd4cfc229cad9e3ccd27071052672ebc805f0ee8d5f0980fb8040",
+    "indexes/by-review-date.md": "c939bc191afc6dd80768759e96f7ada640239af2727533a869fb86fefc125d61",
+    "indexes/by-status.md": "9ed630a1a7053981f9a43462d78ee678cb20f89030768a467c9dd4989697a5b2",
+    "projects/pcr02-ssc305/validation/2026-07-31-active-media-cpu-venc-timeout.md": "5cd7f9c7e4b246f5ef184dee89a13eb99cf89ff9cc766217d6b6954a0f7eaf15",
+    "projects/gros/archive/reports/2026-07-31-pcr02-vi-fps-vif-sleep-optimization.md": "80ecef644771f67050bfe0ee0ee9286a82c470d709f57ff5204f2f60c3d4741a",
+    "governance/product/archive/2026-07-31-knowledge-hub-p1-p3-optimization-closeout.md": "0f9f87a169800250ad9c46afaa85fee20c73b6cf8e0b6cce4623707207d729cd",
+    "projects/gros/archive/debug/2026-07-31-prog-pcr02-memory-growth-monitoring.md": "7382eeb37d18c839869b816d7579874f20090ed4fc555fd14cb41ed66bff5499",
+    "projects/gros/archive/debug/2026-07-31-pcr02-sensor-audio-queue-ao-retry.md": "3679d0dc3a664e11f44b71828042096e6eda2e774cb19dceda07837efa3b2957",
+    "projects/pcr02-ssc305/decisions/2026-08-04-release-nfs-client-retention.md": "07d059dfc69b1f81c90bc034074e27b4b140bbcd2e5832d9689f8412397f65fd"
+  },
+  "outputs": {
+    "projects/pcr02-ssc305/validation/2026-07-31-active-media-cpu-venc-timeout.md": "323cede9aabe3a89ae648d5b51cb6de60a1c72a668723569ba50c2db1216ec00",
+    "projects/gros/archive/reports/2026-07-31-pcr02-vi-fps-vif-sleep-optimization.md": "3f5924607db2d9bf89e515a681f25f9c71d8fbe4dce61194479f5840a6c1e47c",
+    "governance/product/archive/2026-07-31-knowledge-hub-p1-p3-optimization-closeout.md": "7d5de0308db0dcac075c92340a38caad8ded1752b1ee339779a64143210c1708",
+    "projects/gros/archive/debug/2026-07-31-prog-pcr02-memory-growth-monitoring.md": "c28d4ec12491d0985d1431b426cd956b78301b68b50d4a6ea33adf3dc907cb39",
+    "projects/gros/archive/debug/2026-07-31-pcr02-sensor-audio-queue-ao-retry.md": "552e5bb327404a700d6c98a4aa2be50d77188d24cea6da6db6bc75b45e370322",
+    "projects/pcr02-ssc305/decisions/2026-08-04-release-nfs-client-retention.md": "0ecbd123bace2e779b7aa39a8350518f2ff9b7d5cae2a9756feee09dab4c9764",
+    "indexes/by-owner.md": "c101cb6d9734c2c29e73bf948212f641ca4e0f8bd3cb04070635364e14a8c187",
+    "indexes/by-review-date.md": "f6db21b71cc96ae2c75d68606bbaa3433da8584531af4fffe9fd37d5bd157e26",
+    "indexes/by-status.md": "83d562ac4e8270da53ce1e47c8cf6b4e4bbc369f7057340280d58c7d8b5d058d",
+    "registry/items.jsonl": "0729902d7b05ffc3cdc0d5de8baa41d8be4c94a6d44d0be4e208077e82d928e5"
+  },
+  "scheduled_items": [
+    {
+      "item_id": "pcr02-ssc305-active-media-cpu-venc-timeout-20260731",
+      "path": "projects/pcr02-ssc305/validation/2026-07-31-active-media-cpu-venc-timeout.md",
+      "owner": "leiwenjun",
+      "status": "reviewing",
+      "before_sha256": "5cd7f9c7e4b246f5ef184dee89a13eb99cf89ff9cc766217d6b6954a0f7eaf15",
+      "after_sha256": "323cede9aabe3a89ae648d5b51cb6de60a1c72a668723569ba50c2db1216ec00",
+      "before_review_after": "2026-10-31",
+      "after_review_after": "2026-11-15"
+    },
+    {
+      "item_id": "pcr02-vi-fps-vif-sleep-optimization-20260731",
+      "path": "projects/gros/archive/reports/2026-07-31-pcr02-vi-fps-vif-sleep-optimization.md",
+      "owner": "leiwenjun",
+      "status": "reviewing",
+      "before_sha256": "80ecef644771f67050bfe0ee0ee9286a82c470d709f57ff5204f2f60c3d4741a",
+      "after_sha256": "3f5924607db2d9bf89e515a681f25f9c71d8fbe4dce61194479f5840a6c1e47c",
+      "before_review_after": "2026-10-31",
+      "after_review_after": "2026-12-01"
+    },
+    {
+      "item_id": "knowledge-hub-p1-p3-optimization-closeout-20260731",
+      "path": "governance/product/archive/2026-07-31-knowledge-hub-p1-p3-optimization-closeout.md",
+      "owner": "leiwenjun",
+      "status": "reviewing",
+      "before_sha256": "0f9f87a169800250ad9c46afaa85fee20c73b6cf8e0b6cce4623707207d729cd",
+      "after_sha256": "7d5de0308db0dcac075c92340a38caad8ded1752b1ee339779a64143210c1708",
+      "before_review_after": "2026-10-31",
+      "after_review_after": "2027-01-30"
+    },
+    {
+      "item_id": "pcr02-prog-pcr02-memory-growth-monitoring-20260731",
+      "path": "projects/gros/archive/debug/2026-07-31-prog-pcr02-memory-growth-monitoring.md",
+      "owner": "leiwenjun",
+      "status": "reviewing",
+      "before_sha256": "7382eeb37d18c839869b816d7579874f20090ed4fc555fd14cb41ed66bff5499",
+      "after_sha256": "c28d4ec12491d0985d1431b426cd956b78301b68b50d4a6ea33adf3dc907cb39",
+      "before_review_after": "2026-10-31",
+      "after_review_after": "2026-11-15"
+    },
+    {
+      "item_id": "pcr02-sensor-audio-queue-ao-retry-20260731",
+      "path": "projects/gros/archive/debug/2026-07-31-pcr02-sensor-audio-queue-ao-retry.md",
+      "owner": "leiwenjun",
+      "status": "reviewing",
+      "before_sha256": "3679d0dc3a664e11f44b71828042096e6eda2e774cb19dceda07837efa3b2957",
+      "after_sha256": "552e5bb327404a700d6c98a4aa2be50d77188d24cea6da6db6bc75b45e370322",
+      "before_review_after": "2026-10-31",
+      "after_review_after": "2026-11-15"
+    },
+    {
+      "item_id": "pcr02-release-nfs-client-retention-20260804",
+      "path": "projects/pcr02-ssc305/decisions/2026-08-04-release-nfs-client-retention.md",
+      "owner": "leiwenjun",
+      "status": "reviewing",
+      "before_sha256": "07d059dfc69b1f81c90bc034074e27b4b140bbcd2e5832d9689f8412397f65fd",
+      "after_sha256": "0ecbd123bace2e779b7aa39a8350518f2ff9b7d5cae2a9756feee09dab4c9764",
+      "before_review_after": "2026-10-31",
+      "after_review_after": "2026-11-08"
+    }
+  ],
+  "prior_reviews": [],
+  "active_promoted": false,
+  "owner_review_performed": false,
+  "content_approval_performed": false,
+  "owner_cycle_decision_recorded": true,
+  "expected_hash": "ad4b5aef2bdb42093910ee872b928f725a779bf8d963f195c76860c5c4645b43",
+  "transaction_id": "content-maintenance-ad4b5aef2bdb42093910ee87",
+  "authorization_ref": "owner-cycle-ad4b5aef2bdb42093910ee87",
+  "result_writes": {
+    "projects/pcr02-ssc305/validation/2026-07-31-active-media-cpu-venc-timeout.md": "323cede9aabe3a89ae648d5b51cb6de60a1c72a668723569ba50c2db1216ec00",
+    "projects/gros/archive/reports/2026-07-31-pcr02-vi-fps-vif-sleep-optimization.md": "3f5924607db2d9bf89e515a681f25f9c71d8fbe4dce61194479f5840a6c1e47c",
+    "governance/product/archive/2026-07-31-knowledge-hub-p1-p3-optimization-closeout.md": "7d5de0308db0dcac075c92340a38caad8ded1752b1ee339779a64143210c1708",
+    "projects/gros/archive/debug/2026-07-31-prog-pcr02-memory-growth-monitoring.md": "c28d4ec12491d0985d1431b426cd956b78301b68b50d4a6ea33adf3dc907cb39",
+    "projects/gros/archive/debug/2026-07-31-pcr02-sensor-audio-queue-ao-retry.md": "552e5bb327404a700d6c98a4aa2be50d77188d24cea6da6db6bc75b45e370322",
+    "projects/pcr02-ssc305/decisions/2026-08-04-release-nfs-client-retention.md": "0ecbd123bace2e779b7aa39a8350518f2ff9b7d5cae2a9756feee09dab4c9764",
+    "indexes/by-owner.md": "c101cb6d9734c2c29e73bf948212f641ca4e0f8bd3cb04070635364e14a8c187",
+    "indexes/by-review-date.md": "f6db21b71cc96ae2c75d68606bbaa3433da8584531af4fffe9fd37d5bd157e26",
+    "indexes/by-status.md": "83d562ac4e8270da53ce1e47c8cf6b4e4bbc369f7057340280d58c7d8b5d058d",
+    "registry/items.jsonl": "0729902d7b05ffc3cdc0d5de8baa41d8be4c94a6d44d0be4e208077e82d928e5",
+    "registry/provider-operations.jsonl": "c4f65375949e2ed8d9fa4e36e9c96030b7a4eefc61f061094402053d4958a3b5",
+    "registry/authorizations.jsonl": "ec2ef42ed1d5e9b3c4244c0ed02bd3edaf9b8f5d7abddce20d24043e72e9ddd5"
+  },
+  "item_count": 6,
+  "write_count": 12,
+  "delete_count": 0,
+  "original_execution_request_sha256": "ddf09614665065ae398ec34373b977e986c090fcbfbe859cd63521b44bdea134",
+  "original_execution_intake_attestation_sha256": "752de927b59fd09836590c5b3538a7621f7ae3a8a29f2abb70d2146a077b94cf",
+  "owner_decision_basis": "explicit-statements-mechanically-recorded; not-original-intake-attestation"
+}

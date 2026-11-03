@@ -37,7 +37,7 @@ def test_session_scan_reports_no_candidate_without_tool_changes(tmp_path):
     output = repo / "tmp/session/hub-candidate.md"
 
     payload = scan_tool_assets(
-        repository_root(), repo, output, _validation(), source_repo="xcrz-sigmastar-demo"
+        repository_root(), repo, output, _validation(), source_repo="gros"
     )
 
     assert payload["status"] == "pass"
@@ -61,7 +61,7 @@ def test_session_scan_generates_dirty_hash_bound_candidate(tmp_path):
     output = repo / "tmp/session/hub-candidate.md"
 
     payload = scan_tool_assets(
-        repository_root(), repo, output, _validation(), source_repo="xcrz-sigmastar-demo"
+        repository_root(), repo, output, _validation(), source_repo="gros"
     )
 
     assert payload["hub_candidate_generated"] is True
@@ -87,7 +87,7 @@ def test_session_scan_rejects_sensitive_candidate(tmp_path):
         repo,
         repo / "tmp/session/hub-candidate.md",
         _validation(),
-        source_repo="xcrz-sigmastar-demo",
+        source_repo="gros",
         minimum_score=0,
     )
 
@@ -118,7 +118,7 @@ def test_capture_scan_can_chain_hub_dry_run(tmp_path, capsys):
             "--hub-candidate-out",
             str(output),
             "--source-repo",
-            "xcrz-sigmastar-demo",
+            "gros",
             "--session-path",
             "codex_assets/session_helper.py",
             "--hub-dry-run",

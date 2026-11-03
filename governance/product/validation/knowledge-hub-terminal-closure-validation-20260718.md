@@ -24,8 +24,8 @@ source:
   type: manual
   from: current-session direct commands and official upstream metadata; no external body copied
   source_sha256: 21383d3c228cbf679e64e8ec1ed7ec35de74b1486fd8cf8889b7599425569f30
-review_after: '2026-10-18'
-review_status: human-reviewed-accepted
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -51,7 +51,7 @@ evidence_refs:
 - https://pip.pypa.io/en/stable/topics/secure-installs/#hash-checking-mode
 - https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference
 created_at: '2026-07-18'
-updated_at: '2026-07-26'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -63,6 +63,7 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: checked
+human_review_decision: defer
 ---
 
 # Knowledge Hub 全面终态闭环优化验证 2026-07-18

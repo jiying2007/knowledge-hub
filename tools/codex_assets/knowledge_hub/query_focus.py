@@ -43,5 +43,11 @@ def focus_bonus(query, plan, title):
 
 def focus_order(row):
     reasons = row.get('why_selected', ())
-    return ('literal-heading-focus' not in reasons, 'literal-heading-version' not in reasons,
-            'normative-document-form' not in reasons, -int(row['score']), row['path'], row['item_id'])
+    # Explicit policy questions retain their normative-form preference. For
+    # ordinary questions, headings break scored evidence ties; their existing
+    # bounded bonus must not also act as an unconditional ordering override.
+    normative = 'normative-document-form' in reasons
+    return (not normative, normative and 'literal-heading-focus' not in reasons,
+            normative and 'literal-heading-version' not in reasons, -int(row['score']),
+            'literal-heading-focus' not in reasons, 'literal-heading-version' not in reasons,
+            row['path'], row['item_id'])

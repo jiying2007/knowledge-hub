@@ -16,13 +16,16 @@ scope: team-general
 visibility: team-internal
 status: active
 owner: leiwenjun
-review_after: '2026-09-26'
-review_status: human-reviewed-accepted
+review_after: '2026-11-07'
+review_status: periodic-review-scheduled-pending-content
 promotion: none
 aliases:
 - Knowledge Hub 全局路径路由规则
 related:
 - indexes/obsidian-home.md
+updated_at: '2026-10-31'
+manual_validation_pending: true
+content_review_status: accepted
 ---
 
 # 全局路径路由（Path Routing）
@@ -82,7 +85,7 @@ Provider v4 的 `execution_subject` 是执行主体，`retrieval_scope` 是检�
 | PCR02 工程归档 | `~/embedded/engineering_archive/pcr02/` | `~/knowledge-hub/projects/pcr02-ssc305/archive/engineering-archive/pcr02/` |
 | PCR02 排障记录 | `~/embedded/engineering_archive/pcr02/<topic>/` | `~/knowledge-hub/projects/pcr02-ssc305/archive/engineering-archive/pcr02/<topic>/` |
 | PCR02 当前事实 | 源项目 `docs/`、`knowledge/` | `~/knowledge-hub/projects/pcr02-ssc305/current/` |
-| PCR02 当前决策 | 源项目 `docs/decisions` 或历史归档 | `~/knowledge-hub/projects/xcrz-sigmastar-demo/decisions/` |
+| PCR02 当前决策 | 源项目 `docs/decisions` 或历史归档 | `~/knowledge-hub/projects/gros/decisions/` |
 | PCR02 验证记录 | 源项目散落日志或旧 validation 归档 | `~/knowledge-hub/projects/pcr02-ssc305/validation/` |
 | 嵌入式团队规范/runbook | Hub `domains/embedded/` 或项目文档 | 候选/provenance 留在 Hub；已发布正文进入 `workspace://embedded-knowledge` |
 | Codex archive | `~/codex/docs/archive/` | `~/knowledge-hub/domains/codex/archive/codex-archive/` |

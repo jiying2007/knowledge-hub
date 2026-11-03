@@ -7,8 +7,8 @@ scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
-review_after: '2026-10-13'
-review_status: human-reviewed-accepted
+review_after: '2026-11-14'
+review_status: periodic-review-scheduled-pending-content
 promotion: none
 tags:
 - pcr02-ssc305
@@ -35,6 +35,10 @@ aliases:
 related:
 - projects/pcr02-ssc305/README.md
 - indexes/project-readiness.md
+quality_flags:
+- review-overdue
+updated_at: '2026-10-31'
+content_review_status: pending
 ---
 
 # PCR02 SSC305 SDK readiness validation

@@ -57,7 +57,7 @@ Implemented the kernel-side part of the dual ST77912 display optimization in the
 ## Boundary
 
 - This is still fbtft single-framebuffer deferred I/O, not SigmaStar `mi_fb` and not true FB pan/display double buffering.
-- The app-side display provider code with staging/back buffer, dirty area merge, and dual-screen interleaving was not present under `SourceCode/sdk/verify/xcrz_sigmastar_demo/modules/sensor/display`; `pcr02/dep.mk` only conditionally includes that module if the directory exists.
+- The app-side display provider code with staging/back buffer, dirty area merge, and dual-screen interleaving was not present under `SourceCode/sdk/verify/gros/modules/sensor/display`; `pcr02/dep.mk` only conditionally includes that module if the directory exists.
 - Therefore, app-side optimization must be applied in the actual application source tree that participates in the target image build before claiming full end-to-end display optimization.
 - LCD pad-drive validation must read both candidate physical PAD drive fields:
   - `/customer/riu_r 0x103E 0x22` for `PAD_MSPI_CK`; bit7/bit8 clear means the 2-bit field is at its lowest supported `4mA` level.

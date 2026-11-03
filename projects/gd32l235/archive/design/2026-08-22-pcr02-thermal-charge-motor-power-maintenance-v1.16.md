@@ -12,8 +12,8 @@ source:
   type: project-design-doc
   from: gd32l235 Docs design baseline 0224a343c36b468fa2d03a103aa67912fbad1877, captured 2026-08-22
   source_sha256: a2bfbbf3db4fe1a64a0022a48dcbc6911b13ecc52cadc12dfa4959360e97feee
-review_after: '2026-09-22'
-review_status: manual-entry-pending-review
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -34,7 +34,7 @@ evidence_refs:
 - projects/gd32l235/archive/design/2026-08-22-pcr02-thermal-charge-motor-power-maintenance-v1.16.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-08-22'
-updated_at: '2026-08-22'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex

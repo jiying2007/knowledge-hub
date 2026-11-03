@@ -7,8 +7,8 @@ scope: project-specific
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
-review_after: '2026-10-13'
-review_status: human-reviewed-accepted
+review_after: '2026-11-14'
+review_status: periodic-review-scheduled-pending-content
 promotion: none
 tags:
 - app-product-test
@@ -35,6 +35,8 @@ aliases:
 related:
 - projects/app-product-test/README.md
 - indexes/project-readiness.md
+updated_at: '2026-10-31'
+content_review_status: pending
 ---
 
 # PCR02 Product Test App readiness validation

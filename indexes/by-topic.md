@@ -10,12 +10,12 @@
 - knowledge: `artifacts/manifests/pcr02-knowledge-secret-config-boundary-20260620.md`
 - product-test: `artifacts/manifests/pcr02-product-test-artifact-config-interface-boundary-20260620.md`
 - scratch: `artifacts/manifests/pcr02-scratch-archive-boundary-20260620.md`
-- diag: `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`; `projects/xcrz-sigmastar-demo/current/runbooks/diag-usage-guide.md`
-- ASAN: `domains/embedded/runbooks/asan-debug-guide.md`（团队级 active 方法论）；`templates/asan-validation-report.md`（非 PCR02 项目验证模板）；`artifacts/manifests/embedded-asan-active-promotion-20260629.md`（active promotion 证据）；`artifacts/manifests/embedded-asan-non-pcr02-evidence-followup-20260629.md`（非 PCR02 实操证据增强项）；`artifacts/manifests/embedded-asan-team-owner-ready-package-20260629.md`（前置审查包）；`projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md`（PCR02 project-local）；`artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
+- diag: `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`; `projects/gros/archive/historical-current/runbooks/diag-usage-guide.md`
+- ASAN: `domains/embedded/runbooks/asan-debug-guide.md`（团队级 active 方法论）；`templates/asan-validation-report.md`（非 PCR02 项目验证模板）；`artifacts/manifests/embedded-asan-active-promotion-20260629.md`（active promotion 证据）；`artifacts/manifests/embedded-asan-non-pcr02-evidence-followup-20260629.md`（非 PCR02 实操证据增强项）；`artifacts/manifests/embedded-asan-team-owner-ready-package-20260629.md`（前置审查包）；`projects/gros/archive/historical-current/runbooks/asan-debug-guide.md`（PCR02 project-local）；`artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
 - memory auto-curation: `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`; `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
-- PCR02 归档路径: `projects/xcrz-sigmastar-demo/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`; `projects/xcrz-sigmastar-demo/archive/reports/2026-05-29-motor-mcu-debug-record.md`; `projects/xcrz-sigmastar-demo/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`
-- DVR: `projects/xcrz-sigmastar-demo/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`; `projects/xcrz-sigmastar-demo/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`
-- motor MCU: `projects/xcrz-sigmastar-demo/archive/reports/2026-05-29-motor-mcu-debug-record.md`
+- PCR02 归档路径: `projects/gros/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`; `projects/gros/archive/reports/2026-05-29-motor-mcu-debug-record.md`; `projects/gros/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`
+- DVR: `projects/gros/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`; `projects/gros/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`
+- motor MCU: `projects/gros/archive/reports/2026-05-29-motor-mcu-debug-record.md`
 - governance: `governance/`; `artifacts/manifests`
 - path routing: `governance/path-routing.md`; `tools/knowledge-path-audit.sh`
 - automation: `governance/automation-policy.md`; `registry/maintenance-runs.jsonl`
@@ -106,7 +106,7 @@
 - Knowledge Hub status owner summary command: `artifacts/manifests/knowledge-hub-status-owner-summary-command-20260620.md`
 - Core index coverage gate: `tools/knowledge-check.sh`
 - ASAN / AddressSanitizer: `domains/embedded/runbooks/asan-debug-guide.md`; `templates/asan-validation-report.md`; `artifacts/manifests/embedded-asan-active-promotion-20260629.md`; `artifacts/manifests/embedded-asan-non-pcr02-evidence-followup-20260629.md`; `artifacts/manifests/embedded-asan-debug-guide-team-rewrite-20260629.md`; `artifacts/manifests/pcr02-asan-split-targets-20260618.md`
-- PCR02 debug runbooks: `projects/xcrz-sigmastar-demo/current/runbooks`
+- PCR02 debug runbooks: `projects/gros/current/runbooks`
 - Memory auto-curation governance: `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`
 - No-memory-write gate: `artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`
 - PCR02 DVR closeout: `artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`
@@ -263,19 +263,19 @@
 - Knowledge Hub source 主控目录统一收口: `artifacts/manifests/knowledge-hub-source-control-unification-20260624.md`
 - Knowledge Hub operational maturity history: `governance/status/knowledge-hub-operational-maturity.md`; `artifacts/manifests/knowledge-hub-review-after-operation-plan-20260701.md`; `artifacts/manifests/knowledge-hub-complete-delivery-closure-20260701.md`
 - PCR02 docs source 主控目录: `sources/pcr02-project-docs/README.md`
-- PCR02 ASAN project-local target: `projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md`
-- PCR02 DVR archive targets: `projects/xcrz-sigmastar-demo/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`、`projects/xcrz-sigmastar-demo/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`
-- PCR02 motor MCU archive target: `projects/xcrz-sigmastar-demo/archive/reports/2026-05-29-motor-mcu-debug-record.md`
-- PCR02 prog_pcr02 high-load monitoring: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-02-prog-pcr02-high-load-monitoring.md`; `pcr02-prog-pcr02-high-load-monitoring-20260702`
-- PCR02 prog_pcr02 runtime hot-thread follow-up: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-10-prog-pcr02-runtime-hot-thread-followup.md`; `pcr02-prog-pcr02-runtime-hot-thread-followup-20260710`
-- PCR02 Codex history backfill engineering findings: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-09-codex-history-backfill-engineering-findings.md`; `pcr02-codex-history-backfill-engineering-findings-20260709`
-- PCR02 SIGBUS core/debug tools historical session: `projects/xcrz-sigmastar-demo/archive/debug/2026-05-15-pcr02-sigbus-core-debug-tools-history.md`; `pcr02-sigbus-core-debug-tools-history-20260515`
+- PCR02 ASAN project-local target: `projects/gros/archive/historical-current/runbooks/asan-debug-guide.md`
+- PCR02 DVR archive targets: `projects/gros/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`、`projects/gros/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`
+- PCR02 motor MCU archive target: `projects/gros/archive/reports/2026-05-29-motor-mcu-debug-record.md`
+- PCR02 prog_pcr02 high-load monitoring: `projects/gros/archive/debug/2026-07-02-prog-pcr02-high-load-monitoring.md`; `pcr02-prog-pcr02-high-load-monitoring-20260702`
+- PCR02 prog_pcr02 runtime hot-thread follow-up: `projects/gros/archive/debug/2026-07-10-prog-pcr02-runtime-hot-thread-followup.md`; `pcr02-prog-pcr02-runtime-hot-thread-followup-20260710`
+- PCR02 Codex history backfill engineering findings: `projects/gros/archive/reports/2026-07-09-codex-history-backfill-engineering-findings.md`; `pcr02-codex-history-backfill-engineering-findings-20260709`
+- PCR02 SIGBUS core/debug tools historical session: `projects/gros/archive/debug/2026-05-15-pcr02-sigbus-core-debug-tools-history.md`; `pcr02-sigbus-core-debug-tools-history-20260515`
 - PCR02 GROS/SSC305/HDI historical session: `projects/pcr02-ssc305/archive/engineering-archive/pcr02/session/pcr02_build_gros_hdi_history_20260517_20260521.md`; `pcr02-build-gros-hdi-history-20260517-20260521`
 - Codex archive selective backfill audit: `artifacts/manifests/codex-archive-selective-backfill-audit-20260709.md`; `codex-archive-selective-backfill-audit-20260709`
 - Codex archive phased migration removal: `artifacts/manifests/codex-archive-phased-migration-removal-20260709.md`; `codex-archive-phased-migration-removal-20260709`
 - llm_tools Windows builder runbook 候选归档: `projects/llm-tools/archive/release/2026-07-09-windows-builder-runbook.md`; `llm-tools-windows-builder-runbook-20260709`
 - llm_tools release governance archive: `projects/llm-tools/archive/release/2026-05-16-llm-tools-release-governance.md`; `llm-tools-release-governance-archive-20260516`
-- Sigmastar dual-screen animation analysis: `projects/xcrz-sigmastar-demo/archive/reports/2026-05-14-dual-screen-animation-analysis.md`; `xcrz-sigmastar-demo-dual-screen-animation-analysis-20260514`
+- Sigmastar dual-screen animation analysis: `projects/gros/archive/reports/2026-05-14-dual-screen-animation-analysis.md`; `gros-dual-screen-animation-analysis-20260514`
 - Codex archive migration preflight: `artifacts/manifests/codex-archive-migration-preflight-20260709.md`; `codex-archive-migration-preflight-20260709`
 - Codex archive removal preflight: `artifacts/manifests/codex-archive-removal-preflight-20260710.md`; `codex-archive-removal-preflight-20260710`
 - Codex archive extract-first preflight: `artifacts/manifests/codex-archive-extract-first-preflight-20260710.md`; `codex-archive-extract-first-preflight-20260710`
@@ -306,10 +306,10 @@
 - Codex archive memory-curation removal execution: `artifacts/manifests/codex-archive-removal-execution-20260711-memory-curation.md`; `codex-archive-removal-execution-20260711-memory-curation`
 - Codex archive remaining blockers scan: `artifacts/manifests/codex-archive-remaining-blockers-scan-20260711.md`; `codex-archive-remaining-blockers-scan-20260711`
 - PCR02 media monotonic PTS DVR/MP4 historical analysis: `projects/pcr02-ssc305/archive/engineering-archive/pcr02/media-timing/pcr02_media_monotonic_pts_dvr_mp4_20260630.md`; `pcr02-media-monotonic-pts-dvr-mp4-20260630`
-- PCR02 core/GDB triage historical debug record: `projects/xcrz-sigmastar-demo/archive/debug/2026-06-23-pcr02-core-gdb-triage.md`; `pcr02-core-gdb-triage-20260623`
-- PCR02 DVR protocol sync build fix: `projects/xcrz-sigmastar-demo/archive/reports/2026-06-30-dvr-protocol-sync-build-fix.md`; `pcr02-dvr-protocol-sync-build-fix-20260630`
+- PCR02 core/GDB triage historical debug record: `projects/gros/archive/debug/2026-06-23-pcr02-core-gdb-triage.md`; `pcr02-core-gdb-triage-20260623`
+- PCR02 DVR protocol sync build fix: `projects/gros/archive/reports/2026-06-30-dvr-protocol-sync-build-fix.md`; `pcr02-dvr-protocol-sync-build-fix-20260630`
 - PCR02 regular OTA customer partition guard delta: `projects/pcr02-ssc305/archive/engineering-archive/pcr02/ota-release/pcr02_regular_ota_customer_partition_guard_20260625.md`; `pcr02-regular-ota-customer-partition-guard-20260625`
-- PCR02 IR light/player/WiFi debug summary: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-08-pcr02-irlight-player-wifi-debug-summary.md`; `pcr02-irlight-player-wifi-debug-summary-20260708`
+- PCR02 IR light/player/WiFi debug summary: `projects/gros/archive/debug/2026-07-08-pcr02-irlight-player-wifi-debug-summary.md`; `pcr02-irlight-player-wifi-debug-summary-20260708`
 - MCU release NAS guard governance: `projects/mcu/archive/2026-06-29-mcu-release-nas-guard-governance.md`; `mcu-release-nas-guard-governance-20260629`
 - Codex archive final body coverage: `artifacts/manifests/codex-archive-final-body-coverage-20260711.md`; `codex-archive-final-body-coverage-20260711`
 - Codex archive final bodies removal execution: `artifacts/manifests/codex-archive-removal-execution-20260711-final-bodies.md`; `codex-archive-removal-execution-20260711-final-bodies`
@@ -318,7 +318,7 @@
 ## 受控生成条目
 
 - PCR02 SSC305 SDK readiness validation: `projects/pcr02-ssc305/validation/project-readiness.md`; `pcr02-ssc305-readiness-validation-20260713`
-- XCRZ SigmaStar Demo readiness validation: `projects/xcrz-sigmastar-demo/validation/project-readiness.md`; `xcrz-sigmastar-demo-readiness-validation-20260713`
+- GROS readiness validation: `projects/gros/validation/project-readiness.md`; `gros-readiness-validation-20260713`
 - PCR02 API Module readiness validation: `projects/pcr02-api/validation/project-readiness.md`; `pcr02-api-readiness-validation-20260713`
 - PCR02 App Module readiness validation: `projects/pcr02-app/validation/project-readiness.md`; `pcr02-app-readiness-validation-20260713`
 - PCR02 HDI Module readiness validation: `projects/pcr02-hdi/validation/project-readiness.md`; `pcr02-hdi-readiness-validation-20260713`
@@ -348,44 +348,44 @@
 - OTA Packager readiness validation: `projects/ota-packager/validation/project-readiness.md`; `ota-packager-readiness-validation-20260713`
 - Knowledge Hub 当前产品状态与证据缺口: `governance/product/validation/project-readiness.md`; `knowledge-hub-readiness-validation-20260713`
 - Knowledge Hub 产品成熟度全面实现审计 2026-07-13: `artifacts/manifests/knowledge-hub-product-maturity-implementation-20260713.md`; `knowledge-hub-product-maturity-implementation-20260713`
-- PCR02 Video/Audio 共享内存使用说明: `projects/xcrz-sigmastar-demo/current/runbooks/video-audio-shm-usage.md`; `pcr02-video-audio-shm-usage-20260713`
+- PCR02 Video/Audio 共享内存使用说明: `projects/gros/current/runbooks/video-audio-shm-usage.md`; `pcr02-video-audio-shm-usage-20260713`
 - GD32L235 PA12 快慢充控制与硬件兼容性归档: `projects/gd32l235/archive/design/2026-07-13-pa12-fast-slow-charge-compatibility.md`; `gd32l235-pa12-fast-slow-charge-compatibility-20260713`
-- PCR02 ST77912 双屏显示 CPU 热点 ADB 实机排障记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-13-st77912-dual-display-cpu-adb-triage.md`; `xcrz-sigmastar-demo-st77912-dual-display-cpu-adb-triage-20260713`
+- PCR02 ST77912 双屏显示 CPU 热点 ADB 实机排障记录: `projects/gros/archive/debug/2026-07-13-st77912-dual-display-cpu-adb-triage.md`; `gros-st77912-dual-display-cpu-adb-triage-20260713`
 - LLM Agent 与 ADK 3.1 RC2 发布候选闭环验证: `projects/llm-agent/validation/adk-v3-1-rc2-release-closure-20260714.md`; `llm-agent-adk-v3-1-rc2-release-closure-20260714`
 - PCR02 ST77912 黑屏与 LCD ESD 根因记录: `projects/pcr02-ssc305/archive/debug/2026-07-14-st77912-black-screen-esd-root-cause.md`; `pcr02-st77912-black-screen-esd-root-cause-20260714`
-- PCR02 ST77912 局部刷新图像割裂与残留 ADB 排障记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-14-st77912-partial-refresh-visual-regression.md`; `xcrz-sigmastar-demo-st77912-partial-refresh-visual-regression-20260714`
-- PCR02 Sensor 静态数据上报 Task/App 联调指南: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-14-sensor-static-info-integration-guide.md`; `xcrz-sigmastar-demo-sensor-static-info-integration-guide-20260714`
+- PCR02 ST77912 局部刷新图像割裂与残留 ADB 排障记录: `projects/gros/archive/debug/2026-07-14-st77912-partial-refresh-visual-regression.md`; `gros-st77912-partial-refresh-visual-regression-20260714`
+- PCR02 Sensor 静态数据上报 Task/App 联调指南: `projects/gros/archive/reports/2026-07-14-sensor-static-info-integration-guide.md`; `gros-sensor-static-info-integration-guide-20260714`
 - Codex token-lean 固定上下文优化验证候选: `artifacts/manifests/codex-token-lean-context-validation-20260714.md`; `codex-token-lean-context-validation-20260714`
 - PCR02 IMSSV06C11 三方 SDK 审计：摄像头 AE、SPI NAND 与时钟电气路径: `projects/pcr02-ssc305/archive/source-audit/pcr02_imssv06c11_three_way_sdk_audit_20260715.md`; `pcr02-imssv06c11-three-way-sdk-audit-20260715`
-- PCR02 ST77912 局部刷新 pwrite 提交与 SPI 时钟驱动配置: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-15-st77912-partial-refresh-pwrite-commit-pad-drive.md`; `xcrz-sigmastar-demo-st77912-partial-refresh-pwrite-commit-pad-drive-20260715`
+- PCR02 ST77912 局部刷新 pwrite 提交与 SPI 时钟驱动配置: `projects/gros/archive/debug/2026-07-15-st77912-partial-refresh-pwrite-commit-pad-drive.md`; `gros-st77912-partial-refresh-pwrite-commit-pad-drive-20260715`
 - PCR02 新摄像头栈混装 ABI 故障与回退记录: `projects/pcr02-ssc305/archive/debug/2026-07-15-camera-mi-abi-rollback.md`; `pcr02-camera-mi-abi-mix-rollback-20260715`
 - MCU NAS 发布制品与契约验证 2026-07-15: `projects/mcu/validation/2026-07-15-nas-release-evidence-audit.md`; `mcu-release-evidence-audit-20260715`
 - 软件工具干净源码验证审计 2026-07-15: `governance/product/validation/software-tool-evidence-audit-20260715.md`; `software-tool-evidence-audit-20260715`
 - PCR02 SOC v1.1.33 NAS 发布证据审计: `projects/pcr02-ssc305/validation/2026-07-15-soc-v1.1.33-nas-release-audit.md`; `pcr02-soc-v1-1-33-nas-release-audit-20260715`
-- PCR02 API/App/HDI/MP4 精确源码构建审计: `projects/xcrz-sigmastar-demo/validation/2026-07-15-module-clean-source-build-audit.md`; `pcr02-module-clean-source-build-audit-20260715`
+- PCR02 API/App/HDI/MP4 精确源码构建审计: `projects/gros/validation/2026-07-15-module-clean-source-build-audit.md`; `pcr02-module-clean-source-build-audit-20260715`
 - LLM Agent 精确源码 Quick 门禁审计 2026-07-15: `projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md`; `llm-agent-exact-source-quick-gate-audit-20260715`
-- PCR02 Robot 子模块精确源码契约审计: `projects/xcrz-sigmastar-demo/validation/2026-07-15-robot-module-contract-audit.md`; `pcr02-robot-module-contract-audit-20260715`
+- PCR02 Robot 子模块精确源码契约审计: `projects/gros/validation/2026-07-15-robot-module-contract-audit.md`; `pcr02-robot-module-contract-audit-20260715`
 - Knowledge Hub Agent 运行时契约吸收决策候选: `governance/product/decisions/agent-runtime-contract-absorption-candidate.md`; `knowledge-hub-agent-runtime-contract-absorption-20260716`
 - 微信公众号批量研究工作流与二十篇文章优化评估: `projects/llm-agent/archive/research/2026-07-16-wechat-account-research-optimization-assessment.md`; `llm-agent-wechat-account-research-assessment-20260716`
 - LLM Agent 精确源码 Full 门禁审计 2026-07-17: `projects/llm-agent/validation/2026-07-17-exact-source-full-gate-audit.md`; `llm-agent-exact-source-full-gate-audit-20260717`
 - GD32L235 电池供电跳变与 MCU 循环重启排障记录: `projects/gd32l235/archive/debug/2026-07-17-battery-rail-drop-mcu-reboot.md`; `gd32l235-battery-rail-drop-mcu-reboot-20260717`
 - Agent Dev Kit 团队 Harness Readiness v1 吸收决策候选: `projects/agent-dev-kit/decisions/harness-readiness-v1-candidate.md`; `agent-dev-kit-harness-readiness-decision-20260717`
-- PCR02 双麦声学前处理、VAD、KWS 与 SigmaStar IPU 方案评估: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-18-pcr02-audio-wakeup-afe-vad-kws-ipu-evaluation.md`; `xcrz-sigmastar-demo-audio-wakeup-afe-vad-kws-ipu-evaluation-20260718`
-- PCR02 AISpeech VAD 与 QIVW 短期优化落地验证: `projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-short-term-implementation-validation.md`; `xcrz-sigmastar-demo-pcr02-qivw-vad-short-term-implementation-validation-20260718`
-- PCR02 遗留 QIVW 回调与 APP diag provider 优化验证: `projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-legacy-qivw-callback-optimization-validation.md`; `xcrz-sigmastar-demo-pcr02-legacy-qivw-callback-optimization-validation-20260718`
-- PCR02 QIVW VAD gate 显式参数化更正与验证: `projects/xcrz-sigmastar-demo/validation/2026-07-18-pcr02-qivw-vad-gate-explicit-parameter-validation.md`; `xcrz-sigmastar-demo-pcr02-qivw-vad-gate-explicit-parameter-validation-20260718`
+- PCR02 双麦声学前处理、VAD、KWS 与 SigmaStar IPU 方案评估: `projects/gros/archive/reports/2026-07-18-pcr02-audio-wakeup-afe-vad-kws-ipu-evaluation.md`; `gros-audio-wakeup-afe-vad-kws-ipu-evaluation-20260718`
+- PCR02 AISpeech VAD 与 QIVW 短期优化落地验证: `projects/gros/validation/2026-07-18-pcr02-qivw-vad-short-term-implementation-validation.md`; `gros-pcr02-qivw-vad-short-term-implementation-validation-20260718`
+- PCR02 遗留 QIVW 回调与 APP diag provider 优化验证: `projects/gros/validation/2026-07-18-pcr02-legacy-qivw-callback-optimization-validation.md`; `gros-pcr02-legacy-qivw-callback-optimization-validation-20260718`
+- PCR02 QIVW VAD gate 显式参数化更正与验证: `projects/gros/validation/2026-07-18-pcr02-qivw-vad-gate-explicit-parameter-validation.md`; `gros-pcr02-qivw-vad-gate-explicit-parameter-validation-20260718`
 - Knowledge Hub 全面终态闭环优化验证 2026-07-18: `governance/product/validation/knowledge-hub-terminal-closure-validation-20260718.md`; `knowledge-hub-terminal-closure-validation-20260718`
-- xcrz_sigmastar_demo_dev 三目录完全吸收与删除验证: `projects/xcrz-sigmastar-demo/validation/2026-07-18-dev-copy-three-dir-absorption-validation.md`; `xcrz-sigmastar-demo-dev-copy-three-dir-absorption-validation-20260718`
+- gros 三目录完全吸收与删除验证: `projects/gros/validation/2026-07-18-dev-copy-three-dir-absorption-validation.md`; `gros-dev-copy-three-dir-absorption-validation-20260718`
 - embedded/knowledge SSC305 方法与工具引用吸收验证: `projects/pcr02-ssc305/validation/2026-07-18-embedded-knowledge-absorption-validation.md`; `pcr02-ssc305-embedded-knowledge-absorption-validation-20260718`
 - LLM Agent 与 ADK 3.1 RC3 本地发布候选闭环验证: `projects/llm-agent/validation/adk-v3-1-rc3-release-closure-20260718.md`; `llm-agent-adk-v3-1-rc3-release-closure-20260718`
 - llm_agent 多源外部实践吸收终态架构候选: `domains/codex/archive/codex-archive/research-notes/20260719-llm-agent-external-practice-intake-terminal.md`; `llm-agent-external-practice-intake-terminal-20260719`
 - PCR02 /data UBIFS 单页节点整体偏移 4 字节导致只读排障记录: `projects/pcr02-ssc305/archive/engineering-archive/pcr02/ubifs-squashfs/pcr02_data_ubifs_single_page_shift_readonly_20260720.md`; `pcr02-data-ubifs-single-page-shift-readonly-20260720`
-- PCR02 IMU/TOF 高负载调度尾延迟现场分析: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-21-pcr02-imu-tof-high-load-scheduling-triage.md`; `pcr02-imu-tof-high-load-scheduling-triage-20260721`
-- PCR02 IMU/TOF 驱动规格与运行时设计参考: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-21-pcr02-imu-tof-driver-runtime-reference.md`; `pcr02-imu-tof-driver-runtime-reference-20260721`
-- PCR02 双核 A32 整机 CPU 优化规划: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-21-pcr02-dual-a32-system-cpu-optimization-plan.md`; `pcr02-dual-a32-system-cpu-optimization-plan-20260721`
+- PCR02 IMU/TOF 高负载调度尾延迟现场分析: `projects/gros/archive/debug/2026-07-21-pcr02-imu-tof-high-load-scheduling-triage.md`; `pcr02-imu-tof-high-load-scheduling-triage-20260721`
+- PCR02 IMU/TOF 驱动规格与运行时设计参考: `projects/gros/archive/reports/2026-07-21-pcr02-imu-tof-driver-runtime-reference.md`; `pcr02-imu-tof-driver-runtime-reference-20260721`
+- PCR02 双核 A32 整机 CPU 优化规划: `projects/gros/archive/debug/2026-07-21-pcr02-dual-a32-system-cpu-optimization-plan.md`; `pcr02-dual-a32-system-cpu-optimization-plan-20260721`
 - GD32L235 与 PCR02 SoC 电源状态、TCPKA 和关机事务协同归档: `projects/gd32l235/archive/design/2026-07-22-soc-mcu-power-transition-owner-tcpka.md`; `gd32l235-pcr02-power-transition-owner-tcpka-20260722`
-- PCR02 SoC TCPKA 协议 v1 与低功耗生命周期实现归档: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-22-pcr02-tcpka-low-power-protocol-v1.md`; `pcr02-tcpka-low-power-protocol-v1-20260722`
-- PCR02 视频虚拟流降频与 LCD libyuv NEON 优化记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-22-pcr02-video-virtual-stream-cpu-optimization.md`; `pcr02-video-virtual-stream-cpu-optimization-20260722`
+- PCR02 SoC TCPKA 协议 v1 与低功耗生命周期实现归档: `projects/gros/archive/reports/2026-07-22-pcr02-tcpka-low-power-protocol-v1.md`; `pcr02-tcpka-low-power-protocol-v1-20260722`
+- PCR02 视频虚拟流降频与 LCD libyuv NEON 优化记录: `projects/gros/archive/debug/2026-07-22-pcr02-video-virtual-stream-cpu-optimization.md`; `pcr02-video-virtual-stream-cpu-optimization-20260722`
 - GD32L235 与 PCR02 SOC SLEEP EBUSY 和提前 WiFi 唤醒初步排查: `projects/gd32l235/archive/debug/2026-07-22-soc-sleep-ebusy-early-wifi-wake.md`; `gd32l235-soc-sleep-ebusy-early-wifi-wake-20260722`
 - GD32L235 低电量 SOC 休眠保护设计归档: `projects/gd32l235/archive/design/2026-07-22-low-battery-soc-sleep-protection-design.md`; `gd32l235-low-battery-soc-sleep-protection-design-20260722`
 - GD32L235 PA11 关机、充电与 SOC 上电门控设计归档: `projects/gd32l235/archive/design/2026-07-22-pa11-charge-soc-power-gate-design.md`; `gd32l235-pa11-charge-soc-power-gate-design-20260722`
@@ -399,86 +399,86 @@
 - llm_agent 外部实践吸收落地: `projects/llm-agent/archive/research/2026-07-23-external-practice-absorption-implementation.md`; `llm-agent-external-practice-absorption-20260723`
 - github/spec-kit 长期跟踪决策: `projects/llm-agent/decisions/2026-07-23-spec-kit-reference-tracking-decision.md`; `llm-agent-spec-kit-reference-tracking-20260723`
 - github/spec-kit正式登记验证: `projects/llm-agent/validation/2026-07-23-spec-kit-reference-onboarding-validation.md`; `llm-agent-spec-kit-reference-onboarding-validation-20260723`
-- PCR02 VENC main/sub 发布序号独立化记录: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-23-pcr02-venc-main-sub-sequence-isolation.md`; `pcr02-venc-main-sub-sequence-isolation-20260723`
+- PCR02 VENC main/sub 发布序号独立化记录: `projects/gros/archive/reports/2026-07-23-pcr02-venc-main-sub-sequence-isolation.md`; `pcr02-venc-main-sub-sequence-isolation-20260723`
 - PCR02 SoC SLEEP 网络冻结与 wakeup_count 两阶段门禁决策候选: `projects/gd32l235/decisions/soc-sleep-network-freezer-wakeup-count.md`; `gd32l235-pcr02-soc-sleep-network-freezer-wakeup-count-20260724`
-- PCR02 prog_pcr02 高负载 2026-07-24 最新状态跟踪: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-24-prog-pcr02-high-load-followup.md`; `pcr02-prog-pcr02-high-load-followup-20260724`
-- PCR02 SSC305 SDK裁剪与启动、资源、功耗优化规划: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-24-pcr02-ssc305-sdk-trimming-optimization-plan.md`; `pcr02-ssc305-sdk-trimming-optimization-plan-20260724`
-- PCR02 SSC305 SDK裁剪规划运行态基线验证: `projects/xcrz-sigmastar-demo/validation/2026-07-24-pcr02-ssc305-runtime-resource-baseline.md`; `pcr02-ssc305-runtime-resource-baseline-20260724`
+- PCR02 prog_pcr02 高负载 2026-07-24 最新状态跟踪: `projects/gros/archive/debug/2026-07-24-prog-pcr02-high-load-followup.md`; `pcr02-prog-pcr02-high-load-followup-20260724`
+- PCR02 SSC305 SDK裁剪与启动、资源、功耗优化规划: `projects/pcr02-ssc305/archive/reports/2026-07-24-sdk-trimming-historical-plan.md`; `pcr02-ssc305-sdk-trimming-optimization-plan-20260724`
+- PCR02 SSC305 SDK裁剪规划运行态基线验证: `projects/pcr02-ssc305/validation/2026-07-24-pcr02-ssc305-runtime-resource-baseline.md`; `pcr02-ssc305-runtime-resource-baseline-20260724`
 - PCR02 SSC305 SDK系统优化实施计划: `projects/pcr02-ssc305/archive/reports/2026-07-24-sdk-system-optimization-plan.md`; `pcr02-ssc305-sdk-system-optimization-plan-20260724`
 - Knowledge Hub 真实项目证据与反馈波次 2026-07-26: `governance/product/validation/knowledge-hub-real-evidence-feedback-wave-20260726.md`; `knowledge-hub-real-evidence-feedback-wave-20260726`
-- PCR02 MCU/SoC 电机 UART 时间戳同步与实时链路最终方案: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-26-pcr02-motor-uart-timestamp-sync-plan.md`; `pcr02-motor-uart-timestamp-sync-plan-20260726`
-- PCR02 HDI VI 30/1 fps 路由与 H26x teardown 排障记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-27-hdi-vi-30-1fps-scl-pool-teardown.md`; `xcrz-sigmastar-demo-hdi-vi-30-1fps-scl-pool-teardown-20260727`
+- PCR02 MCU/SoC 电机 UART 时间戳同步与实时链路最终方案: `projects/gros/archive/reports/2026-07-26-pcr02-motor-uart-timestamp-sync-plan.md`; `pcr02-motor-uart-timestamp-sync-plan-20260726`
+- PCR02 HDI VI 30/1 fps 路由与 H26x teardown 排障记录: `projects/gros/archive/debug/2026-07-27-hdi-vi-30-1fps-scl-pool-teardown.md`; `gros-hdi-vi-30-1fps-scl-pool-teardown-20260727`
 - GD32L235 与 PCR02 SoC DISARM 和传感器恢复事务归档: `projects/gd32l235/archive/design/2026-07-27-disarm-sensor-restore-transaction.md`; `gd32l235-pcr02-disarm-sensor-restore-validation-20260727`
-- PCR02 电机 UART 时间戳同步实施与离线验证: `projects/xcrz-sigmastar-demo/validation/2026-07-27-pcr02-motor-uart-timestamp-sync-implementation.md`; `pcr02-motor-uart-timestamp-sync-implementation-validation-20260727`
+- PCR02 电机 UART 时间戳同步实施与离线验证: `projects/gros/validation/2026-07-27-pcr02-motor-uart-timestamp-sync-implementation.md`; `pcr02-motor-uart-timestamp-sync-implementation-validation-20260727`
 - PCR02 SSC305 ACTIVE_LOW_1组件化Pipeline与日夜策略: `projects/pcr02-ssc305/archive/design/2026-07-27-active-low-1-pipeline-architecture.md`; `pcr02-active-low-1-pipeline-architecture-20260727`
 - PCR02 ACTIVE_LOW_1无H26x流关闭light-meter决策: `projects/pcr02-ssc305/decisions/active-low-1-no-h26x-light-meter-power-gate-20260727.md`; `pcr02-active-low-1-no-h26x-light-meter-power-gate-20260727`
-- PCR02 app_uart 时间同步与低功耗 ACK 槽竞争: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-28-app-uart-time-sync-low-power-busy.md`; `pcr02-app-uart-time-sync-low-power-busy-20260728`
-- PCR02 ACTIVE_LOW_1 COLD 切换耗时优化决策: `projects/xcrz-sigmastar-demo/current/decisions/active-low-1-cold-switch-latency-optimization.md`; `pcr02-active-low-1-cold-switch-latency-optimization-20260728`
-- PCR02 ACTIVE_LOW_1 WARM切换实验决策: `projects/xcrz-sigmastar-demo/current/decisions/active-low-1-warm-switch-experiment.md`; `pcr02-active-low-1-warm-switch-experiment-20260728`
-- PCR02 ACTIVE_LOW_1 HOT切换实验决策: `projects/xcrz-sigmastar-demo/current/decisions/active-low-1-hot-switch-experiment.md`; `pcr02-active-low-1-hot-switch-experiment-20260728`
-- PCR02 1/30fps 代码规范收敛与板级复验: `projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-code-quality-closeout.md`; `pcr02-vi-fps-code-quality-closeout-20260728`
-- PCR02 VI 1/30fps 同步抽象规范收敛验证: `projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-sync-abstraction-closeout.md`; `pcr02-vi-fps-sync-abstraction-closeout-20260728`
-- PCR02 2026-07-28 电机时间戳与低功耗联调收口: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-28-pcr02-motor-uart-low-power-session-closeout.md`; `pcr02-motor-uart-low-power-session-closeout-20260728`
+- PCR02 app_uart 时间同步与低功耗 ACK 槽竞争: `projects/gros/archive/debug/2026-07-28-app-uart-time-sync-low-power-busy.md`; `pcr02-app-uart-time-sync-low-power-busy-20260728`
+- PCR02 ACTIVE_LOW_1 COLD 切换耗时优化决策: `projects/gros/current/decisions/active-low-1-cold-switch-latency-optimization.md`; `pcr02-active-low-1-cold-switch-latency-optimization-20260728`
+- PCR02 ACTIVE_LOW_1 WARM切换实验决策: `projects/gros/current/decisions/active-low-1-warm-switch-experiment.md`; `pcr02-active-low-1-warm-switch-experiment-20260728`
+- PCR02 ACTIVE_LOW_1 HOT切换实验决策: `projects/gros/current/decisions/active-low-1-hot-switch-experiment.md`; `pcr02-active-low-1-hot-switch-experiment-20260728`
+- PCR02 1/30fps 代码规范收敛与板级复验: `projects/gros/validation/2026-07-28-vi-fps-code-quality-closeout.md`; `pcr02-vi-fps-code-quality-closeout-20260728`
+- PCR02 VI 1/30fps 同步抽象规范收敛验证: `projects/gros/validation/2026-07-28-vi-fps-sync-abstraction-closeout.md`; `pcr02-vi-fps-sync-abstraction-closeout-20260728`
+- PCR02 2026-07-28 电机时间戳与低功耗联调收口: `projects/gros/archive/reports/2026-07-28-pcr02-motor-uart-low-power-session-closeout.md`; `pcr02-motor-uart-low-power-session-closeout-20260728`
 - PCR02 BCMDHD suspend 竞态与可启动 SD 边界: `projects/pcr02-ssc305/archive/debug/2026-07-28-bcmdhd-suspend-and-sd-boot-boundary.md`; `pcr02-bcmdhd-suspend-sd-boot-boundary-20260728`
 - GD32L235 WiFi wake shadow 诊断与验证: `projects/gd32l235/archive/debug/2026-07-28-wifi-wake-shadow-validation.md`; `gd32l235-wifi-wake-shadow-validation-20260728`
-- PCR02 1/30fps Pipeline全量整改与板级验证: `projects/xcrz-sigmastar-demo/validation/2026-07-28-vi-fps-full-optimization-closeout.md`; `pcr02-vi-fps-full-optimization-closeout-20260728`
-- PCR02 libmsc Lua RPC释放后使用core分析: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-24-libmsc-lua-rpc-use-after-free.md`; `pcr02-libmsc-lua-rpc-use-after-free-20260724`
-- PCR02 Agora下行音频STARVE与丢尾音分析: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-13-agora-downlink-audio-starve-tail-loss.md`; `pcr02-agora-downlink-audio-starve-tail-loss-20260713`
-- PCR02扫码配网显示状态机缺口分析: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-02-wifi-provision-display-state-gap.md`; `pcr02-wifi-provision-display-state-gap-20260702`
-- PCR02 ZMQ context与mailbox生命周期崩溃分析: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-02-zmq-context-mailbox-lifecycle-crash.md`; `pcr02-zmq-context-mailbox-lifecycle-crash-20260702`
-- PCR02 DVR回放SD热拔插闭环验证: `projects/xcrz-sigmastar-demo/validation/2026-07-15-dvr-replay-sd-hot-unplug-closure.md`; `pcr02-dvr-replay-sd-hot-unplug-closure-20260715`
-- PCR02电机标定静态信息缓存语义验证: `projects/xcrz-sigmastar-demo/validation/2026-07-15-motor-calibration-static-info-cache.md`; `pcr02-motor-calibration-static-info-cache-20260715`
-- PCR02电机Hall校准前置事务验证: `projects/xcrz-sigmastar-demo/validation/2026-07-24-motor-hall-calibration-prestart-transaction.md`; `pcr02-motor-hall-calibration-prestart-transaction-20260724`
-- PCR02 QR_CODE_SN字符校验失败分析: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-28-qr-code-sn-character-validation.md`; `pcr02-qr-code-sn-character-validation-20260728`
-- PCR02老化健康上报与超时契约归档: `projects/xcrz-sigmastar-demo/archive/design/2026-07-17-aging-health-report-timeout-contract.md`; `pcr02-aging-health-report-timeout-contract-20260717`
-- PCR02 AI音频流顺序与EOF语义契约归档: `projects/xcrz-sigmastar-demo/archive/design/2026-07-13-ai-audio-stream-order-eof-contract.md`; `pcr02-ai-audio-stream-order-eof-contract-20260713`
-- PCR02 ACTIVE_LOW_1 Profile Switch Mode当前决策: `projects/xcrz-sigmastar-demo/current/decisions/active-low-1-profile-switch-mode.md`; `pcr02-active-low-1-profile-switch-mode-20260729`
-- PCR02 player 单调时钟与请求确认优化验证: `projects/xcrz-sigmastar-demo/validation/reports/2026-07-29-player-monotonic-sync-validation.md`; `pcr02-player-monotonic-sync-validation-20260729`
-- PCR02 API消息队列并发创建导致Player/UART串消息验证: `projects/xcrz-sigmastar-demo/validation/reports/2026-07-30-api-msg-player-uart-crosstalk-validation.md`; `pcr02-api-msg-player-uart-crosstalk-validation-20260730`
-- PCR02 DEEP_SLEEP ARMED ACK 物理发送完成与 PA15 切电诊断: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-30-deep-sleep-ack-completion.md`; `pcr02-deep-sleep-ack-completion-20260730`
+- PCR02 1/30fps Pipeline全量整改与板级验证: `projects/gros/validation/2026-07-28-vi-fps-full-optimization-closeout.md`; `pcr02-vi-fps-full-optimization-closeout-20260728`
+- PCR02 libmsc Lua RPC释放后使用core分析: `projects/gros/archive/debug/2026-07-24-libmsc-lua-rpc-use-after-free.md`; `pcr02-libmsc-lua-rpc-use-after-free-20260724`
+- PCR02 Agora下行音频STARVE与丢尾音分析: `projects/gros/archive/debug/2026-07-13-agora-downlink-audio-starve-tail-loss.md`; `pcr02-agora-downlink-audio-starve-tail-loss-20260713`
+- PCR02扫码配网显示状态机缺口分析: `projects/gros/archive/debug/2026-07-02-wifi-provision-display-state-gap.md`; `pcr02-wifi-provision-display-state-gap-20260702`
+- PCR02 ZMQ context与mailbox生命周期崩溃分析: `projects/gros/archive/debug/2026-07-02-zmq-context-mailbox-lifecycle-crash.md`; `pcr02-zmq-context-mailbox-lifecycle-crash-20260702`
+- PCR02 DVR回放SD热拔插闭环验证: `projects/gros/validation/2026-07-15-dvr-replay-sd-hot-unplug-closure.md`; `pcr02-dvr-replay-sd-hot-unplug-closure-20260715`
+- PCR02电机标定静态信息缓存语义验证: `projects/gros/validation/2026-07-15-motor-calibration-static-info-cache.md`; `pcr02-motor-calibration-static-info-cache-20260715`
+- PCR02电机Hall校准前置事务验证: `projects/gros/validation/2026-07-24-motor-hall-calibration-prestart-transaction.md`; `pcr02-motor-hall-calibration-prestart-transaction-20260724`
+- PCR02 QR_CODE_SN字符校验失败分析: `projects/gros/archive/debug/2026-07-28-qr-code-sn-character-validation.md`; `pcr02-qr-code-sn-character-validation-20260728`
+- PCR02老化健康上报与超时契约归档: `projects/gros/archive/design/2026-07-17-aging-health-report-timeout-contract.md`; `pcr02-aging-health-report-timeout-contract-20260717`
+- PCR02 AI音频流顺序与EOF语义契约归档: `projects/gros/archive/design/2026-07-13-ai-audio-stream-order-eof-contract.md`; `pcr02-ai-audio-stream-order-eof-contract-20260713`
+- PCR02 ACTIVE_LOW_1 Profile Switch Mode当前决策: `projects/gros/current/decisions/active-low-1-profile-switch-mode.md`; `pcr02-active-low-1-profile-switch-mode-20260729`
+- PCR02 player 单调时钟与请求确认优化验证: `projects/gros/validation/reports/2026-07-29-player-monotonic-sync-validation.md`; `pcr02-player-monotonic-sync-validation-20260729`
+- PCR02 API消息队列并发创建导致Player/UART串消息验证: `projects/gros/validation/reports/2026-07-30-api-msg-player-uart-crosstalk-validation.md`; `pcr02-api-msg-player-uart-crosstalk-validation-20260730`
+- PCR02 DEEP_SLEEP ARMED ACK 物理发送完成与 PA15 切电诊断: `projects/gros/archive/debug/2026-07-30-deep-sleep-ack-completion.md`; `pcr02-deep-sleep-ack-completion-20260730`
 - GD32L235 v1.1.40 NAS 发布记录: `projects/gd32l235/archive/release/2026-07-30-gd32l235-v1.1.40-nas-release.md`; `gd32l235-v1.1.40-nas-release-20260730`
 - GD32L235 智能留电充电唤醒与低电策略归档: `projects/gd32l235/archive/design/2026-07-30-smart-reserve-charge-wakeup.md`; `gd32l235-smart-reserve-charge-wakeup-20260730`
 - Knowledge Hub 全维度评估与持续优化蓝图 2026-07-30: `governance/product/current/knowledge-hub-comprehensive-optimization-assessment-20260730.md`; `knowledge-hub-comprehensive-optimization-assessment-20260730`
 - Knowledge Hub 目标架构与 P1-P3 全量落地计划 2026-07-30: `governance/product/current/knowledge-hub-target-architecture-p1-p3-implementation-20260730.md`; `knowledge-hub-target-architecture-p1-p3-implementation-20260730`
-- PCR02 Sensor 全面测试资产基线: `projects/xcrz-sigmastar-demo/validation/2026-07-30-app-sensor-test-foundation.md`; `pcr02-app-sensor-test-foundation-20260730`
+- PCR02 Sensor 全面测试资产基线: `projects/gros/validation/2026-07-30-app-sensor-test-foundation.md`; `pcr02-app-sensor-test-foundation-20260730`
 - Knowledge Hub 目标架构 P1-P3 落地验证 2026-07-30: `governance/product/validation/knowledge-hub-target-architecture-p1-p3-validation-20260730.md`; `knowledge-hub-target-architecture-p1-p3-validation-20260730`
-- PCR02 Sensor 分层全面测试框架基线: `projects/xcrz-sigmastar-demo/validation/2026-07-30-app-sensor-test-framework.md`; `pcr02-app-sensor-test-framework-20260730`
-- PCR02 Sensor 测试框架 v3 硬切换验证记录: `projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-v3-hard-cut.md`; `pcr02-app-sensor-test-v3-hard-cut-20260731`
+- PCR02 Sensor 分层全面测试框架基线: `projects/gros/validation/2026-07-30-app-sensor-test-framework.md`; `pcr02-app-sensor-test-framework-20260730`
+- PCR02 Sensor 测试框架 v3 硬切换验证记录: `projects/gros/validation/2026-07-31-app-sensor-test-v3-hard-cut.md`; `pcr02-app-sensor-test-v3-hard-cut-20260731`
 - PCR02 active 媒体 CPU 与 VENC 等待优化验证: `projects/pcr02-ssc305/validation/2026-07-31-active-media-cpu-venc-timeout.md`; `pcr02-ssc305-active-media-cpu-venc-timeout-20260731`
-- PCR02 SSC305 物理1fps/30fps VIF Sleep切换优化归档: `projects/xcrz-sigmastar-demo/archive/reports/2026-07-31-pcr02-vi-fps-vif-sleep-optimization.md`; `pcr02-vi-fps-vif-sleep-optimization-20260731`
-- PCR02 Sensor 全面测试框架落地验证记录: `projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-comprehensive-closure.md`; `pcr02-app-sensor-test-comprehensive-closure-20260731`
-- app_sensor_test JSONL v4 与 HIL 证据闭环验证: `projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-v4-evidence-closure.md`; `app-sensor-test-v4-evidence-closure-20260731`
-- PCR02 1/30fps 优化提交推送与最终验收: `projects/xcrz-sigmastar-demo/validation/2026-07-31-vi-fps-publish-validation.md`; `pcr02-vi-fps-publish-validation-20260731`
-- app_sensor_test 选择完整性、构建身份与性能门禁验证: `projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-selection-performance-closure.md`; `app-sensor-test-selection-performance-closure-20260731`
-- app_sensor_test 证据裁决、并发真实性与 CI 硬门禁验证: `projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-evidence-ci-hardcut.md`; `app-sensor-test-evidence-ci-hardcut-20260731`
-- app_sensor_test staged safe 板测 transport 阻塞: `projects/xcrz-sigmastar-demo/validation/2026-07-31-app-sensor-test-board-safe-smoke-blocked.md`; `app-sensor-test-board-safe-smoke-blocked-20260731`
-- PCR02 prog_pcr02 匿名堆持续增长监控记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-31-prog-pcr02-memory-growth-monitoring.md`; `pcr02-prog-pcr02-memory-growth-monitoring-20260731`
+- PCR02 SSC305 物理1fps/30fps VIF Sleep切换优化归档: `projects/gros/archive/reports/2026-07-31-pcr02-vi-fps-vif-sleep-optimization.md`; `pcr02-vi-fps-vif-sleep-optimization-20260731`
+- PCR02 Sensor 全面测试框架落地验证记录: `projects/gros/validation/2026-07-31-app-sensor-test-comprehensive-closure.md`; `pcr02-app-sensor-test-comprehensive-closure-20260731`
+- app_sensor_test JSONL v4 与 HIL 证据闭环验证: `projects/gros/validation/2026-07-31-app-sensor-test-v4-evidence-closure.md`; `app-sensor-test-v4-evidence-closure-20260731`
+- PCR02 1/30fps 优化提交推送与最终验收: `projects/gros/validation/2026-07-31-vi-fps-publish-validation.md`; `pcr02-vi-fps-publish-validation-20260731`
+- app_sensor_test 选择完整性、构建身份与性能门禁验证: `projects/gros/validation/2026-07-31-app-sensor-test-selection-performance-closure.md`; `app-sensor-test-selection-performance-closure-20260731`
+- app_sensor_test 证据裁决、并发真实性与 CI 硬门禁验证: `projects/gros/validation/2026-07-31-app-sensor-test-evidence-ci-hardcut.md`; `app-sensor-test-evidence-ci-hardcut-20260731`
+- app_sensor_test staged safe 板测 transport 阻塞: `projects/gros/validation/2026-07-31-app-sensor-test-board-safe-smoke-blocked.md`; `app-sensor-test-board-safe-smoke-blocked-20260731`
+- PCR02 prog_pcr02 匿名堆持续增长监控记录: `projects/gros/archive/debug/2026-07-31-prog-pcr02-memory-growth-monitoring.md`; `pcr02-prog-pcr02-memory-growth-monitoring-20260731`
 - GD32L235 在桩检测有效但未发生净充电的当前结论: `projects/gd32l235/archive/debug/2026-07-31-dock-detected-without-net-charging-analysis.md`; `gd32l235-dock-detected-without-net-charging-analysis-20260731`
-- PCR02 Sensor audio queue 满与 MI AO 非对齐重试闭环: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-31-pcr02-sensor-audio-queue-ao-retry.md`; `pcr02-sensor-audio-queue-ao-retry-20260731`
+- PCR02 Sensor audio queue 满与 MI AO 非对齐重试闭环: `projects/gros/archive/debug/2026-07-31-pcr02-sensor-audio-queue-ao-retry.md`; `pcr02-sensor-audio-queue-ao-retry-20260731`
 - ADK Token 与上下文工作流优化验证: `projects/agent-dev-kit/validation/2026-08-01-token-context-workflow-optimization.md`; `agent-dev-kit-token-context-workflow-optimization-20260801`
 - TXT 阅读器产品与技术落地方案候选: `notes/personal/2026-08-01-txt-reader-product-and-technical-plan.md`; `txt-reader-product-and-technical-plan-20260801`
 - ADK/Codex/Hub Token 与门禁优化 v2: `projects/agent-dev-kit/validation/2026-08-01-token-context-governance-v2.md`; `agent-dev-kit-token-context-governance-v2-20260801`
 - PCR02 原理图第二批静态优化决策: `projects/pcr02-ssc305/decisions/pcr02-schematic-second-batch-static-optimization-20260802.md`; `pcr02-schematic-second-batch-static-optimization-20260802`
 - PCR02 debug/release rootfs 与 OTA 边界决策: `projects/pcr02-ssc305/decisions/pcr02-debug-release-rootfs-policy-20260803.md`; `pcr02-debug-release-rootfs-policy-20260803`
-- PCR02 Sensor/WiFi 多 WiFi 存储与切换方案评审: `projects/xcrz-sigmastar-demo/current/designs/2026-08-03-pcr02-sensor-wifi-multi-network-design.md`; `pcr02-sensor-wifi-multi-network-design-20260803`
+- PCR02 Sensor/WiFi 多 WiFi 存储与切换方案评审: `projects/gros/current/designs/2026-08-03-pcr02-sensor-wifi-multi-network-design.md`; `pcr02-sensor-wifi-multi-network-design-20260803`
 - PCR02 release 网络恢复与启动时序分析: `projects/pcr02-ssc305/archive/debug/2026-08-03-release-network-and-boot-analysis.md`; `pcr02-release-network-boot-analysis-20260803`
 - PCR02 Release 生产化、安全与性能优化范围: `projects/pcr02-ssc305/decisions/pcr02-release-production-hardening-scope-20260803.md`; `pcr02-release-production-hardening-scope-20260803`
 - GD32L235 POWER_KEY 退出中拨回 ON 的重启收敛: `projects/gd32l235/archive/debug/2026-08-03-power-key-exit-restart-convergence.md`; `gd32l235-power-key-exit-restart-convergence-20260803`
 - PCR02 customer 静态 UBI 卷启动扫描优化候选: `projects/pcr02-ssc305/decisions/pcr02-customer-ubi-startup-optimization-20260803.md`; `pcr02-customer-ubi-startup-optimization-20260803`
 - PCR02 customer UBI 启动优化复核决策候选: `projects/pcr02-ssc305/decisions/pcr02-customer-ubi-startup-optimization-review-20260804.md`; `pcr02-customer-ubi-startup-optimization-review-20260804`
 - GD32L235 与 PCR02 拨动开关 UART 快速交接实现归档: `projects/gd32l235/archive/session/2026-08-04-power-switch-uart-handoff-implementation.md`; `gd32l235-power-switch-uart-handoff-implementation-20260804`
-- daemon 与 prog_ota UART 独占租约验证: `projects/xcrz-sigmastar-demo/validation/2026-08-04-daemon-ota-uart-lease-validation.md`; `daemon-ota-uart-lease-validation-2026-08-04`
+- daemon 与 prog_ota UART 独占租约验证: `projects/gros/validation/2026-08-04-daemon-ota-uart-lease-validation.md`; `daemon-ota-uart-lease-validation-2026-08-04`
 - GD32L235 调试唤醒诊断 Flash 溢出与 OTA 回归记录: `projects/gd32l235/archive/debug/2026-08-04-debug-wakeup-flash-overflow-and-ota-regression.md`; `gd32l235-debug-wakeup-flash-overflow-ota-regression-20260804`
 - GD32L235 Power Diag 独立构建开关决策: `projects/gd32l235/decisions/power-diag-independent-build-switch.md`; `gd32l235-power-diag-independent-build-switch-20260804`
 - GD32L235 APP_EXITED(OFF) 后拨回 ON 的硬恢复缺口: `projects/gd32l235/archive/debug/2026-08-04-power-off-hold-late-on-restart-gap.md`; `gd32l235-power-off-hold-late-on-restart-gap-20260804`
 - PCR02 release 暂时保留 NFS 客户端: `projects/pcr02-ssc305/decisions/2026-08-04-release-nfs-client-retention.md`; `pcr02-release-nfs-client-retention-20260804`
 - PCR02 no-clean 编译与 debug 镜像体积排障: `projects/pcr02-ssc305/archive/debug/2026-08-04-no-clean-and-debug-image-build.md`; `pcr02-no-clean-debug-image-build-20260804`
-- PCR02 AI视频输出帧率联调归档: `projects/xcrz-sigmastar-demo/archive/reports/2026-08-04-ai-video-output-fps-integration.md`; `pcr02-ai-video-output-fps-integration-20260804`
-- prog_pcr02 Common/Proto预编译库不一致排障: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-05-prog-pcr02-common-proto-link-failure.md`; `xcrz-prog-pcr02-common-proto-link-debug-20260805`
+- PCR02 AI视频输出帧率联调归档: `projects/gros/archive/reports/2026-08-04-ai-video-output-fps-integration.md`; `pcr02-ai-video-output-fps-integration-20260804`
+- prog_pcr02 Common/Proto预编译库不一致排障: `projects/gros/archive/debug/2026-08-05-prog-pcr02-common-proto-link-failure.md`; `xcrz-prog-pcr02-common-proto-link-debug-20260805`
 - X5 EVB V2P0 首次启动与固件恢复 Runbook: `domains/embedded/runbooks/x5-evb-v2p0-first-boot.md`; `embedded-x5-evb-v2p0-first-boot-20260805`
 - X5 SDK 下载说明（脱敏版）: `domains/embedded/runbooks/x5-sdk-download.md`; `embedded-x5-sdk-download-20260805`
 - X5 AI Toolchain V1.2.8 下载与完整性验证: `projects/firmware-toolchains/validation/2026-08-05-x5-ai-toolchain-download.md`; `firmware-toolchains-x5-ai-toolchain-download-validation-20260805`
-- PCR02 TCPKA payload 与服务端路由校验优化: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-05-pcr02-tcpka-payload-server-alignment.md`; `pcr02-tcpka-payload-server-alignment-20260805`
+- PCR02 TCPKA payload 与服务端路由校验优化: `projects/gros/archive/debug/2026-08-05-pcr02-tcpka-payload-server-alignment.md`; `pcr02-tcpka-payload-server-alignment-20260805`
 - X5 SDK V1.1.2 GitLab 层级镜像验证: `projects/firmware-toolchains/validation/2026-08-05-x5-v1.1.2-gitlab-mirror.md`; `firmware-toolchains-x5-v1-1-2-gitlab-mirror-validation-20260805`
 - GD32L235 v1.1.41 NAS 发布记录: `projects/gd32l235/archive/release/2026-08-05-gd32l235-v1.1.41-nas-release.md`; `gd32l235-v1.1.41-nas-release-20260805`
 - X5 SDK V1.1.2 固件构建验证: `projects/firmware-toolchains/validation/2026-08-05-x5-v1.1.2-firmware-build.md`; `firmware-toolchains-x5-v1-1-2-firmware-build-20260805`
@@ -488,100 +488,100 @@
 - X5 SDK版本化工作区迁移验证: `projects/firmware-toolchains/validation/2026-08-06-x5-versioned-workspace-migration.md`; `firmware-toolchains-x5-versioned-workspace-migration-20260806`
 - X5 V1.1.2实机前交付闭环: `projects/firmware-toolchains/validation/2026-08-06-x5-pre-board-readiness.md`; `firmware-toolchains-x5-pre-board-readiness-20260806`
 - PCR02 diag 大文件直链下载实现与构建边界验证: `projects/pcr02-ssc305/validation/2026-08-06-diag-curl-large-download.md`; `pcr02-diag-curl-large-download-validation-20260806`
-- PCR02新增QIVW诊断调用后的libmsc链接契约排障: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-06-pcr02-libmsc-link-contract.md`; `xcrz-pcr02-libmsc-link-contract-debug-20260806`
+- PCR02新增QIVW诊断调用后的libmsc链接契约排障: `projects/gros/archive/debug/2026-08-06-pcr02-libmsc-link-contract.md`; `xcrz-pcr02-libmsc-link-contract-debug-20260806`
 - GD32L235 PB12 WL_GPIO4 WoWLAN 引脚契约候选: `projects/gd32l235/current/pb12-wl-gpio4-contract.md`; `gd32l235-pb12-wl-gpio4-contract-20260812`
 - GD32L235 充电温度软硬保护策略决策候选: `projects/gd32l235/decisions/charge-temperature-soft-hard-protection.md`; `gd32l235-charge-temperature-soft-hard-protection-20260812`
 - GD32L235 可配置充电温度软硬保护策略决策候选: `projects/gd32l235/decisions/charge-temperature-configurable-soft-hard-protection.md`; `gd32l235-charge-temperature-configurable-soft-hard-protection-20260812`
-- PCR02 Valgrind OpenSSL ARMv7 计数器与 MI 设备门禁排障记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-12-valgrind-openssl-armv7-tick-mi-device-gate.md`; `pcr02-valgrind-openssl-armv7-tick-mi-device-gate-20260812`
-- PCR02 ASan protobuf 容器注解失配与独立回调崩溃排障记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-12-asan-protobuf-container-annotation-and-callback-segv.md`; `pcr02-asan-protobuf-container-annotation-callback-segv-20260812`
-- PCR02 显示动作自切换导致 nextAction_ 悬空引用: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-12-asan-display-action-nextaction-uaf.md`; `pcr02-asan-display-action-nextaction-uaf-20260812`
-- PCR02 显示动作 UAF 源码修复验证: `projects/xcrz-sigmastar-demo/validation/2026-08-12-asan-display-action-uaf-fix.md`; `pcr02-asan-display-action-uaf-fix-validation-20260812`
-- PCR02 持续视频预览离线与内存池耗尽排障记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-13-pcr02-video-soak-memory-deadlock.md`; `pcr02-video-soak-memory-deadlock-20260813`
-- HDI/HAL 跨平台与 Host 开发测试架构决策候选: `projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813.md`; `pcr02-hdi-hal-cross-platform-host-development-architecture-20260813`
-- HDI/HAL 跨平台与 Host 开发测试方案审查记录: `projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813.md`; `pcr02-hdi-hal-cross-platform-host-development-review-20260813`
-- HDI/HAL 跨平台与 Host 开发测试架构决策候选 v2: `projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v2.md`; `pcr02-hdi-hal-cross-platform-host-development-architecture-20260813-v2`
-- HDI/HAL 跨平台与 Host 开发测试方案审查记录 v2: `projects/xcrz-sigmastar-demo/validation/hdi-hal-cross-platform-host-development-review-20260813-v2.md`; `pcr02-hdi-hal-cross-platform-host-development-review-20260813-v2`
-- Diag、Observability 与 Maintenance 跨平台平面决策候选: `projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813.md`; `pcr02-diag-observability-maintenance-cross-platform-plane-20260813`
-- Diag、Observability 与 Maintenance 平面架构审查记录: `projects/xcrz-sigmastar-demo/validation/diag-observability-maintenance-plane-review-20260813.md`; `pcr02-diag-observability-maintenance-plane-review-20260813`
-- HDI/HAL/Diag 跨平台硬切换与 Host 自动化架构决策候选 v3: `projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v3.md`; `pcr02-hdi-hal-cross-platform-host-development-architecture-20260813-v3`
-- Diag、Observability 与 Maintenance 硬切换平面决策候选 v2: `projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813-v2.md`; `pcr02-diag-observability-maintenance-cross-platform-plane-20260813-v2`
-- HDI/HAL/Diag 硬切换与零残留架构审查记录: `projects/xcrz-sigmastar-demo/validation/hdi-hal-diag-hard-cut-review-20260813.md`; `pcr02-hdi-hal-diag-hard-cut-review-20260813`
-- HDI/HAL/Diag 跨平台硬切换与 Host 自动化最终架构基线 v4: `projects/xcrz-sigmastar-demo/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v4.md`; `pcr02-hdi-hal-cross-platform-host-development-architecture-20260813-v4`
-- Diag Observability Maintenance 跨平台最终平面规范 v3: `projects/xcrz-sigmastar-demo/decisions/diag-observability-maintenance-cross-platform-plane-20260813-v3.md`; `pcr02-diag-observability-maintenance-cross-platform-plane-20260813-v3`
-- HDI/HAL/Diag 跨平台重构最终方案审查与定案: `projects/xcrz-sigmastar-demo/validation/hdi-hal-diag-final-architecture-determination-20260813.md`; `pcr02-hdi-hal-diag-final-architecture-determination-20260813`
-- HDI HAL Diag AI MP4 跨平台硬切最终复审: `projects/xcrz-sigmastar-demo/archive/reports/2026-08-14-hdi-hal-diag-ai-mp4-hard-cut-final-review.md`; `xcrz-hdi-hal-diag-ai-mp4-hard-cut-final-review-20260814`
-- PCR02 WARM低帧率VIF sleep引发CMDQ异常: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-14-warm-vif-sleep-cmdq-regression.md`; `xcrz-pcr02-warm-vif-sleep-cmdq-debug-20260814`
+- PCR02 Valgrind OpenSSL ARMv7 计数器与 MI 设备门禁排障记录: `projects/gros/archive/debug/2026-08-12-valgrind-openssl-armv7-tick-mi-device-gate.md`; `pcr02-valgrind-openssl-armv7-tick-mi-device-gate-20260812`
+- PCR02 ASan protobuf 容器注解失配与独立回调崩溃排障记录: `projects/gros/archive/debug/2026-08-12-asan-protobuf-container-annotation-and-callback-segv.md`; `pcr02-asan-protobuf-container-annotation-callback-segv-20260812`
+- PCR02 显示动作自切换导致 nextAction_ 悬空引用: `projects/gros/archive/debug/2026-08-12-asan-display-action-nextaction-uaf.md`; `pcr02-asan-display-action-nextaction-uaf-20260812`
+- PCR02 显示动作 UAF 源码修复验证: `projects/gros/validation/2026-08-12-asan-display-action-uaf-fix.md`; `pcr02-asan-display-action-uaf-fix-validation-20260812`
+- PCR02 持续视频预览离线与内存池耗尽排障记录: `projects/gros/archive/debug/2026-08-13-pcr02-video-soak-memory-deadlock.md`; `pcr02-video-soak-memory-deadlock-20260813`
+- HDI/HAL 跨平台与 Host 开发测试架构决策候选: `projects/gros/decisions/hdi-hal-cross-platform-host-development-architecture-20260813.md`; `pcr02-hdi-hal-cross-platform-host-development-architecture-20260813`
+- HDI/HAL 跨平台与 Host 开发测试方案审查记录: `projects/gros/validation/hdi-hal-cross-platform-host-development-review-20260813.md`; `pcr02-hdi-hal-cross-platform-host-development-review-20260813`
+- HDI/HAL 跨平台与 Host 开发测试架构决策候选 v2: `projects/gros/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v2.md`; `pcr02-hdi-hal-cross-platform-host-development-architecture-20260813-v2`
+- HDI/HAL 跨平台与 Host 开发测试方案审查记录 v2: `projects/gros/validation/hdi-hal-cross-platform-host-development-review-20260813-v2.md`; `pcr02-hdi-hal-cross-platform-host-development-review-20260813-v2`
+- Diag、Observability 与 Maintenance 跨平台平面决策候选: `projects/gros/decisions/diag-observability-maintenance-cross-platform-plane-20260813.md`; `pcr02-diag-observability-maintenance-cross-platform-plane-20260813`
+- Diag、Observability 与 Maintenance 平面架构审查记录: `projects/gros/validation/diag-observability-maintenance-plane-review-20260813.md`; `pcr02-diag-observability-maintenance-plane-review-20260813`
+- HDI/HAL/Diag 跨平台硬切换与 Host 自动化架构决策候选 v3: `projects/gros/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v3.md`; `pcr02-hdi-hal-cross-platform-host-development-architecture-20260813-v3`
+- Diag、Observability 与 Maintenance 硬切换平面决策候选 v2: `projects/gros/decisions/diag-observability-maintenance-cross-platform-plane-20260813-v2.md`; `pcr02-diag-observability-maintenance-cross-platform-plane-20260813-v2`
+- HDI/HAL/Diag 硬切换与零残留架构审查记录: `projects/gros/validation/hdi-hal-diag-hard-cut-review-20260813.md`; `pcr02-hdi-hal-diag-hard-cut-review-20260813`
+- HDI/HAL/Diag 跨平台硬切换与 Host 自动化最终架构基线 v4: `projects/gros/decisions/hdi-hal-cross-platform-host-development-architecture-20260813-v4.md`; `pcr02-hdi-hal-cross-platform-host-development-architecture-20260813-v4`
+- Diag Observability Maintenance 跨平台最终平面规范 v3: `projects/gros/decisions/diag-observability-maintenance-cross-platform-plane-20260813-v3.md`; `pcr02-diag-observability-maintenance-cross-platform-plane-20260813-v3`
+- HDI/HAL/Diag 跨平台重构最终方案审查与定案: `projects/gros/validation/hdi-hal-diag-final-architecture-determination-20260813.md`; `pcr02-hdi-hal-diag-final-architecture-determination-20260813`
+- HDI HAL Diag AI MP4 跨平台硬切最终复审: `projects/gros/archive/reports/2026-08-14-hdi-hal-diag-ai-mp4-hard-cut-final-review.md`; `xcrz-hdi-hal-diag-ai-mp4-hard-cut-final-review-20260814`
+- PCR02 WARM低帧率VIF sleep引发CMDQ异常: `projects/gros/archive/debug/2026-08-14-warm-vif-sleep-cmdq-regression.md`; `xcrz-pcr02-warm-vif-sleep-cmdq-debug-20260814`
 - X5 GitLab CE 多仓分支保护降级方案: `projects/x5-rdk/current/candidates/2026-08-15-gitlab-ce-branch-protection-fallback.md`; `x5-rdk-gitlab-ce-branch-protection-fallback-20260815`
 - X5 Android repo 引用治理与安全清理: `projects/x5-rdk/current/candidates/2026-08-15-android-repo-manifest-ref-governance.md`; `x5-rdk-android-repo-ref-governance-20260815`
 - X5 供应商资料不可变清单与修订协议: `projects/x5-rdk/current/candidates/2026-08-15-immutable-vendor-manifest-amendment.md`; `x5-rdk-immutable-vendor-manifest-amendment-20260815`
-- PCR02 WARM当前业务负载CMDQ异常V2: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-15-warm-current-workload-cmdq-regression-v2.md`; `xcrz-pcr02-warm-current-workload-cmdq-debug-v2-20260815`
-- OSAL Platform HDI 终版边界与硬切验证: `projects/xcrz-sigmastar-demo/decisions/osal-platform-hdi-final-boundary-20260817.md`; `xcrz-osal-platform-hdi-final-boundary-20260817`
+- PCR02 WARM当前业务负载CMDQ异常V2: `projects/gros/archive/debug/2026-08-15-warm-current-workload-cmdq-regression-v2.md`; `xcrz-pcr02-warm-current-workload-cmdq-debug-v2-20260815`
+- OSAL Platform HDI 终版边界与硬切验证: `projects/gros/decisions/osal-platform-hdi-final-boundary-20260817.md`; `xcrz-osal-platform-hdi-final-boundary-20260817`
 - GD32L235 高温回桩热态充电治理策略决策候选: `projects/gd32l235/decisions/charge-temperature-thermal-governor-20260818.md`; `gd32l235-charge-temperature-thermal-governor-20260818`
 - GD32L235 充电温度保护会话化与 PB10 计时归档: `projects/gd32l235/archive/design/2026-08-20-charge-temperature-session-protection.md`; `gd32l235-charge-temperature-session-protection-20260820`
 - GD32L235 v1.2.0 NAS 发布记录: `projects/gd32l235/archive/release/2026-08-20-gd32l235-v1.2.0-nas-release.md`; `gd32l235-v1.2.0-nas-release-20260820`
-- PCR02恢复出厂WiFi控制阻塞优化: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-20-factory-reset-wifi-control-blocking.md`; `pcr02-factory-reset-wifi-control-blocking-20260820`
-- PCR02 NTP shutdown drain 与 HDI 生命周期修复: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-20-ntp-shutdown-drain-hdi-lifecycle.md`; `pcr02-ntp-shutdown-drain-hdi-lifecycle-20260820`
+- PCR02恢复出厂WiFi控制阻塞优化: `projects/gros/archive/incomplete/2026-08-20-factory-reset-wifi-control-blocking.md`; `pcr02-factory-reset-wifi-control-blocking-20260820`
+- PCR02 NTP shutdown drain 与 HDI 生命周期修复: `projects/gros/archive/debug/2026-08-20-ntp-shutdown-drain-hdi-lifecycle.md`; `pcr02-ntp-shutdown-drain-hdi-lifecycle-20260820`
 - 嵌入式团队知识提升闭环验证: `artifacts/manifests/embedded-team-knowledge-promotion-20260821.md`; `embedded-team-knowledge-promotion-20260821`
 - RDK X5 SDK readiness validation: `projects/x5-rdk/validation/project-readiness.md`; `x5-rdk-readiness-validation-20260713`
 - Agent Dev Kit 团队 Codex Runtime Bundle 分发决策候选: `projects/agent-dev-kit/decisions/codex-team-runtime-distribution-v1-candidate.md`; `agent-dev-kit-codex-team-runtime-distribution-v1`
 - PCR02 温度、充电接触、电机供电及维护模式 v1.16 设计归档: `projects/gd32l235/archive/design/2026-08-22-pcr02-thermal-charge-motor-power-maintenance-v1.16.md`; `gd32l235-pcr02-thermal-charge-motor-maintenance-v116-20260822`
-- PCR02 DEEP_SLEEP TCPKA runtime WoWL host-wake 验证归档: `projects/xcrz-sigmastar-demo/archive/reports/2026-08-26-pcr02-deep-sleep-tcpka-runtime-wowl-hostwake.md`; `pcr02-deep-sleep-tcpka-runtime-wowl-hostwake-20260826`
+- PCR02 DEEP_SLEEP TCPKA runtime WoWL host-wake 验证归档: `projects/gros/archive/reports/2026-08-26-pcr02-deep-sleep-tcpka-runtime-wowl-hostwake.md`; `pcr02-deep-sleep-tcpka-runtime-wowl-hostwake-20260826`
 - PCR02 BDMA CH0 未释放导致 UBIFS 与 /data 阻塞排障记录: `projects/pcr02-ssc305/archive/debug/2026-08-28-bdma-ch0-ubifs-deadlock.md`; `pcr02-bdma-ch0-ubifs-deadlock-20260828`
 - PCR02 MSPI0 泄漏 BDMA CH0 导致 NAND/UBIFS 全局阻塞: `projects/pcr02-ssc305/archive/debug/2026-08-28-pcr02-bdma-ch0-mspi-ubifs-lockup.md`; `pcr02-bdma-ch0-mspi-ubifs-lockup-20260828`
-- PCR02 摄像头老化后白屏的 AE/ISP 初步分析: `projects/xcrz-sigmastar-demo/archive/debug/2026-07-03-pcr02-camera-whiteout-ae-exposure-analysis.md`; `pcr02-camera-whiteout-ae-exposure-analysis-20260703`
-- PCR02 充电待机亮屏后的显示恢复与全量重绘候选: `projects/xcrz-sigmastar-demo/archive/debug/2026-08-29-pcr02-display-resume-redraw.md`; `pcr02-display-resume-redraw-20260829`
-- GROS 单轨跨平台构建硬切换最终方案候选 v1: `projects/xcrz-sigmastar-demo/decisions/gros-single-track-cross-platform-build-hard-cut-20260830-v1.md`; `pcr02-gros-single-track-cross-platform-build-hard-cut-20260830-v1`
-- 四仓 AI 开发资产与团队知识协作候选: `projects/xcrz-sigmastar-demo/decisions/four-repo-ai-coding-team-knowledge-20260905.md`; `pcr02-four-repo-ai-coding-team-knowledge-20260905`
-- 四仓 AI 资产跨平台边界修正候选: `projects/xcrz-sigmastar-demo/decisions/module-ai-platform-boundary-20260906.md`; `module-ai-platform-boundary-20260906`
-- Sensor C++17规范与LLVM Tooling门禁归档: `projects/xcrz-sigmastar-demo/archive/reports/2026-09-07-sensor-cpp17-standard-tooling-closure.md`; `pcr02-sensor-cpp17-standard-tooling-closure-20260907`
-- PCR02 DVR 调度落后与 ring-frame 零拷贝 lease 修复记录: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-08-pcr02-dvr-ringframe-lease-closure.md`; `pcr02-dvr-ringframe-lease-closure-20260908`
+- PCR02 摄像头老化后白屏的 AE/ISP 初步分析: `projects/gros/archive/incomplete/2026-07-03-pcr02-camera-whiteout-ae-exposure-analysis.md`; `pcr02-camera-whiteout-ae-exposure-analysis-20260703`
+- PCR02 充电待机亮屏后的显示恢复与全量重绘候选: `projects/gros/archive/debug/2026-08-29-pcr02-display-resume-redraw.md`; `pcr02-display-resume-redraw-20260829`
+- GROS 单轨跨平台构建硬切换最终方案候选 v1: `projects/gros/decisions/gros-single-track-cross-platform-build-hard-cut-20260830-v1.md`; `pcr02-gros-single-track-cross-platform-build-hard-cut-20260830-v1`
+- 四仓 AI 开发资产与团队知识协作候选: `projects/gros/decisions/four-repo-ai-coding-team-knowledge-20260905.md`; `pcr02-four-repo-ai-coding-team-knowledge-20260905`
+- 四仓 AI 资产跨平台边界修正候选: `projects/gros/decisions/module-ai-platform-boundary-20260906.md`; `module-ai-platform-boundary-20260906`
+- Sensor C++17规范与LLVM Tooling门禁归档: `projects/gros/archive/reports/2026-09-07-sensor-cpp17-standard-tooling-closure.md`; `pcr02-sensor-cpp17-standard-tooling-closure-20260907`
+- PCR02 DVR 调度落后与 ring-frame 零拷贝 lease 修复记录: `projects/gros/archive/debug/2026-09-08-pcr02-dvr-ringframe-lease-closure.md`; `pcr02-dvr-ringframe-lease-closure-20260908`
 - Digital Worker readiness validation: `projects/digital-worker/validation/project-readiness.md`; `digital-worker-readiness-validation-20260713`
 - llm_agent / agent-dev-kit 长期资产架构结论候选: `projects/llm-agent/architecture/llm-agent-adk-target-architecture.md`; `llm-agent-adk-target-architecture`
-- PCR02 公开 WiFi 跨 API 安全类型契约验证: `projects/xcrz-sigmastar-demo/validation/2026-09-14-public-wifi-security-contract.md`; `pcr02-public-wifi-security-contract-20260914`
-- PCR02 公开 WiFi 凭据安全类型有界扫描验证: `projects/xcrz-sigmastar-demo/validation/2026-09-14-public-wifi-bounded-security-scan.md`; `pcr02-public-wifi-bounded-security-scan-20260914`
-- AISpeech AEC RES 24样本分层验证: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-15-aispeech-aec-res-24-sample-split.md`; `pcr02-aispeech-aec-res-24-sample-split-20260915`
-- AISpeech AEC RES 失败样本鉴别器边界: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-15-aispeech-aec-res-failure-discriminator-boundary.md`; `pcr02-aispeech-aec-res-failure-discriminator-20260915`
-- AISpeech 四轨 reference delay 置信度边界: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-15-aispeech-reference-delay-confidence-boundary.md`; `pcr02-aispeech-reference-delay-confidence-20260915`
-- PCR02 公开 WiFi 扫描 teardown 状态机验证: `projects/xcrz-sigmastar-demo/validation/2026-09-15-public-wifi-scan-teardown.md`; `pcr02-public-wifi-scan-teardown-20260915`
-- AISpeech 双麦播放交互与通话审查: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-20-aispeech-dualmic-playback-review.md`; `pcr02-aispeech-dualmic-playback-review-20260920`
-- AISpeech NR 数值边界修复与声学门禁复核: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-20-aispeech-nr-numeric-review.md`; `pcr02-aispeech-nr-numeric-review-20260920`
-- AISpeech 声学评分对齐修复与 DTD 释放候选否决: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-20-aispeech-quality-timeline-review.md`; `pcr02-aispeech-quality-timeline-review-20260920`
-- AISpeech DTD 条件释放候选与 Host 构建隔离修复: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-20-aispeech-dtd-conditional-release-review.md`; `pcr02-aispeech-dtd-conditional-release-review-20260920`
-- AISpeech DTD 原始判决、保持和无效历史状态归因: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-20-aispeech-dtd-attribution-review.md`; `pcr02-aispeech-dtd-attribution-review-20260920`
-- AISpeech fileid 4 对齐对照与四轨评估器加固: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-file4-delay-review.md`; `pcr02-aispeech-file4-delay-review-20260921`
-- AISpeech 回声覆盖区间与非线性留出对照: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-echo-model-review.md`; `pcr02-aispeech-echo-model-review-20260921`
-- AISpeech 全链路源码审查与确定性修复: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-full-chain-review.md`; `pcr02-aispeech-full-chain-review-20260921`
-- AISpeech 产品 ABI 接入与构建阻断: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-product-abi-integration.md`; `pcr02-aispeech-product-abi-20260921`
-- AISpeech CALL VAD 状态导出及 HDI 接入: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-vad-contract.md`; `pcr02-aispeech-vad-contract-20260921`
-- AISpeech AGC 窗口优化验证: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-agc-window-review.md`; `aispeech-agc-window-review-20260921`
-- AISpeech BF 数值与资源契约验证: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-bf-numeric-review.md`; `aispeech-bf-numeric-review-20260921`
-- AISpeech NR NN 过渡与弱语音观测: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-tail-transition-review.md`; `aispeech-tail-transition-review-20260921`
-- AISpeech AGC全零增益归因与候选: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-agc-attribution-review.md`; `aispeech-agc-attribution-review-20260921`
-- AISpeech AGC起始恢复与微幅输入边界: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-agc-onset-review.md`; `aispeech-agc-onset-review-20260921`
-- AISpeech AGC整链起始验证与候选拒绝: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-agc-chain-onset-review.md`; `aispeech-agc-chain-onset-review-20260921`
-- AISpeech AGC低输入增益与VAD耦合候选: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-agc-low-input-review.md`; `aispeech-agc-low-input-review-20260921`
-- AISpeech AGC联合指标与试听工件: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-agc-joint-review.md`; `aispeech-agc-joint-review-20260921`
-- AISpeech样本18身份与电平核查: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-id18-identity-review.md`; `aispeech-id18-identity-review-20260921`
-- AISpeech AGC清晰度反馈与补偿边界: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-agc-audibility-review.md`; `aispeech-agc-audibility-review-20260921`
-- AISpeech非AGC环节审查与下一阶段重点: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-next-stage-audit.md`; `aispeech-next-stage-audit-20260921`
-- AISpeech五方向全面推进与分层门禁: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-comprehensive-review.md`; `aispeech-comprehensive-review-20260921`
-- AISpeech ARM权重符号修复与板端恢复验证: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-board-sign-review.md`; `aispeech-board-sign-review-20260921`
-- AISpeech迁入新媒体主线与产品链接验证: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-mainline-integration-review.md`; `aispeech-mainline-integration-review-20260921`
-- 音频候选迁回开发路径与验证边界: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-aispeech-devpath-port-review.md`; `aispeech-devpath-port-review-20260921`
-- 音频接口中立命名修正: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-audio-neutral-naming-review.md`; `audio-neutral-naming-review-20260921`
-- 音频中立命名最终修订：保留原构建配置: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-audio-neutral-naming-final.md`; `audio-neutral-naming-final-20260921`
-- 音频配置命名全面统一与验证: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-audio-profile-naming-complete.md`; `audio-profile-naming-complete-20260921`
-- 音频场景采集第一阶段实现与验证: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-audio-test-phase1-implementation.md`; `audio-test-phase1-implementation-20260921`
-- 音频采集工具实现审查与修复: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-audio-test-review-fixes.md`; `audio-test-review-fixes-20260921`
-- 音频采集完整性与退出取消复审: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-21-audio-test-capture-integrity-review.md`; `audio-test-capture-integrity-review-20260921`
-- 音频场景采集工具完整使用指南: `projects/xcrz-sigmastar-demo/current/runbooks/app-audio-test-usage-guide.md`; `app-audio-test-usage-guide-20260922`
-- 音频采集首帧覆盖与备注输入治理: `projects/xcrz-sigmastar-demo/archive/debug/2026-09-24-audio-capture-start-and-note-governance.md`; `audio-capture-start-and-note-governance-20260924`
+- PCR02 公开 WiFi 跨 API 安全类型契约验证: `projects/gros/archive/incomplete/2026-09-14-public-wifi-security-contract.md`; `pcr02-public-wifi-security-contract-20260914`
+- PCR02 公开 WiFi 凭据安全类型有界扫描验证: `projects/gros/archive/incomplete/2026-09-14-public-wifi-bounded-security-scan.md`; `pcr02-public-wifi-bounded-security-scan-20260914`
+- AISpeech AEC RES 24样本分层验证: `projects/gros/archive/debug/2026-09-15-aispeech-aec-res-24-sample-split.md`; `pcr02-aispeech-aec-res-24-sample-split-20260915`
+- AISpeech AEC RES 失败样本鉴别器边界: `projects/gros/archive/debug/2026-09-15-aispeech-aec-res-failure-discriminator-boundary.md`; `pcr02-aispeech-aec-res-failure-discriminator-20260915`
+- AISpeech 四轨 reference delay 置信度边界: `projects/gros/archive/debug/2026-09-15-aispeech-reference-delay-confidence-boundary.md`; `pcr02-aispeech-reference-delay-confidence-20260915`
+- PCR02 公开 WiFi 扫描 teardown 状态机验证: `projects/gros/archive/incomplete/2026-09-15-public-wifi-scan-teardown.md`; `pcr02-public-wifi-scan-teardown-20260915`
+- AISpeech 双麦播放交互与通话审查: `projects/gros/archive/debug/2026-09-20-aispeech-dualmic-playback-review.md`; `pcr02-aispeech-dualmic-playback-review-20260920`
+- AISpeech NR 数值边界修复与声学门禁复核: `projects/gros/archive/debug/2026-09-20-aispeech-nr-numeric-review.md`; `pcr02-aispeech-nr-numeric-review-20260920`
+- AISpeech 声学评分对齐修复与 DTD 释放候选否决: `projects/gros/archive/debug/2026-09-20-aispeech-quality-timeline-review.md`; `pcr02-aispeech-quality-timeline-review-20260920`
+- AISpeech DTD 条件释放候选与 Host 构建隔离修复: `projects/gros/archive/debug/2026-09-20-aispeech-dtd-conditional-release-review.md`; `pcr02-aispeech-dtd-conditional-release-review-20260920`
+- AISpeech DTD 原始判决、保持和无效历史状态归因: `projects/gros/archive/debug/2026-09-20-aispeech-dtd-attribution-review.md`; `pcr02-aispeech-dtd-attribution-review-20260920`
+- AISpeech fileid 4 对齐对照与四轨评估器加固: `projects/gros/archive/debug/2026-09-21-aispeech-file4-delay-review.md`; `pcr02-aispeech-file4-delay-review-20260921`
+- AISpeech 回声覆盖区间与非线性留出对照: `projects/gros/archive/debug/2026-09-21-aispeech-echo-model-review.md`; `pcr02-aispeech-echo-model-review-20260921`
+- AISpeech 全链路源码审查与确定性修复: `projects/gros/archive/debug/2026-09-21-aispeech-full-chain-review.md`; `pcr02-aispeech-full-chain-review-20260921`
+- AISpeech 产品 ABI 接入与构建阻断: `projects/gros/archive/debug/2026-09-21-aispeech-product-abi-integration.md`; `pcr02-aispeech-product-abi-20260921`
+- AISpeech CALL VAD 状态导出及 HDI 接入: `projects/gros/archive/debug/2026-09-21-aispeech-vad-contract.md`; `pcr02-aispeech-vad-contract-20260921`
+- AISpeech AGC 窗口优化验证: `projects/gros/archive/debug/2026-09-21-aispeech-agc-window-review.md`; `aispeech-agc-window-review-20260921`
+- AISpeech BF 数值与资源契约验证: `projects/gros/archive/debug/2026-09-21-aispeech-bf-numeric-review.md`; `aispeech-bf-numeric-review-20260921`
+- AISpeech NR NN 过渡与弱语音观测: `projects/gros/archive/debug/2026-09-21-aispeech-tail-transition-review.md`; `aispeech-tail-transition-review-20260921`
+- AISpeech AGC全零增益归因与候选: `projects/gros/archive/debug/2026-09-21-aispeech-agc-attribution-review.md`; `aispeech-agc-attribution-review-20260921`
+- AISpeech AGC起始恢复与微幅输入边界: `projects/gros/archive/debug/2026-09-21-aispeech-agc-onset-review.md`; `aispeech-agc-onset-review-20260921`
+- AISpeech AGC整链起始验证与候选拒绝: `projects/gros/archive/debug/2026-09-21-aispeech-agc-chain-onset-review.md`; `aispeech-agc-chain-onset-review-20260921`
+- AISpeech AGC低输入增益与VAD耦合候选: `projects/gros/archive/debug/2026-09-21-aispeech-agc-low-input-review.md`; `aispeech-agc-low-input-review-20260921`
+- AISpeech AGC联合指标与试听工件: `projects/gros/archive/debug/2026-09-21-aispeech-agc-joint-review.md`; `aispeech-agc-joint-review-20260921`
+- AISpeech样本18身份与电平核查: `projects/gros/archive/debug/2026-09-21-aispeech-id18-identity-review.md`; `aispeech-id18-identity-review-20260921`
+- AISpeech AGC清晰度反馈与补偿边界: `projects/gros/archive/debug/2026-09-21-aispeech-agc-audibility-review.md`; `aispeech-agc-audibility-review-20260921`
+- AISpeech非AGC环节审查与下一阶段重点: `projects/gros/archive/debug/2026-09-21-aispeech-next-stage-audit.md`; `aispeech-next-stage-audit-20260921`
+- AISpeech五方向全面推进与分层门禁: `projects/gros/archive/debug/2026-09-21-aispeech-comprehensive-review.md`; `aispeech-comprehensive-review-20260921`
+- AISpeech ARM权重符号修复与板端恢复验证: `projects/gros/archive/debug/2026-09-21-aispeech-board-sign-review.md`; `aispeech-board-sign-review-20260921`
+- AISpeech迁入新媒体主线与产品链接验证: `projects/gros/archive/debug/2026-09-21-aispeech-mainline-integration-review.md`; `aispeech-mainline-integration-review-20260921`
+- 音频候选迁回开发路径与验证边界: `projects/gros/archive/debug/2026-09-21-aispeech-devpath-port-review.md`; `aispeech-devpath-port-review-20260921`
+- 音频接口中立命名修正: `projects/gros/archive/debug/2026-09-21-audio-neutral-naming-review.md`; `audio-neutral-naming-review-20260921`
+- 音频中立命名最终修订：保留原构建配置: `projects/gros/archive/debug/2026-09-21-audio-neutral-naming-final.md`; `audio-neutral-naming-final-20260921`
+- 音频配置命名全面统一与验证: `projects/gros/archive/debug/2026-09-21-audio-profile-naming-complete.md`; `audio-profile-naming-complete-20260921`
+- 音频场景采集第一阶段实现与验证: `projects/gros/archive/debug/2026-09-21-audio-test-phase1-implementation.md`; `audio-test-phase1-implementation-20260921`
+- 音频采集工具实现审查与修复: `projects/gros/archive/debug/2026-09-21-audio-test-review-fixes.md`; `audio-test-review-fixes-20260921`
+- 音频采集完整性与退出取消复审: `projects/gros/archive/debug/2026-09-21-audio-test-capture-integrity-review.md`; `audio-test-capture-integrity-review-20260921`
+- 音频场景采集工具完整使用指南: `projects/gros/current/runbooks/app-audio-test-usage-guide.md`; `app-audio-test-usage-guide-20260922`
+- 音频采集首帧覆盖与备注输入治理: `projects/gros/archive/debug/2026-09-24-audio-capture-start-and-note-governance.md`; `audio-capture-start-and-note-governance-20260924`
 - 第二产品 MCU 研发基础设施建设计划: `projects/mcu/decisions/second-product-engineering-foundation-plan.md`; `mcu-second-product-engineering-foundation-plan-20260924`
 - ADK 与 Codex 四仓来源和运行资产门禁验证: `domains/codex/validation/adk-four-repo-source-live-2026-09-27.md`; `adk-four-repo-source-live-validation-20260927`
-- PCR02 Valgrind 调试指导: `projects/xcrz-sigmastar-demo/current/runbooks/valgrind-debug-guide.md`; `pcr02-valgrind-debug-guide-20260929`
+- PCR02 Valgrind 调试指导: `projects/gros/current/runbooks/valgrind-debug-guide.md`; `pcr02-valgrind-debug-guide-20260929`
 - Provider 候选归档与 Runtime intake 自动化验证: `governance/product/validation/provider-knowledge-hub-a8edf99197b5ebb7b44dca52.md`; `provider-knowledge-hub-a8edf99197b5ebb7b44dca52`
 - ADK 主分支同步与验证边界审查候选: `projects/llm-agent/archive/provider-llm-agent-85cdfb6aec9222231a5a7243.md`; `provider-llm-agent-85cdfb6aec9222231a5a7243`
-- 本地 GROS 构建与制品交付审查验证: `projects/xcrz-sigmastar-demo/validation/provider-xcrz-sigmastar-demo-6fe2c665cc326326e1fa22e2.md`; `provider-xcrz-sigmastar-demo-6fe2c665cc326326e1fa22e2`
+- 本地 GROS 构建与制品交付审查验证: `projects/gros/validation/provider-gros-6fe2c665cc326326e1fa22e2.md`; `provider-gros-6fe2c665cc326326e1fa22e2`
 - llm_agent / ADK 优化闭环候选: `projects/llm-agent/validation/provider-llm-agent-94244aa67d60c96f9375bcc7.md`; `provider-llm-agent-94244aa67d60c96f9375bcc7`
 - llm_agent / ADK 内外部审查与迭代记录: `projects/llm-agent/validation/provider-llm-agent-f703aef64b44092a82ffe439.md`; `provider-llm-agent-f703aef64b44092a82ffe439`
 - Knowledge Hub 可靠性与运营自动化优化验证 2026-10-06: `governance/product/validation/provider-knowledge-hub-59b973037d5b9d11b551bd39.md`; `provider-knowledge-hub-59b973037d5b9d11b551bd39`
@@ -608,70 +608,70 @@
 - 默认配置与执行日志修复交付应用闭环: `domains/codex/validation/provider-codex-f8fab5f7ef5796515f389169.md`; `provider-codex-f8fab5f7ef5796515f389169`
 - 资格工具修复与已有签名证据接入: `projects/llm-agent/validation/provider-llm-agent-af374aa724c6b6f6701a408f.md`; `provider-llm-agent-af374aa724c6b6f6701a408f`
 - 资格工具源码交付与main运行入口回读: `projects/llm-agent/validation/provider-llm-agent-8d83f3e3a9acd15106bf204c.md`; `provider-llm-agent-8d83f3e3a9acd15106bf204c`
-- AISpeech 离线优化续办核验: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-dfe38ae5f8e4bbe3ce5f1ec4.md`; `provider-xcrz-sigmastar-demo-dfe38ae5f8e4bbe3ce5f1ec4`
+- AISpeech 离线优化续办核验: `projects/gros/archive/provider-gros-dfe38ae5f8e4bbe3ce5f1ec4.md`; `provider-gros-dfe38ae5f8e4bbe3ce5f1ec4`
 - Knowledge Hub 恢复安全与自然问句检索优化验证: `governance/product/validation/provider-knowledge-hub-fe3802e55deaf44d2a249146.md`; `provider-knowledge-hub-fe3802e55deaf44d2a249146`
-- CALL 回声继续优化：配对实验与恢复复验: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-0020b56bd8371c2253089016.md`; `provider-xcrz-sigmastar-demo-0020b56bd8371c2253089016`
-- CALL 回声优化补充实验 v3: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-9bb41d2281ce7dc4e87d376b.md`; `provider-xcrz-sigmastar-demo-9bb41d2281ce7dc4e87d376b`
-- 参考独立 aec/src 的 CALL AEC 对照与修复: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-da6450a639df9a0b35b1b6e9.md`; `provider-xcrz-sigmastar-demo-da6450a639df9a0b35b1b6e9`
-- CALL 低延迟分块卷积的数学、接口及质量对照: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-cb4606d4a79c53923e6f7d0a.md`; `provider-xcrz-sigmastar-demo-cb4606d4a79c53923e6f7d0a`
-- CALL AEC 独立稳定性与完整尾链复验 v6: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-3034b09d1906b76f541864e5.md`; `provider-xcrz-sigmastar-demo-3034b09d1906b76f541864e5`
+- CALL 回声继续优化：配对实验与恢复复验: `projects/gros/archive/provider-gros-0020b56bd8371c2253089016.md`; `provider-gros-0020b56bd8371c2253089016`
+- CALL 回声优化补充实验 v3: `projects/gros/archive/provider-gros-9bb41d2281ce7dc4e87d376b.md`; `provider-gros-9bb41d2281ce7dc4e87d376b`
+- 参考独立 aec/src 的 CALL AEC 对照与修复: `projects/gros/archive/provider-gros-da6450a639df9a0b35b1b6e9.md`; `provider-gros-da6450a639df9a0b35b1b6e9`
+- CALL 低延迟分块卷积的数学、接口及质量对照: `projects/gros/archive/provider-gros-cb4606d4a79c53923e6f7d0a.md`; `provider-gros-cb4606d4a79c53923e6f7d0a`
+- CALL AEC 独立稳定性与完整尾链复验 v6: `projects/gros/archive/provider-gros-3034b09d1906b76f541864e5.md`; `provider-gros-3034b09d1906b76f541864e5`
 - Knowledge Hub AI 自动推进准备与每日维护接入: `governance/product/validation/provider-knowledge-hub-2ec8479ec63e11add7435c69.md`; `provider-knowledge-hub-2ec8479ec63e11add7435c69`
-- CALL 阶段归因与两个候选的资格审查 v7: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-7a101780867bc5c6b67fa3df.md`; `provider-xcrz-sigmastar-demo-7a101780867bc5c6b67fa3df`
-- CALL 原生 AEC 权重因果取证 v8: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-e818d33540ae257957f7e50e.md`; `provider-xcrz-sigmastar-demo-e818d33540ae257957f7e50e`
+- CALL 阶段归因与两个候选的资格审查 v7: `projects/gros/archive/provider-gros-7a101780867bc5c6b67fa3df.md`; `provider-gros-7a101780867bc5c6b67fa3df`
+- CALL 原生 AEC 权重因果取证 v8: `projects/gros/archive/provider-gros-e818d33540ae257957f7e50e.md`; `provider-gros-e818d33540ae257957f7e50e`
 - AI 内容预审批次与自动收口边界: `governance/product/validation/provider-knowledge-hub-84f3e5f2ba074e0098caa2a7.md`; `provider-knowledge-hub-84f3e5f2ba074e0098caa2a7`
-- CALL 尾链单模块归因与目标投影 v9: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-572f16a62b72085df28cb410.md`; `provider-xcrz-sigmastar-demo-572f16a62b72085df28cb410`
-- CALL 选择性频谱增益机制验证 v10: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-9ce2d728807eff6bc0ff07ec.md`; `provider-xcrz-sigmastar-demo-9ce2d728807eff6bc0ff07ec`
-- CALL 无真值增益预测完整链验证 v11: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-44d6470b6db5ac82cf2340a8.md`; `provider-xcrz-sigmastar-demo-44d6470b6db5ac82cf2340a8`
-- CALL 短时相位特征与失败分层 v12: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-a3664b37ed8cf10fff847628.md`; `provider-xcrz-sigmastar-demo-a3664b37ed8cf10fff847628`
-- CALL 逐例保护、AGC交互及独立验证 v13-v16: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-e005268fa28eea1afdec9982.md`; `provider-xcrz-sigmastar-demo-e005268fa28eea1afdec9982`
+- CALL 尾链单模块归因与目标投影 v9: `projects/gros/archive/provider-gros-572f16a62b72085df28cb410.md`; `provider-gros-572f16a62b72085df28cb410`
+- CALL 选择性频谱增益机制验证 v10: `projects/gros/archive/provider-gros-9ce2d728807eff6bc0ff07ec.md`; `provider-gros-9ce2d728807eff6bc0ff07ec`
+- CALL 无真值增益预测完整链验证 v11: `projects/gros/archive/provider-gros-44d6470b6db5ac82cf2340a8.md`; `provider-gros-44d6470b6db5ac82cf2340a8`
+- CALL 短时相位特征与失败分层 v12: `projects/gros/archive/provider-gros-a3664b37ed8cf10fff847628.md`; `provider-gros-a3664b37ed8cf10fff847628`
+- CALL 逐例保护、AGC交互及独立验证 v13-v16: `projects/gros/archive/provider-gros-e005268fa28eea1afdec9982.md`; `provider-gros-e005268fa28eea1afdec9982`
 - 证据缺口盘点与复核推进记录: `governance/product/validation/provider-knowledge-hub-53614ab9b8bbfe84e2d5d091.md`; `provider-knowledge-hub-53614ab9b8bbfe84e2d5d091`
 - 使用记录驱动的M5试点候选筛选与采集边界: `projects/llm-agent/validation/provider-llm-agent-0b4e789c64d998ea9f138e05.md`; `provider-llm-agent-0b4e789c64d998ea9f138e05`
-- CALL final PCM projection constraints v17: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-51f615b199ee7b4f1f5a5ac1.md`; `provider-xcrz-sigmastar-demo-51f615b199ee7b4f1f5a5ac1`
-- CALL final PCM protected candidate v19: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-2d0fd6fc97ed64db46486648.md`; `provider-xcrz-sigmastar-demo-2d0fd6fc97ed64db46486648`
-- Correction-bound experiment and broader regression v20: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-9870d3d881535a3b0b25b5ff.md`; `provider-xcrz-sigmastar-demo-9870d3d881535a3b0b25b5ff`
-- Expanded136 strict final-PCM fit v21: rejected: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-21757d955c1e22b5a7df9ab9.md`; `provider-xcrz-sigmastar-demo-21757d955c1e22b5a7df9ab9`
-- Analytic0.08dB reserve v22: reject borderline far case: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-6a4cce1a3723e96391982070.md`; `provider-xcrz-sigmastar-demo-6a4cce1a3723e96391982070`
-- Fixed numerical reserve v23: development pass, independent DT failure: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-604d21daced165c4af8b3645.md`; `provider-xcrz-sigmastar-demo-604d21daced165c4af8b3645`
-- Fixed smooth prior v24: reject residual907 DT failure: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-5f6e072137716dd1ecb29b33.md`; `provider-xcrz-sigmastar-demo-5f6e072137716dd1ecb29b33`
-- v25：160 例回归通过，新的 24 例否决采用: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-794e3fa5cff7a70c528d5ccb.md`; `provider-xcrz-sigmastar-demo-794e3fa5cff7a70c528d5ccb`
-- v26 固定双讲保护：证明需要重建拟合几何: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-5e78cdad3e394cbb929439e4.md`; `provider-xcrz-sigmastar-demo-5e78cdad3e394cbb929439e4`
-- v27：固定双讲保护新几何未达到远端收益: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-855c2f450f361ad38ffc6c91.md`; `provider-xcrz-sigmastar-demo-855c2f450f361ad38ffc6c91`
-- v28 直接 SI 锥候选：实际回归拒绝: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-52e3165db16e1ec7e2d235f5.md`; `provider-xcrz-sigmastar-demo-52e3165db16e1ec7e2d235f5`
-- v29：扩大开发覆盖后的固定 SI 锥候选: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-d859af95f78c8156d962baa9.md`; `provider-xcrz-sigmastar-demo-d859af95f78c8156d962baa9`
-- v30固定算术组约束负结果: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-16a604851d70f6ea7381792a.md`; `provider-xcrz-sigmastar-demo-16a604851d70f6ea7381792a`
-- v31：开发完整通过，保留独立集双讲失败: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-08b04efa5eb99b197ccce4e4.md`; `provider-xcrz-sigmastar-demo-08b04efa5eb99b197ccce4e4`
-- v32：上一整Feed对齐的shadow DTD逐帧诊断: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-79733f5904388a2bd972cd0f.md`; `provider-xcrz-sigmastar-demo-79733f5904388a2bd972cd0f`
-- v33：固定平滑 echo 占优保护未通过: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-64a79d0c39aa032433a4a086.md`; `provider-xcrz-sigmastar-demo-64a79d0c39aa032433a4a086`
-- v34：切换归因与固定保护条件的收益上限: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-2be9c079bb361ccf1ee6a8ad.md`; `provider-xcrz-sigmastar-demo-2be9c079bb361ccf1ee6a8ad`
-- v35：瞬时残差保护未通过: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-465bd4ca70156a64a0b84fdc.md`; `provider-xcrz-sigmastar-demo-465bd4ca70156a64a0b84fdc`
-- v36：实际 raw mic / estimated echo 归一化复相干性观察: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-11ac3e3aa0793cf3aa17188f.md`; `provider-xcrz-sigmastar-demo-11ac3e3aa0793cf3aa17188f`
-- v37：复相干性连续混合仍未通过: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-065e64ca16e5bc74491b24dd.md`; `provider-xcrz-sigmastar-demo-065e64ca16e5bc74491b24dd`
-- v39：已保留小幅消回声优化候选: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-95a5c0ea0390142335570b21.md`; `provider-xcrz-sigmastar-demo-95a5c0ea0390142335570b21`
-- v40 接力：安全小幅候选已保留，置信度几何仍待完整拟合: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-a98cedb3e1b28a343ca8499c.md`; `provider-xcrz-sigmastar-demo-a98cedb3e1b28a343ca8499c`
+- CALL final PCM projection constraints v17: `projects/gros/archive/provider-gros-51f615b199ee7b4f1f5a5ac1.md`; `provider-gros-51f615b199ee7b4f1f5a5ac1`
+- CALL final PCM protected candidate v19: `projects/gros/archive/provider-gros-2d0fd6fc97ed64db46486648.md`; `provider-gros-2d0fd6fc97ed64db46486648`
+- Correction-bound experiment and broader regression v20: `projects/gros/archive/provider-gros-9870d3d881535a3b0b25b5ff.md`; `provider-gros-9870d3d881535a3b0b25b5ff`
+- Expanded136 strict final-PCM fit v21: rejected: `projects/gros/archive/provider-gros-21757d955c1e22b5a7df9ab9.md`; `provider-gros-21757d955c1e22b5a7df9ab9`
+- Analytic0.08dB reserve v22: reject borderline far case: `projects/gros/archive/provider-gros-6a4cce1a3723e96391982070.md`; `provider-gros-6a4cce1a3723e96391982070`
+- Fixed numerical reserve v23: development pass, independent DT failure: `projects/gros/archive/provider-gros-604d21daced165c4af8b3645.md`; `provider-gros-604d21daced165c4af8b3645`
+- Fixed smooth prior v24: reject residual907 DT failure: `projects/gros/archive/provider-gros-5f6e072137716dd1ecb29b33.md`; `provider-gros-5f6e072137716dd1ecb29b33`
+- v25：160 例回归通过，新的 24 例否决采用: `projects/gros/archive/provider-gros-794e3fa5cff7a70c528d5ccb.md`; `provider-gros-794e3fa5cff7a70c528d5ccb`
+- v26 固定双讲保护：证明需要重建拟合几何: `projects/gros/archive/provider-gros-5e78cdad3e394cbb929439e4.md`; `provider-gros-5e78cdad3e394cbb929439e4`
+- v27：固定双讲保护新几何未达到远端收益: `projects/gros/archive/provider-gros-855c2f450f361ad38ffc6c91.md`; `provider-gros-855c2f450f361ad38ffc6c91`
+- v28 直接 SI 锥候选：实际回归拒绝: `projects/gros/archive/provider-gros-52e3165db16e1ec7e2d235f5.md`; `provider-gros-52e3165db16e1ec7e2d235f5`
+- v29：扩大开发覆盖后的固定 SI 锥候选: `projects/gros/archive/provider-gros-d859af95f78c8156d962baa9.md`; `provider-gros-d859af95f78c8156d962baa9`
+- v30固定算术组约束负结果: `projects/gros/archive/provider-gros-16a604851d70f6ea7381792a.md`; `provider-gros-16a604851d70f6ea7381792a`
+- v31：开发完整通过，保留独立集双讲失败: `projects/gros/archive/provider-gros-08b04efa5eb99b197ccce4e4.md`; `provider-gros-08b04efa5eb99b197ccce4e4`
+- v32：上一整Feed对齐的shadow DTD逐帧诊断: `projects/gros/archive/provider-gros-79733f5904388a2bd972cd0f.md`; `provider-gros-79733f5904388a2bd972cd0f`
+- v33：固定平滑 echo 占优保护未通过: `projects/gros/archive/provider-gros-64a79d0c39aa032433a4a086.md`; `provider-gros-64a79d0c39aa032433a4a086`
+- v34：切换归因与固定保护条件的收益上限: `projects/gros/archive/provider-gros-2be9c079bb361ccf1ee6a8ad.md`; `provider-gros-2be9c079bb361ccf1ee6a8ad`
+- v35：瞬时残差保护未通过: `projects/gros/archive/provider-gros-465bd4ca70156a64a0b84fdc.md`; `provider-gros-465bd4ca70156a64a0b84fdc`
+- v36：实际 raw mic / estimated echo 归一化复相干性观察: `projects/gros/archive/provider-gros-11ac3e3aa0793cf3aa17188f.md`; `provider-gros-11ac3e3aa0793cf3aa17188f`
+- v37：复相干性连续混合仍未通过: `projects/gros/archive/provider-gros-065e64ca16e5bc74491b24dd.md`; `provider-gros-065e64ca16e5bc74491b24dd`
+- v39：已保留小幅消回声优化候选: `projects/gros/archive/provider-gros-95a5c0ea0390142335570b21.md`; `provider-gros-95a5c0ea0390142335570b21`
+- v40 接力：安全小幅候选已保留，置信度几何仍待完整拟合: `projects/gros/archive/provider-gros-a98cedb3e1b28a343ca8499c.md`; `provider-gros-a98cedb3e1b28a343ca8499c`
 - M5执行来源与Gitlink身份修复验证闭环: `projects/llm-agent/validation/provider-llm-agent-6295def9bb30a2c212be9cf6.md`; `provider-llm-agent-6295def9bb30a2c212be9cf6`
-- v41：完整收益拟合未建立可行性，小幅候选通过首次新24例: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-d84c0672b9057650a42861f4.md`; `provider-xcrz-sigmastar-demo-d84c0672b9057650a42861f4`
-- v43：优化几何已可行，但实际语音保护阻止晋升: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-9031f7f3cea33504c97a3408.md`; `provider-xcrz-sigmastar-demo-9031f7f3cea33504c97a3408`
+- v41：完整收益拟合未建立可行性，小幅候选通过首次新24例: `projects/gros/archive/provider-gros-d84c0672b9057650a42861f4.md`; `provider-gros-d84c0672b9057650a42861f4`
+- v43：优化几何已可行，但实际语音保护阻止晋升: `projects/gros/archive/provider-gros-9031f7f3cea33504c97a3408.md`; `provider-gros-9031f7f3cea33504c97a3408`
 - M5生产者干净仓库预检修复与正常流程验证: `projects/llm-agent/validation/provider-llm-agent-4df030445710dcaf13ede006.md`; `provider-llm-agent-4df030445710dcaf13ede006`
-- v47：当前选择固定半强度候选，主目标尚未完全解决: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-56889df2675937749a7ec35e.md`; `provider-xcrz-sigmastar-demo-56889df2675937749a7ec35e`
-- 当前最优已验证候选：固定半强度v46，仍为次级优化: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-cd7b25f3679b651b2a34c81d.md`; `provider-xcrz-sigmastar-demo-cd7b25f3679b651b2a34c81d`
-- CALL AEC 当前最佳验证候选 v52 与原生受控接入: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-fedf6467f331651fdc2c6922.md`; `provider-xcrz-sigmastar-demo-fedf6467f331651fdc2c6922`
-- CALL AEC v55 因果复数残余原型：负结果: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-b8515981e1558a9d40ac647c.md`; `provider-xcrz-sigmastar-demo-b8515981e1558a9d40ac647c`
-- CALL AEC v56：保留相位原型未通过双讲保护: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-fadea80bb0da5af30d71dbfe.md`; `provider-xcrz-sigmastar-demo-fadea80bb0da5af30d71dbfe`
-- CALL 残余回声 v57—v59 实际优化结论: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-e8be6e6d06d62765ca09ffbe.md`; `provider-xcrz-sigmastar-demo-e8be6e6d06d62765ca09ffbe`
+- v47：当前选择固定半强度候选，主目标尚未完全解决: `projects/gros/archive/provider-gros-56889df2675937749a7ec35e.md`; `provider-gros-56889df2675937749a7ec35e`
+- 当前最优已验证候选：固定半强度v46，仍为次级优化: `projects/gros/archive/provider-gros-cd7b25f3679b651b2a34c81d.md`; `provider-gros-cd7b25f3679b651b2a34c81d`
+- CALL AEC 当前最佳验证候选 v52 与原生受控接入: `projects/gros/archive/provider-gros-fedf6467f331651fdc2c6922.md`; `provider-gros-fedf6467f331651fdc2c6922`
+- CALL AEC v55 因果复数残余原型：负结果: `projects/gros/archive/provider-gros-b8515981e1558a9d40ac647c.md`; `provider-gros-b8515981e1558a9d40ac647c`
+- CALL AEC v56：保留相位原型未通过双讲保护: `projects/gros/archive/provider-gros-fadea80bb0da5af30d71dbfe.md`; `provider-gros-fadea80bb0da5af30d71dbfe`
+- CALL 残余回声 v57—v59 实际优化结论: `projects/gros/archive/provider-gros-e8be6e6d06d62765ca09ffbe.md`; `provider-gros-e8be6e6d06d62765ca09ffbe`
 - M5源码完整性Git边界修复与独立验证: `projects/llm-agent/validation/provider-llm-agent-5aa0beb874375353fd497ca2.md`; `provider-llm-agent-5aa0beb874375353fd497ca2`
-- CALL AEC v60 独立反例与 v61 保护实验: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-b5d515667b7ee5aea3354fc4.md`; `provider-xcrz-sigmastar-demo-b5d515667b7ee5aea3354fc4`
-- CALL AEC：v62/v63 固定有界修正与 v64 独立验证: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-b58cc806a8318bce5e657055.md`; `provider-xcrz-sigmastar-demo-b58cc806a8318bce5e657055`
+- CALL AEC v60 独立反例与 v61 保护实验: `projects/gros/archive/provider-gros-b5d515667b7ee5aea3354fc4.md`; `provider-gros-b5d515667b7ee5aea3354fc4`
+- CALL AEC：v62/v63 固定有界修正与 v64 独立验证: `projects/gros/archive/provider-gros-b58cc806a8318bce5e657055.md`; `provider-gros-b58cc806a8318bce5e657055`
 - M5当前候选真实资格采集发布前核验: `projects/llm-agent/validation/provider-llm-agent-53025823c567c58f2782904b.md`; `provider-llm-agent-53025823c567c58f2782904b`
-- CALL AEC v65/v66 有界优化结果: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-de2a4495d0dad20b8e471cbf.md`; `provider-xcrz-sigmastar-demo-de2a4495d0dad20b8e471cbf`
+- CALL AEC v65/v66 有界优化结果: `projects/gros/archive/provider-gros-de2a4495d0dad20b8e471cbf.md`; `provider-gros-de2a4495d0dad20b8e471cbf`
 - M5签名执行来源修复PR194交付回执: `projects/llm-agent/validation/provider-llm-agent-35135d5b2a455015f830b2a2.md`; `provider-llm-agent-35135d5b2a455015f830b2a2`
-- CALL AEC v66 资源、v67 幅度占比与 v68 首次验证: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-6d1596fda156ad137fd38ddc.md`; `provider-xcrz-sigmastar-demo-6d1596fda156ad137fd38ddc`
-- v69 原生 v67 候选接入验证: `projects/xcrz-sigmastar-demo/validation/provider-xcrz-sigmastar-demo-09191df8a6dcd01329f29b83.md`; `provider-xcrz-sigmastar-demo-09191df8a6dcd01329f29b83`
-- CALL AEC v70/v71：更强候选、400例验证与原始录音: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-d586b86c605d30cd4ca1b091.md`; `provider-xcrz-sigmastar-demo-d586b86c605d30cd4ca1b091`
+- CALL AEC v66 资源、v67 幅度占比与 v68 首次验证: `projects/gros/archive/provider-gros-6d1596fda156ad137fd38ddc.md`; `provider-gros-6d1596fda156ad137fd38ddc`
+- v69 原生 v67 候选接入验证: `projects/gros/validation/provider-gros-09191df8a6dcd01329f29b83.md`; `provider-gros-09191df8a6dcd01329f29b83`
+- CALL AEC v70/v71：更强候选、400例验证与原始录音: `projects/gros/archive/provider-gros-d586b86c605d30cd4ca1b091.md`; `provider-gros-d586b86c605d30cd4ca1b091`
 - M5合并与本机一次性runtime准备: `projects/llm-agent/validation/provider-llm-agent-4c54541ddc25de0417e371c4.md`; `provider-llm-agent-4c54541ddc25de0417e371c4`
-- v70原生隔离集成v72验证: `projects/xcrz-sigmastar-demo/validation/provider-xcrz-sigmastar-demo-42cbd775d78d91f94e61ca7c.md`; `provider-xcrz-sigmastar-demo-42cbd775d78d91f94e61ca7c`
-- v70原生隔离集成v72验证: `projects/xcrz-sigmastar-demo/validation/provider-xcrz-sigmastar-demo-b4b1df17472d9acd6ba35480.md`; `provider-xcrz-sigmastar-demo-b4b1df17472d9acd6ba35480`
+- v70原生隔离集成v72验证: `projects/gros/validation/provider-gros-42cbd775d78d91f94e61ca7c.md`; `provider-gros-42cbd775d78d91f94e61ca7c`
+- v70原生隔离集成v72验证: `projects/gros/validation/provider-gros-b4b1df17472d9acd6ba35480.md`; `provider-gros-b4b1df17472d9acd6ba35480`
 - M5当前main真实签名CI核验: `projects/llm-agent/validation/provider-llm-agent-3ccf828bb9ab8991bf5f7045.md`; `provider-llm-agent-3ccf828bb9ab8991bf5f7045`
-- CALL AEC 当前优先候选固化决定: `projects/xcrz-sigmastar-demo/validation/provider-xcrz-sigmastar-demo-ea073afae31ad85f25ff4a84.md`; `provider-xcrz-sigmastar-demo-ea073afae31ad85f25ff4a84`
+- CALL AEC 当前优先候选固化决定: `projects/gros/validation/provider-gros-ea073afae31ad85f25ff4a84.md`; `provider-gros-ea073afae31ad85f25ff4a84`
 - Knowledge Provider 无 Git 工作区检索与候选归档设计: `governance/product/archive/provider-knowledge-hub-6adcb6abc0606e01b3abfd73.md`; `provider-knowledge-hub-6adcb6abc0606e01b3abfd73`
 - M5 一次性真实运行失败与ADK依赖修复: `projects/llm-agent/validation/provider-llm-agent-f30190bf7f0ceb72736b4f9a.md`; `provider-llm-agent-f30190bf7f0ceb72736b4f9a`
 - A123X 知识入口: `projects/a123x/README.md`; `a123x-knowledge-entry`
@@ -684,11 +684,899 @@
 - M5 根仓交付与真实 runtime 负结果: `projects/llm-agent/validation/provider-llm-agent-c6f631f892b9c8413e6c2b41.md`; `provider-llm-agent-c6f631f892b9c8413e6c2b41`
 - M5 单次运行磁盘负结果与存储修复: `projects/llm-agent/validation/provider-llm-agent-31988cd2df2d624396e03cd0.md`; `provider-llm-agent-31988cd2df2d624396e03cd0`
 - M5 存储修复后的真实单次运行与身份缺证: `projects/llm-agent/validation/provider-llm-agent-6c9019634759c3598c4b9095.md`; `provider-llm-agent-6c9019634759c3598c4b9095`
-- PCR02 pstore 现场核验与暂缓启用: `projects/xcrz-sigmastar-demo/archive/provider-xcrz-sigmastar-demo-758996c3c9e2b5c844939c95.md`; `provider-xcrz-sigmastar-demo-758996c3c9e2b5c844939c95`
+- PCR02 pstore 现场核验与暂缓启用: `projects/gros/archive/provider-gros-758996c3c9e2b5c844939c95.md`; `provider-gros-758996c3c9e2b5c844939c95`
 - Codex 模型身份载体兼容与负诊断修复: `projects/llm-agent/validation/provider-llm-agent-71087f273dfb302d5f589d3b.md`; `provider-llm-agent-71087f273dfb302d5f589d3b`
 - Carrier 修复发布与真实模型身份缺证复验: `projects/llm-agent/validation/provider-llm-agent-05d6a436bf36f2625ab93bf0.md`; `provider-llm-agent-05d6a436bf36f2625ab93bf0`
 - M5 v2 执行验收契约落地: `projects/llm-agent/validation/provider-llm-agent-dd5146d74604545445b7cf86.md`; `provider-llm-agent-dd5146d74604545445b7cf86`
 - M5 execution v2 真实任务与签名核验: `projects/llm-agent/validation/provider-llm-agent-da6978d29ccbc39d2235463a.md`; `provider-llm-agent-da6978d29ccbc39d2235463a`
 - Knowledge Provider v4 终态主树迁移与运行验收: `governance/product/validation/provider-90714ac663bd61fc76df49058c6089d577aca5117c5c64d5e3242cf1597d3cf7.md`; `provider-90714ac663bd61fc76df49058c6089d577aca5117c5c64d5e3242cf1597d3cf7`
+- F20全生命周期项目资产设计与布局2.0: `projects/a123x/archive/provider-5ee9fb33e3064abcaf494490c131e3f5b52bd35d1efaa19a6ea42ad8234b44b0.md`; `provider-5ee9fb33e3064abcaf494490c131e3f5b52bd35d1efaa19a6ea42ad8234b44b0`
+- 跨项目任务 intake 与 Provider 查询失败分层诊断: `domains/codex/validation/provider-41f9902092ca8e6cba47c984ce10dcb3947273d3df9c241454cc79799938de3a.md`; `provider-41f9902092ca8e6cba47c984ce10dcb3947273d3df9c241454cc79799938de3a`
+- 两仓源码发布与受管应用验收及Provider恢复收口: `projects/llm-agent/validation/provider-ea96b590c498ace11345ab18f5cc6965c49f7485d5ea076649d56f6d5fe2cd7b.md`; `provider-ea96b590c498ace11345ab18f5cc6965c49f7485d5ea076649d56f6d5fe2cd7b`
+- PCR02 Wi-Fi SDIO启动失败源码分诊候选: `projects/gros/archive/provider-08476b66c861b5dd285c7e9cecaac36e714d2f875b4ef0c7a5f2ea475ee1796a.md`; `provider-08476b66c861b5dd285c7e9cecaac36e714d2f875b4ef0c7a5f2ea475ee1796a`
 - GROS 知识入口: `projects/gros/README.md`; `gros-knowledge-entry`
-- GROS readiness validation: `projects/gros/validation/project-readiness.md`; `gros-readiness-validation-20261015`
+- GROS readiness validation: `projects/gros/archive/registration/knowledge-project-readiness.md`; `gros-readiness-validation-20261015`
+- WiFi 暂停恢复与逻辑期限审查候选: `projects/gros/validation/provider-6be14da52aa685d83e5d8bbe17a2105ba844ebbfab6d748cab9334152c569a73.md`; `provider-6be14da52aa685d83e5d8bbe17a2105ba844ebbfab6d748cab9334152c569a73`
+- WiFi 暂停确认快照与期限修复验证候选: `projects/gros/validation/provider-832c4e2ce48276178bd023c458f41f18016c65fe8fa9d80d17bed8f65301b221.md`; `provider-832c4e2ce48276178bd023c458f41f18016c65fe8fa9d80d17bed8f65301b221`
+- Codex 日常审批摩擦优化与只读验收验证: `domains/codex/validation/provider-34dd60f2a4a39b28b6ed1d9e18d7da74948e1738a458cb96863ef535a7ea2322.md`; `provider-34dd60f2a4a39b28b6ed1d9e18d7da74948e1738a458cb96863ef535a7ea2322`
+- F10美国首发固件完整方案与需求评审候选: `projects/gros/archive/provider-52417314b904b36ed42ac03539d152131393d0d289518f91f4615094c1cc95d4.md`; `provider-52417314b904b36ed42ac03539d152131393d0d289518f91f4615094c1cc95d4`
+- F10美国首发方案第一轮自审与修订清单: `projects/gros/archive/provider-4b67082ac27f309f37eaa8761be2fa809d9189f6ed77a5d2d931a3a87e244f84.md`; `provider-4b67082ac27f309f37eaa8761be2fa809d9189f6ed77a5d2d931a3a87e244f84`
+- F10出海固件方案v2满足需求稳定可靠最小实现: `projects/gros/archive/provider-e5b2c31f8548ddac0902516a347c3833ad8c6baa49d448849b1fc16ebffa8e73.md`; `provider-e5b2c31f8548ddac0902516a347c3833ad8c6baa49d448849b1fc16ebffa8e73`
+- F10出海固件优化完整方案v3: `projects/gros/archive/provider-3d195376fa42f198528f6823523f14a18e30c103a1a4bd255980867b41b6b2b4.md`; `provider-3d195376fa42f198528f6823523f14a18e30c103a1a4bd255980867b41b6b2b4`
+- Wi-Fi 断连诊断技能候选与证据边界: `projects/gros/archive/provider-55b26feda7b156e292bbdf79bb664a7f4cb164e54fb8d946f24da279da5e5269.md`; `provider-55b26feda7b156e292bbdf79bb664a7f4cb164e54fb8d946f24da279da5e5269`
+- Wi-Fi 断连诊断技能检查优化与 Codex 受管应用验证: `domains/codex/validation/provider-98478e36fcaeeafd722ddce64d2e7dd7c0301c14d582060b30473f991bd96aff.md`; `provider-98478e36fcaeeafd722ddce64d2e7dd7c0301c14d582060b30473f991bd96aff`
+- wifi_loss_rock 设备离线跨层排查与修复验证: `projects/gros/archive/provider-8790aa31c06e2f2c87227f152adef1ca6df8be4bd291510d7987b8653f023f0b.md`; `provider-8790aa31c06e2f2c87227f152adef1ca6df8be4bd291510d7987b8653f023f0b`
+- wifi_loss_nan 多模块与 WPA 协同离线排查: `projects/gros/archive/provider-f7a2e12076684a44fa229e22a651ad8cdaed8b1c4f1be9fa34c4970787f92564.md`; `provider-f7a2e12076684a44fa229e22a651ad8cdaed8b1c4f1be9fa34c4970787f92564`
+- F10出海固件实施方案: `projects/gros/archive/provider-c80473c2048fb38e76c9177b4a0e97418691ac738110173c63c7632a236ba749.md`; `provider-c80473c2048fb38e76c9177b4a0e97418691ac738110173c63c7632a236ba749`
+- PCR02 WiFi 三仓修复提交与推送验证 2026-10-16: `projects/gros/validation/provider-36cf24b5d412cf96d87f72259662f625ecf18a3e2b67e3099ea9f60fe8398418.md`; `provider-36cf24b5d412cf96d87f72259662f625ecf18a3e2b67e3099ea9f60fe8398418`
+- wifi_loss_wong 02:04 离线：定时OTA接管与版本身份异常: `projects/gros/archive/provider-8aac34f5a7318f84ed6a1da381a9a9c7f2c83c9cb4a7f6d54aff0eaaf5eafb0e.md`; `provider-8aac34f5a7318f84ed6a1da381a9a9c7f2c83c9cb4a7f6d54aff0eaaf5eafb0e`
+- PCR02 WiFi 全面审查：历史复现与优化回归风险: `projects/gros/archive/provider-9a680d3aefe98b8c0e21761b66a7633f6d8d45c0d29b3eb7df6e50664baf5ac1.md`; `provider-9a680d3aefe98b8c0e21761b66a7633f6d8d45c0d29b3eb7df6e50664baf5ac1`
+- PCR02 WiFi 解析链路修复与历史回归验证: `projects/gros/validation/provider-69e848cbb28eccbffc2667645d9b30cf018ae8512570c84e60d08c6a5464d3d7.md`; `provider-69e848cbb28eccbffc2667645d9b30cf018ae8512570c84e60d08c6a5464d3d7`
+- WiFi修复提交前检查与Runtime门禁阻塞: `projects/gros/validation/provider-92490e5da05b9bdeab78082fca3a174a8a4ffe8f4fb5ed8c8dd211d042a3f920.md`; `provider-92490e5da05b9bdeab78082fca3a174a8a4ffe8f4fb5ed8c8dd211d042a3f920`
+- F10出海固件实施方案国家与云环境分离: `projects/gros/archive/provider-b41451871d03abe2831b0ca7991bc6f161fdc60ebcba1e89f8cff32f14b3f288.md`; `provider-b41451871d03abe2831b0ca7991bc6f161fdc60ebcba1e89f8cff32f14b3f288`
+- F10出海固件实施方案终版含两种资源方式: `projects/gros/archive/provider-8fd22f02d87e55b2a65bba3b34a7d3751c638b0d8c2f552c580ec2c1465ea167.md`; `provider-8fd22f02d87e55b2a65bba3b34a7d3751c638b0d8c2f552c580ec2c1465ea167`
+- F10出海固件端方案选型前置评审终稿: `projects/gros/archive/provider-04e558a1f51560eeb14c5c09fd7b5ec0874cbc3d316a7ddcba42cb146c2bbdc6.md`; `provider-04e558a1f51560eeb14c5c09fd7b5ec0874cbc3d316a7ddcba42cb146c2bbdc6`
+- F10出海固件实施方案含选型前置条件: `projects/gros/archive/provider-60125f3a949cafe6509c01dbd222918ec494e5aa60aa5b10f1e05e9a09ab8a04.md`; `provider-60125f3a949cafe6509c01dbd222918ec494e5aa60aa5b10f1e05e9a09ab8a04`
+- F10出海固件端三种国家方案选型评审终稿: `projects/gros/archive/provider-f460a8ce3392035f8f71ffe8371663b3e567fb1403b1b0942733bf7ba82d81bc.md`; `provider-f460a8ce3392035f8f71ffe8371663b3e567fb1403b1b0942733bf7ba82d81bc`
+- F10出海固件实施方案含三方案评审前置条件: `projects/gros/archive/provider-e1cd176672f58235423bbc1eec8444d35a89620160eebbaea7ab5bed58d707cf.md`; `provider-e1cd176672f58235423bbc1eec8444d35a89620160eebbaea7ab5bed58d707cf`
+- WiFi专项修复提交推送与远端读回回执: `projects/gros/validation/provider-85ad090f0465694f21d6a024896617d080c1e15a15aa1152f676d11b7b09f048.md`; `provider-85ad090f0465694f21d6a024896617d080c1e15a15aa1152f676d11b7b09f048`
+- PCR02出海固件实施方案资源交付修订: `projects/pcr02-ssc305/archive/provider-07ca11f20c2a378c9b5e43e1eac0fc636b9a9f0276999fb1ba2fd4dc1ef2d7cd.md`; `provider-07ca11f20c2a378c9b5e43e1eac0fc636b9a9f0276999fb1ba2fd4dc1ef2d7cd`
+- Sensor WiFi新增接口未声明的公共头漂移排查: `projects/gros/archive/provider-3aff997800582edad5b6c7da8286a4c01935b9a6c159c6119f5972325542a2a1.md`; `provider-3aff997800582edad5b6c7da8286a4c01935b9a6c159c6119f5972325542a2a1`
+- AISpeech v70/v72 ARM 测试库重编与本地采用核验: `projects/gros/validation/provider-4240bf640e129847ccf9b9c871410af4b500ff2b95a6c7b1abdb9a37e39b0db7.md`; `provider-4240bf640e129847ccf9b9c871410af4b500ff2b95a6c7b1abdb9a37e39b0db7`
+- AISpeech 集成提交前审查: `projects/gros/validation/provider-8b657f483ac23a77cd3551eac8827f4c56f108c4c86ac9625ce4195b99a99569.md`; `provider-8b657f483ac23a77cd3551eac8827f4c56f108c4c86ac9625ce4195b99a99569`
+- AISpeech v70/v72生产合入默认启用及四批本地提交验证: `projects/gros/validation/provider-500cfe40e13ba35e489988b965c5b71e5fd368af6727e41825eb3d9143e7b4c0.md`; `provider-500cfe40e13ba35e489988b965c5b71e5fd368af6727e41825eb3d9143e7b4c0`
+- wifi_loss_lei_1：OTA与按键离线、启动保存网络不可用及持久化缺口: `projects/gros/archive/provider-8c97f5f045c780c47c9e5cd6c14758ecfaaa0873b327f1e206dbcac1ae261ef3.md`; `provider-8c97f5f045c780c47c9e5cd6c14758ecfaaa0873b327f1e206dbcac1ae261ef3`
+- wifi_loss_lei_2：同版本定时OTA与33分钟启动联网等待: `projects/gros/archive/provider-d01902a2f345fe89c5982269d5cdf55ed4c7e5f7e65d9a03b80d4969dde2c3ba.md`; `provider-d01902a2f345fe89c5982269d5cdf55ed4c7e5f7e65d9a03b80d4969dde2c3ba`
+- lei扫码配网复审：空配置未初始化、内存保存与缓存持久化语义: `projects/gros/archive/provider-738111ce7c32f9be2e5adbda3207ce842c5b5f5533e659b1f36a79c7eaa20e78.md`; `provider-738111ce7c32f9be2e5adbda3207ce842c5b5f5533e659b1f36a79c7eaa20e78`
+- WiFi三仓落地：空配置初始化、持久化确认和缓存复核验证: `projects/gros/validation/provider-7ded8e7050bf4cb91cf3100ed41a09f61d05daf4cde25317a92868ab3a7bee2c.md`; `provider-7ded8e7050bf4cb91cf3100ed41a09f61d05daf4cde25317a92868ab3a7bee2c`
+- WiFi持久化实现全面复审：初始化中断和多网策略恢复三项缺口: `projects/gros/validation/provider-bd58125c34fc929ea8d289ed80a45f7782cf0de46a4a1c87fec3acffc4df03e0.md`; `provider-bd58125c34fc929ea8d289ed80a45f7782cf0de46a4a1c87fec3acffc4df03e0`
+- WiFi持久化三项复审缺陷修复：原子初始化、失败传播、多网恢复重试: `projects/gros/validation/provider-502b0af7e247b2f34f21d2d16b1610f0ae02c38bc466ce9185b853ed117b9d21.md`; `provider-502b0af7e247b2f34f21d2d16b1610f0ae02c38bc466ce9185b853ed117b9d21`
+- WiFi三仓设计复杂度复审：必要保护、局部重复与慢保存超时耦合: `projects/gros/validation/provider-760f891f7784d23ce89e6e93ab35cb7e60eba895b59eb7cc79fce9ab8340facd.md`; `provider-760f891f7784d23ce89e6e93ab35cb7e60eba895b59eb7cc79fce9ab8340facd`
+- WiFi三仓收敛优化：成功确认与保存解耦、共享实现和头依赖定向: `projects/gros/validation/provider-72318d54f366355dc11493ed5ab50d6eed0118b06b9caaa711e6e1b0d3f6a816.md`; `provider-72318d54f366355dc11493ed5ab50d6eed0118b06b9caaa711e6e1b0d3f6a816`
+- WiFi三仓实现复审：未发现新Major，保留worker并发测试覆盖建议: `projects/gros/validation/provider-232f877459b254e45ae41b5764ff0225aa8a4ca197f934ecc266ad991f412845.md`; `provider-232f877459b254e45ae41b5764ff0225aa8a4ca197f934ecc266ad991f412845`
+- WiFi三仓规范与命名审查：C规则欠项及save/saved持久化语义: `projects/gros/validation/provider-75960198643d60f33a30e30f7fd19f1b805a0b5898c561e4028277c596d1a819.md`; `provider-75960198643d60f33a30e30f7fd19f1b805a0b5898c561e4028277c596d1a819`
+- WiFi三仓known-persist命名整改与定向验证: `projects/gros/validation/provider-29e7b371698a5ad8e5638fca6f1febba37e55dde4e94e3ae83aef43e4f1c85c8.md`; `provider-29e7b371698a5ad8e5638fca6f1febba37e55dde4e94e3ae83aef43e4f1c85c8`
+- WiFi实现复审：跨目录软链保存同步遗漏已复现: `projects/gros/validation/provider-8886514d4189176263bd8392f067f8e5a3aa11bc9113ffef089a85ca9d628504.md`; `provider-8886514d4189176263bd8392f067f8e5a3aa11bc9113ffef089a85ca9d628504`
+- WiFi软链真实目标同步修复与默认路径适用性纠正: `projects/gros/validation/provider-69d011efafb38ca637868be4ba800b94194a55b1b24885c732330d229e8ca219.md`; `provider-69d011efafb38ca637868be4ba800b94194a55b1b24885c732330d229e8ca219`
+- 扫码联网后持久化三次失败与短暂重获IP分析: `projects/gros/archive/provider-80d86bf1e96734b09ad740cd902f9d754acaa17606983ff0cbe735397a28d29b.md`; `provider-80d86bf1e96734b09ad740cd902f9d754acaa17606983ff0cbe735397a28d29b`
+- WiFi持久化失败补充：1字节配置绕过长度初始化判断: `projects/gros/archive/provider-64138de2a242cacdac940a4753cdc71429f691971d47c3180dbab28cc4e59499.md`; `provider-64138de2a242cacdac940a4753cdc71429f691971d47c3180dbab28cc4e59499`
+- WiFi空白配置确认与控制接口保存能力判定: `projects/gros/archive/provider-36c2932365f7113c44a7d2634b537898ff89710518220fe98e78951b228f1973.md`; `provider-36c2932365f7113c44a7d2634b537898ff89710518220fe98e78951b228f1973`
+- WiFi仅空白配置初始化与保存授权检查落地验证: `projects/gros/validation/provider-2b725eff1d25bb68b4a45fe49ce1cd65dc87222d3441342eb99ffe736a4d8981.md`; `provider-2b725eff1d25bb68b4a45fe49ce1cd65dc87222d3441342eb99ffe736a4d8981`
+- WiFi三仓提交前检查：源码验证通过，测试包与提交边界待修: `projects/gros/validation/provider-8bf3e8288741ae7801dd8b31f2968663875a47db50dc443d055f18631801121c.md`; `provider-8bf3e8288741ae7801dd8b31f2968663875a47db50dc443d055f18631801121c`
+- WiFi三仓本地提交与保护状态核验20261019: `projects/gros/validation/provider-6428c3b6fc219ad5eaedcfa0ce9c9333a3cae4eed4030f2a45f1c5d787250eb6.md`; `provider-6428c3b6fc219ad5eaedcfa0ce9c9333a3cae4eed4030f2a45f1c5d787250eb6`
+- 冷启动约80秒后扫码：自动找宠抢占、断网超时及充电资源恢复: `projects/gros/archive/provider-22825f497075b821c5afd036e5cfd5f0e584aa9addb50deec7919d45ab29c193.md`; `provider-22825f497075b821c5afd036e5cfd5f0e584aa9addb50deec7919d45ab29c193`
+- 新增网络成功后上游断网、状态查询失败与恢复旧网络: `projects/gros/archive/provider-ab7f317a4a8f9d28ec3a7d5f4e787521508f2d48700604e78136bf69b5d0e8c5.md`; `provider-ab7f317a4a8f9d28ec3a7d5f4e787521508f2d48700604e78136bf69b5d0e8c5`
+- wifi_loss_lei_2复核报告：同版本定时OTA与关联前33分钟等待: `projects/gros/archive/provider-d1ae2ca429b38e7cbfc36b17aaf5900de5a2d14ee8347acfa6b8fa6ea58c2aeb.md`; `provider-d1ae2ca429b38e7cbfc36b17aaf5900de5a2d14ee8347acfa6b8fa6ea58c2aeb`
+- 启动首次获IP后第二轮DHCP持续OBTAINING_IP的只读分析: `projects/gros/archive/provider-67c30efb0f5e073ae3afefd2065a62f4ab2ce44666902b8757d6a21b09cd9ec5.md`; `provider-67c30efb0f5e073ae3afefd2065a62f4ab2ce44666902b8757d6a21b09cd9ec5`
+- 同SSID漫游后DHCP超时终态丢失与恢复停滞源码定位: `projects/gros/archive/provider-d16a7f9a8757e98bb379346c6fcf32a84a456307aae8f7c91d63ab20bec4461d.md`; `provider-d16a7f9a8757e98bb379346c6fcf32a84a456307aae8f7c91d63ab20bec4461d`
+- PCR02 WiFi DHCP终态与恢复修复本地验证候选: `projects/gros/validation/provider-aac1c0a3b18e6c0acd7e2620c85a597d422498fb5cf6536fcd44efff5b9dd842.md`; `provider-aac1c0a3b18e6c0acd7e2620c85a597d422498fb5cf6536fcd44efff5b9dd842`
+- PCR02 WiFi恢复实现复审：三项生命周期缺口: `projects/gros/validation/provider-9e231b68f000495b3a2dba4bc025216f0c518cc185c5fa2d995aa34df11cf7a9.md`; `provider-9e231b68f000495b3a2dba4bc025216f0c518cc185c5fa2d995aa34df11cf7a9`
+- PCR02 WiFi复审三项问题最小修复与验证: `projects/gros/validation/provider-b34ef66ea18fae66cda63ed17b568e65bdde2cbfa4d511a1cd47d5872b244bad.md`; `provider-b34ef66ea18fae66cda63ed17b568e65bdde2cbfa4d511a1cd47d5872b244bad`
+- PCR02 WiFi切换BUSY回归定位与最小修复: `projects/gros/validation/provider-2764c3ebd8ca49806e6d8b5a3a76d87465cf260aed77266789808c5da4693667.md`; `provider-2764c3ebd8ca49806e6d8b5a3a76d87465cf260aed77266789808c5da4693667`
+- WiFi API Sensor三仓修复检查提交推送记录: `projects/gros/validation/provider-7327552a6335ad3a822f0ff924d58573aa571c4b47f57f3496e559cfd769b737.md`; `provider-7327552a6335ad3a822f0ff924d58573aa571c4b47f57f3496e559cfd769b737`
+- WiFi RSSI快照与Sensor迟到转换通知最小优化验证: `projects/gros/validation/provider-da7e1fc5222ca6104fa172288b394d1fa496218bc4263de3782cb1aeb7876d54.md`; `provider-da7e1fc5222ca6104fa172288b394d1fa496218bc4263de3782cb1aeb7876d54`
+- PCR02扫描start-fetch与迟到断连通知修复验证: `projects/gros/validation/provider-0e589080d57f4752dadbd0100c7a785fc1ea4c87cae4269769fadf0924df8fb8.md`; `provider-0e589080d57f4752dadbd0100c7a785fc1ea4c87cae4269769fadf0924df8fb8`
+- WiFi扫描契约消费者兼容性审计: `projects/gros/archive/provider-9dc129c612c40c13114a4f9be5313f1944419ed563c670eee650b6f1c883d42f.md`; `provider-9dc129c612c40c13114a4f9be5313f1944419ed563c670eee650b6f1c883d42f`
+- WiFi扫描调用方适配与验证: `projects/gros/validation/provider-0e1c102a21982909e6f5f9aadb70b75ad60552407d90c17703c37668da203d68.md`; `provider-0e1c102a21982909e6f5f9aadb70b75ad60552407d90c17703c37668da203d68`
+- WiFi扫描适配提交前检查: `projects/gros/validation/provider-f0897a775cb57d42cd7bd56ddbf58b099361b866d0ed7dcfc075d104c4b8bffb.md`; `provider-f0897a775cb57d42cd7bd56ddbf58b099361b866d0ed7dcfc075d104c4b8bffb`
+- Wi-Fi分诊技能0.3.0团队内部复用审查与受管安装: `domains/codex/validation/provider-f292675a9c36d26ae459e620b5499ceab9fa4f4daa5f0c89de0b30ce662af70e.md`; `provider-f292675a9c36d26ae459e620b5499ceab9fa4f4daa5f0c89de0b30ce662af70e`
+- app_ota 强制升级使用与实施验证: `projects/app-ota/validation/provider-2e1be6754ba71d07e173ade638d408fb02859c7d033432135b9a592a3e00b4d9.md`; `provider-2e1be6754ba71d07e173ade638d408fb02859c7d033432135b9a592a3e00b4d9`
+- CB400开发板全资料分析与使用边界: `projects/a123x/archive/provider-1f4cb7693e9d16ef1661737dee0ff4a566b1700eed2501ea9498ffe0ba8c54a4.md`; `provider-1f4cb7693e9d16ef1661737dee0ff4a566b1700eed2501ea9498ffe0ba8c54a4`
+- CB400 GPIO与连接器证据索引: `projects/a123x/archive/provider-015f74bfd18072a7fb9064faf3cdf950b4ec005a14c8f2ddb9a752e48c9a5ce0.md`; `provider-015f74bfd18072a7fb9064faf3cdf950b4ec005a14c8f2ddb9a752e48c9a5ce0`
+- CB400风险检查单与板端验证矩阵: `projects/a123x/archive/provider-f9f28e10dce2929f8b4f3a64b51ae0877c34353b8fa99d09404ac9c9b5f8d6d2.md`; `provider-f9f28e10dce2929f8b4f3a64b51ae0877c34353b8fa99d09404ac9c9b5f8d6d2`
+- A123X LPDDR4X六层模块参考分析: `projects/a123x/archive/provider-bb3137f771329902af9ef41a7adcbc45ea0a92f8ca58d5e959d890314f51b2b7.md`; `provider-bb3137f771329902af9ef41a7adcbc45ea0a92f8ca58d5e959d890314f51b2b7`
+- CB400资料来源与覆盖审计: `projects/a123x/archive/provider-8a4301051c9359433b512c63bacd9d7758b5024bd206813dc071e95dec602032.md`; `provider-8a4301051c9359433b512c63bacd9d7758b5024bd206813dc071e95dec602032`
+- F20 EVT1初版原理图评审报告: `projects/a123x/archive/provider-c928eea377865b112c3355c2c1b33849f5c5249e5c21b2ab33c0224ecfb18cbb.md`; `provider-c928eea377865b112c3355c2c1b33849f5c5249e5c21b2ab33c0224ecfb18cbb`
+- F20 EVT1逐页评审与CB400差异: `projects/a123x/archive/provider-fe9a089b3d4f64534101e052b7b822a626315eda9d38beb377adf84f2439a2c5.md`; `provider-fe9a089b3d4f64534101e052b7b822a626315eda9d38beb377adf84f2439a2c5`
+- F20 EVT1资源电源与验证闭环矩阵: `projects/a123x/archive/provider-1a5eb21535b49e95b5b7019523dd6e94c1ef16e015fa91e9d844bbb331445280.md`; `provider-1a5eb21535b49e95b5b7019523dd6e94c1ef16e015fa91e9d844bbb331445280`
+- F20 EVT1评审来源与验证记录: `projects/a123x/archive/provider-ff26a189efd446570ff0cbbf8fbfe252f99dc67d8012c209ab75f9113cb61320.md`; `provider-ff26a189efd446570ff0cbbf8fbfe252f99dc67d8012c209ab75f9113cb61320`
+- CB400开发板使用手册: `projects/a123x/archive/provider-103e568c1a1e41fba15d13c3a7545d5019caec70ee678642ad90c3b4f8874be4.md`; `provider-103e568c1a1e41fba15d13c3a7545d5019caec70ee678642ad90c3b4f8874be4`
+- A123X双NPU区别与F20使用边界: `projects/a123x/archive/provider-fea29fda6d10205462d939b62ebf0bb26b26e6c31b38875175ce577173ce8718.md`; `provider-fea29fda6d10205462d939b62ebf0bb26b26e6c31b38875175ce577173ce8718`
+- F20 DDR与eMMC容量评估含SLAM及2GB优化方案: `projects/a123x/archive/provider-8c3587647922760a39f017bba6e19c46994f8c8bb62c4ee79c9ded4a67c72765.md`; `provider-8c3587647922760a39f017bba6e19c46994f8c8bb62c4ee79c9ded4a67c72765`
+- Knowledge Provider 归档预检拒绝的安全修复方式: `governance/product/archive/provider-b58164d963799fe28c02b3844a06bc1f1e984a431288a1137226e8e8b232bf74.md`; `provider-b58164d963799fe28c02b3844a06bc1f1e984a431288a1137226e8e8b232bf74`
+- PCR02 巡航失联与重新配网失败日志复核补录: `projects/gros/archive/provider-2ea890d146ea0c9a9128978e0f82d2356f96a8f3461945154859f2565e8e9b7d.md`; `provider-2ea890d146ea0c9a9128978e0f82d2356f96a8f3461945154859f2565e8e9b7d`
+- PCR02 DHCP 与 DNS 写入边界源码初查补录: `projects/gros/archive/provider-e24e5af47b34758a6751fe89b2cc56f9a4c17e2a98ab52fc7375ee1d708f95f6.md`; `provider-e24e5af47b34758a6751fe89b2cc56f9a4c17e2a98ab52fc7375ee1d708f95f6`
+- PCR02 DHCP DNS 的 SDK 来源与改动方案补录: `projects/pcr02-ssc305/archive/provider-c493f8a2da189f319a0e25d1b1d787afea672540bd0e6b7d7fc3c164203f869e.md`; `provider-c493f8a2da189f319a0e25d1b1d787afea672540bd0e6b7d7fc3c164203f869e`
+- PCR02 DHCP DNS 源码实现与隔离验证补录: `projects/gros/validation/provider-8cbb8494b2e3c160d8f6a3e87d4c3c06b9ba9e9df413e4ed0b1c77d89aaef028.md`; `provider-8cbb8494b2e3c160d8f6a3e87d4c3c06b9ba9e9df413e4ed0b1c77d89aaef028`
+- PCR02 kernel_log Host 测试健壮性整改补录: `projects/gros/validation/provider-e0f6237e14b06e30b367fe4cb3aefe3b568de709bf30c949fdaf0039c490927a.md`; `provider-e0f6237e14b06e30b367fe4cb3aefe3b568de709bf30c949fdaf0039c490927a`
+- PCR02 AI 语音唤醒源码审查补录: `projects/gros/archive/provider-4f5549a504898c88464b2dad075b1fbb25f1b59205e736bd23beab70a1d3fe0e.md`; `provider-4f5549a504898c88464b2dad075b1fbb25f1b59205e736bd23beab70a1d3fe0e`
+- PCR02 状态过期与同 SSID 跨网段漫游分析补录: `projects/gros/archive/provider-83558c64b9455e539594a958103075cca3b902f0ecf9fed7fcd310fcd00c34c5.md`; `provider-83558c64b9455e539594a958103075cca3b902f0ecf9fed7fcd310fcd00c34c5`
+- PCR02 手动 WiFi 切换与重复扫描分析补录: `projects/gros/archive/provider-5cd8ffc4f963079b78bbea99e3e6caa9ea6d5c2306cfb7ba4bb93ce3d08b440e.md`; `provider-5cd8ffc4f963079b78bbea99e3e6caa9ea6d5c2306cfb7ba4bb93ce3d08b440e`
+- PCR02 SDIO 启动失败源码分诊补录: `projects/gros/archive/provider-01e98316fe3058f1f95a5d7ec8181b210abcba1f844960940b4dd1167f9a2050.md`; `provider-01e98316fe3058f1f95a5d7ec8181b210abcba1f844960940b4dd1167f9a2050`
+- PCR02 WiFi 无法恢复故障时间线补录: `projects/gros/archive/provider-3b47cac88d5b778eb87e8c0a1b49c28606156e20a235995bac0421216e3b1f93.md`; `provider-3b47cac88d5b778eb87e8c0a1b49c28606156e20a235995bac0421216e3b1f93`
+- PCR02 WiFi 故障链源码审查补录: `projects/gros/archive/provider-a6aedda8a41a30340bdb76795edc518110a8f8d4633138761142971646ed14c4.md`; `provider-a6aedda8a41a30340bdb76795edc518110a8f8d4633138761142971646ed14c4`
+- PCR02 WiFi 恢复整改源码验证补录: `projects/gros/validation/provider-909eb2eb46a338f52a83c90c631227c898e5805b5cb6426f1db5abf2908ab6b4.md`; `provider-909eb2eb46a338f52a83c90c631227c898e5805b5cb6426f1db5abf2908ab6b4`
+- PCR02 Sensor WiFi 职责收敛与定向验证补录: `projects/gros/validation/provider-00a08cb3e1ca8a472b098ae5c283850c763492acfce6a125a5237ab60eda9004.md`; `provider-00a08cb3e1ca8a472b098ae5c283850c763492acfce6a125a5237ab60eda9004`
+- F10 DHD 到 A123X 移植初版构建证据补录: `projects/a123x/validation/provider-e74c7d08d1fbf286e176535aba00917647fda12d2775b38ac71c82db40d78fda.md`; `provider-e74c7d08d1fbf286e176535aba00917647fda12d2775b38ac71c82db40d78fda`
+- AP6303BH 飞线与 DHD 枚举 OOB 整改补录: `projects/a123x/validation/provider-48aee2fdc7574fd91c942a33c4e09f8ebd226681756015d43053b3bc3330792d.md`; `provider-48aee2fdc7574fd91c942a33c4e09f8ebd226681756015d43053b3bc3330792d`
+- CB400 三外设固件构建与镜像核验补录: `projects/a123x/archive/provider-34830fd6cebafbe3fe0b597e96363c00b2e2a9ca4d454df3a2e7446f808693a3.md`; `provider-34830fd6cebafbe3fe0b597e96363c00b2e2a9ca4d454df3a2e7446f808693a3`
+- 历史 Knowledge Provider 归档失败逐项补录对账: `governance/product/archive/provider-294956a6a76760e608bb947b9ddcd314f761e7cb00fadf3fb2d9a925c6fe5020.md`; `provider-294956a6a76760e608bb947b9ddcd314f761e7cb00fadf3fb2d9a925c6fe5020`
+- SC5336P接收诊断与实验IQ复用本地验证: `projects/a123x/validation/provider-2ab49fd550d8c19eea5bd68e2e388d6717cba7cb79e7680403a13719e84f5545.md`; `provider-2ab49fd550d8c19eea5bd68e2e388d6717cba7cb79e7680403a13719e84f5545`
+- 外设组件命名与目录边界整改: `projects/a123x/validation/provider-a83525ecc63124a8800c86cf58d11c552a2ab229ad6d87df5caae0fe67bd5126.md`; `provider-a83525ecc63124a8800c86cf58d11c552a2ab229ad6d87df5caae0fe67bd5126`
+- A123X camera、WiFi、display 集成阶段总结与板端交接: `projects/a123x/archive/provider-c81872adb210747d8cd0e8d62bb85f0de76caa19dcc709f5bd1cd5f62187e909.md`; `provider-c81872adb210747d8cd0e8d62bb85f0de76caa19dcc709f5bd1cd5f62187e909`
+- DEVWIRE DHD头文件和内核依赖修复及规则漂移门禁: `projects/a123x/validation/provider-a1a2ef5a56dda01e2bfbdb72d0b2488369c9803e868c4698756c064f14b0b219.md`; `provider-a1a2ef5a56dda01e2bfbdb72d0b2488369c9803e868c4698756c064f14b0b219`
+- DEVWIRE当前固件构建成功及DHD模块打包缺口: `projects/a123x/validation/provider-7b866d553cedf57c2b632531a0c880df75d77f6dfa50bf285a0edc2b06dfb52e.md`; `provider-7b866d553cedf57c2b632531a0c880df75d77f6dfa50bf285a0edc2b06dfb52e`
+- A123X三板打包链审计与模块迁移缺口: `projects/a123x/validation/provider-3336cd6446be29697c755a3edb37ae87644d9780033fbd5e78e9d1ccb419e381.md`; `provider-3336cd6446be29697c755a3edb37ae87644d9780033fbd5e78e9d1ccb419e381`
+- A123X 新增资产接入 SDK 布局的整改与验证: `projects/a123x/validation/provider-3aa68c9972efd6588568da7f41c7ad53cbd0e30df3787194db326ea019e70cfc.md`; `provider-3aa68c9972efd6588568da7f41c7ad53cbd0e30df3787194db326ea019e70cfc`
+- A123X SDK 全部本地修改审查: `projects/a123x/validation/provider-8a103970eff970b0d7b9209cc71f4d3ffa59cc87d2bb96368130f6f534cc5491.md`; `provider-8a103970eff970b0d7b9209cc71f4d3ffa59cc87d2bb96368130f6f534cc5491`
+- A123X SDK 修复与三板制品验证: `projects/a123x/validation/provider-6279d7d0916f9650226ae87814476a23e4da7ef4fb4bde937e9fb038b71445b8.md`; `provider-6279d7d0916f9650226ae87814476a23e4da7ef4fb4bde937e9fb038b71445b8`
+- A123X SDK 调试能力接入与隔离验证: `projects/a123x/validation/provider-ddf1433ae6ccbe3698a985667ebb689038b152dc01aa885479915a9f45d803ab.md`; `provider-ddf1433ae6ccbe3698a985667ebb689038b152dc01aa885479915a9f45d803ab`
+- A123X 非调试候选契约与原生布局文档整改: `projects/a123x/validation/provider-d2363d7f8b99ffbcc3016a7d832425211e769b55f1e8260d661e301601e111e1.md`; `provider-d2363d7f8b99ffbcc3016a7d832425211e769b55f1e8260d661e301601e111e1`
+- A123X 调试包SHA校验与循环依赖修复验证: `projects/a123x/validation/provider-f007bf9fd41ada9a453180263b3dbc21f08fd9d6154ca8a4ddfaf0fd12894f5b.md`; `provider-f007bf9fd41ada9a453180263b3dbc21f08fd9d6154ca8a4ddfaf0fd12894f5b`
+- DEVWIRE WiFi运行时设备树导出根因与源码修复: `projects/a123x/validation/provider-4a5583316170d16da4881d8e69e86c79b5cd56f1e07a22cc07b491ea0eaec891.md`; `provider-4a5583316170d16da4881d8e69e86c79b5cd56f1e07a22cc07b491ea0eaec891`
+- A123X SDK开发免认证SSH接入验证: `projects/a123x/validation/provider-6c576aa58d10f84f82e49ce86046355d155dd9da7639664ab18b11a18a15bfc0.md`; `provider-6c576aa58d10f84f82e49ce86046355d155dd9da7639664ab18b11a18a15bfc0`
+- WIFI Camera Display保持SDK原生链路的源码收敛与验证: `projects/a123x/validation/provider-c822be624c8ab61483a0ddc6fcfceccc1f615616262aa7fdf514c0db819c8db4.md`; `provider-c822be624c8ab61483a0ddc6fcfceccc1f615616262aa7fdf514c0db819c8db4`
+- A123X开发网络ADB与SSH免认证默认配置验证: `projects/a123x/validation/provider-3fc3790d50fdb4dcaa5ac7b76e76322c56afce2ae17ce7d2801128a58604cd0e.md`; `provider-3fc3790d50fdb4dcaa5ac7b76e76322c56afce2ae17ce7d2801128a58604cd0e`
+- A123X-SDK基线与原生运行方式全面审查-20261022: `projects/a123x/archive/provider-7c0ede803acbcb7a66b14da7b9f742382e50e2e961619f15ef6b057db81ff36b.md`; `provider-7c0ede803acbcb7a66b14da7b9f742382e50e2e961619f15ef6b057db81ff36b`
+- A123X-SDK原生接入优化源码与测试交付-20261022: `projects/a123x/validation/provider-858317139a2bff550d3650c9aa4882b94ed2d45fc2850ebf4092e9f70a95d8ee.md`; `provider-858317139a2bff550d3650c9aa4882b94ed2d45fc2850ebf4092e9f70a95d8ee`
+- DEVWIRE WiFi REG_ON读回诊断与候选模块验证: `projects/a123x/validation/provider-302b236ae1ba5deeae8a4ca17aa7e1e550f1bccd12c2c46b306556ca644ba3f7.md`; `provider-302b236ae1ba5deeae8a4ca17aa7e1e550f1bccd12c2c46b306556ca644ba3f7`
+- SC5336P分层测试操作指导与验收边界: `projects/a123x/archive/provider-15b5b0e951a77f1fce1ba79158845dc4b1fa8121d09df9de37a3e73c391b4ec6.md`; `provider-15b5b0e951a77f1fce1ba79158845dc4b1fa8121d09df9de37a3e73c391b4ec6`
+- CB400 DEVWIRE AP6303排查进展与4SW1启动拨码说明: `projects/a123x/archive/provider-933143015a767a13bec7d37fda3ce827de6eb9fee3b02b61984103cc11c7b60c.md`; `provider-933143015a767a13bec7d37fda3ce827de6eb9fee3b02b61984103cc11c7b60c`
+- A123X开发观测能力增量与隔离交叉验证: `projects/a123x/validation/provider-ec89a22f6f545507755fadd82e7039fd3ecf2e5028eb08ba33ab61f000a74f8e.md`; `provider-ec89a22f6f545507755fadd82e7039fd3ecf2e5028eb08ba33ab61f000a74f8e`
+- A123X全调试方法手册与跨仓导航验证: `projects/a123x/validation/provider-8d11479b47a9c3c1fb3f84200ac7e49520b0b47f7110d5c43b4c9a4e5cbedd37.md`; `provider-8d11479b47a9c3c1fb3f84200ac7e49520b0b47f7110d5c43b4c9a4e5cbedd37`
+- A123X调试实现审查与三项反例验证: `projects/a123x/archive/provider-9481c68e67afd9b4ab8ef75e406c3730c9a59eddad0d45b3f645f64773e985ce.md`; `provider-9481c68e67afd9b4ab8ef75e406c3730c9a59eddad0d45b3f645f64773e985ce`
+- A123X调试三项审查发现修复与52项回归: `projects/a123x/archive/provider-ca7d4272a08b1f56c05c8754988f44b0c06c8834ce14bf3880c828329444006a.md`; `provider-ca7d4272a08b1f56c05c8754988f44b0c06c8834ce14bf3880c828329444006a`
+- A123X提交和交接前审查-20261023: `projects/a123x/validation/provider-0374e185ae3c58a4d90e085134a1ab0f174f22b4168933a27899c31015fce8a7.md`; `provider-0374e185ae3c58a4d90e085134a1ab0f174f22b4168933a27899c31015fce8a7`
+- A123X提交交接审查三项整改与补测-20261023: `projects/a123x/validation/provider-ae597df21762858d8bce3c2a4f43856d1c6b9044b8bfa5a6b1b51751fd1b5168.md`; `provider-ae597df21762858d8bce3c2a4f43856d1c6b9044b8bfa5a6b1b51751fd1b5168`
+- F20 EVT1 GPIO完整评审与157条记录覆盖矩阵: `projects/a123x/validation/provider-cf5d9f41da9d5a553f7a72d2a9a82a6ded75991e9851206b2d9c94225ec4b2fe.md`; `provider-cf5d9f41da9d5a553f7a72d2a9a82a6ded75991e9851206b2d9c94225ec4b2fe`
+- F20 EVT1 MCU GPIO评审与64脚资源覆盖: `projects/a123x/validation/provider-f6eddd352c9def9916083f803113356c70dc80f95c78d284b640412f5bd2080b.md`; `provider-f6eddd352c9def9916083f803113356c70dc80f95c78d284b640412f5bd2080b`
+- F20 EVT1 MCU GPIO评审v1.1与IO更新阶段说明: `projects/a123x/validation/provider-d6069b45077180b67753db32886fdff2928d95d6ea2c7b94d6c1030454478dec.md`; `provider-d6069b45077180b67753db32886fdff2928d95d6ea2c7b94d6c1030454478dec`
+- DEVWIRE WiFi选装电阻NC状态与CMD5超时排查补充: `projects/a123x/archive/provider-55fd6808ea9c8044e50f026a85f7f412c220373895ccf3f72b4237fb9c072d5a.md`; `provider-55fd6808ea9c8044e50f026a85f7f412c220373895ccf3f72b4237fb9c072d5a`
+- SC5336P提交前代码文档整理与验证-20261023: `projects/a123x/validation/provider-2f35286910e49cdb192afc9029bd246704a70ab4e0caa9e407cd57f02eea2486.md`; `provider-2f35286910e49cdb192afc9029bd246704a70ab4e0caa9e407cd57f02eea2486`
+- AISpeech原生AEC与因果时序RES双原型验证及否决结果: `projects/gros/validation/provider-5abcbe89e821678ec3daaee867be2058fad8040c692044cbb6f0997f2ef83559.md`; `provider-5abcbe89e821678ec3daaee867be2058fad8040c692044cbb6f0997f2ef83559`
+- Hub 向嵌入式团队知识库提炼的本地验证候选: `governance/product/validation/provider-25b9563669b698ec494a3d1dbbaabd041a3eea7a73c2c8886e84eb85f795a2ef.md`; `provider-25b9563669b698ec494a3d1dbbaabd041a3eea7a73c2c8886e84eb85f795a2ef`
+- PCR02 SSC305 OTA 互升历史检查清单及迁移来源: `projects/pcr02-ssc305/archive/provider-5e128402bea486233d3f44bd471eea8296cd32950bdd6e7921a617e0703b2096.md`; `provider-5e128402bea486233d3f44bd471eea8296cd32950bdd6e7921a617e0703b2096`
+- A123X integration与project审查整改和分层验证: `projects/a123x/validation/provider-51d365798c60dcf9e5570c359b3a0a7fb63b4152bb8cd2c1d9027f891fda6fb7.md`; `provider-51d365798c60dcf9e5570c359b3a0a7fb63b4152bb8cd2c1d9027f891fda6fb7`
+- AISpeech有界自动迭代九候选否决与v70基线保留: `projects/gros/validation/provider-1f69d40fb347566abd322cca98bc4ca67730e40712ef8687beee8af025584349.md`; `provider-1f69d40fb347566abd322cca98bc4ca67730e40712ef8687beee8af025584349`
+- A123X平台知识库01：架构、芯片能力与版本适用范围: `projects/a123x/archive/provider-badaaf835cb8fd17d370e76e2c2e35d47c9e16c1c2e51120523d3dab86c43a8d.md`; `provider-badaaf835cb8fd17d370e76e2c2e35d47c9e16c1c2e51120523d3dab86c43a8d`
+- A123X平台知识库：21章开发手册 架构构建硬件相机音频AI驱动无线低功耗OTA安全调试: `projects/a123x/archive/provider-bf39c9e314c63c0c362092c90ac874c9d3a25e159b3c654f8e983c2c468fe11e.md`; `provider-bf39c9e314c63c0c362092c90ac874c9d3a25e159b3c654f8e983c2c468fe11e`
+- A123X平台知识库API上卷：ADLA CVE DEWARP ISP AE AWB MIPI VI PPU: `projects/a123x/archive/provider-5d328cbc0cd7b94a4a8cc6f684d4cc76c1d79fff46420826dedf632d7b8f2be3.md`; `provider-5d328cbc0cd7b94a4a8cc6f684d4cc76c1d79fff46420826dedf632d7b8f2be3`
+- A123X平台知识库API下卷：SYS PMZ VBP VENC VDEC AUDIO AI AO AENC ADEC GE2D REGION VO: `projects/a123x/archive/provider-a73decb620f01a8bdcfbde74de175815273e456b006e01efb0ed80cae8760f53.md`; `provider-a73decb620f01a8bdcfbde74de175815273e456b006e01efb0ed80cae8760f53`
+- A123X平台知识库来源总目：124份PDF 6897页 版本hash与页码检索: `projects/a123x/archive/provider-93fd336708010a604a08cf4d669ba929e9c518cd9b3f4959e2faaa12bfe156ce.md`; `provider-93fd336708010a604a08cf4d669ba929e9c518cd9b3f4959e2faaa12bfe156ce`
+- A123X平台知识库来源锁：52仓59路径 当前RC1身份与版本冲突: `projects/a123x/archive/provider-83119f21261db442509a638122f24e334fc0a962003a2321d8a32b5596604e05.md`; `provider-83119f21261db442509a638122f24e334fc0a962003a2321d8a32b5596604e05`
+- A123X平台知识库总入口：开发手册 API速查 PDF来源与常见问题: `projects/a123x/archive/provider-0b80e268b5c7112a2b600fb4887c9b1f20580d0f3e9552d80c62527a8af4748d.md`; `provider-0b80e268b5c7112a2b600fb4887c9b1f20580d0f3e9552d80c62527a8af4748d`
+- A123X独立知识卡：ASP采样率与48k PCM兼容: `projects/a123x/archive/provider-1abab6ea1e662135a2a93d8b5e152d3d50d2e26d365c74dc442d893e7ed7e024.md`; `provider-1abab6ea1e662135a2a93d8b5e152d3d50d2e26d365c74dc442d893e7ed7e024`
+- A123X独立知识卡：AEC参考通道、ASP串行调用与销毁: `projects/a123x/archive/provider-87c68b9702ee842cdbaf6a534612796e728571cf779ac80ed44f4b3271464b2f.md`; `provider-87c68b9702ee842cdbaf6a534612796e728571cf779ac80ed44f4b3271464b2f`
+- A123X独立知识卡：SC5336P当前CSI_AB和I2C0活动链路: `projects/a123x/archive/provider-e6eba4f3bcafa6c60b15a661299d4a23815a867cb1a4627e1f500e8368553c58.md`; `provider-e6eba4f3bcafa6c60b15a661299d4a23815a867cb1a4627e1f500e8368553c58`
+- A123X独立知识卡：MBI_VI_GetFrame不存在及PPU取帧替代入口: `projects/a123x/archive/provider-fdcfac80004bf03b17d85c761e5fbe154904af73b19ba0d8fd46a734aa0f1390.md`; `provider-fdcfac80004bf03b17d85c761e5fbe154904af73b19ba0d8fd46a734aa0f1390`
+- A123X独立知识卡：WiFi关联DHCP与休眠唤醒验收边界: `projects/a123x/archive/provider-1e1ebb24271a67d2c4d630a3a6382d202a6ddbf93455e525359dc72b3daa8407.md`; `provider-1e1ebb24271a67d2c4d630a3a6382d202a6ddbf93455e525359dc72b3daa8407`
+- A123X独立知识卡：ADLA2 ADLA3为何不能相加为12T INT8: `projects/a123x/archive/provider-4148e9fa603d3c32f86d408934811e644e2dd6bac2f77043e6c6f492cad06dfa.md`; `provider-4148e9fa603d3c32f86d408934811e644e2dd6bac2f77043e6c6f492cad06dfa`
+- A123X独立知识卡：MBI_ADLA_Forward推理生命周期与Query: `projects/a123x/archive/provider-4b368d0333697a634054431ff424856f256f44adef39a4a7d96c47483452eea6.md`; `provider-4b368d0333697a634054431ff424856f256f44adef39a4a7d96c47483452eea6`
+- A123X独立知识卡：MBI_VENC_GetStream与ReleaseStream码流借还: `projects/a123x/archive/provider-b8915250c84cdada0030b71bac7eaad56e32ce2a4af4eb6e363a0f236322311b.md`; `provider-b8915250c84cdada0030b71bac7eaad56e32ce2a4af4eb6e363a0f236322311b`
+- A123X独立知识卡：BlueZ BSA双栈UART互斥与hci0区别: `projects/a123x/archive/provider-b0658c3717ab0e7ff2fb3a6a982795a7207436959fcdcd2ee303d3cc9316bb18.md`; `provider-b0658c3717ab0e7ff2fb3a6a982795a7207436959fcdcd2ee303d3cc9316bb18`
+- A123X独立知识卡：UART_E蓝牙四线流控与uart-has-rtscts: `projects/a123x/archive/provider-abcf387555699875ffa379a54b89c543b592e0aa752558448550ebb884931fad.md`; `provider-abcf387555699875ffa379a54b89c543b592e0aa752558448550ebb884931fad`
+- A123X独立知识卡：eMMC扩容的GPT参数化与8G残留路径: `projects/a123x/archive/provider-e3bf34e0dddb1aeb297c76b7e39dfe6849bad115af31cd5fd2b31428283795a2.md`; `provider-e3bf34e0dddb1aeb297c76b7e39dfe6849bad115af31cd5fd2b31428283795a2`
+- A123X独立知识卡：PMZ CMA PSS与媒体内存去重统计: `projects/a123x/archive/provider-9d5190ab5b0ee23e3295aa28dc5851ffbd9793484847fb0201b3cd4ed4345a3c.md`; `provider-9d5190ab5b0ee23e3295aa28dc5851ffbd9793484847fb0201b3cd4ed4345a3c`
+- A123X独立知识卡：同一SDK工作区串行编译与切板清理: `projects/a123x/archive/provider-8b9124e4153cf2e9bbad86c2b667450b179db2447ef28faefb9a38f707767854.md`; `provider-8b9124e4153cf2e9bbad86c2b667450b179db2447ef28faefb9a38f707767854`
+- A123X独立知识卡：SC5336P实验IQ与真实RAW帧验收: `projects/a123x/archive/provider-b845be9142a64d41879f2d71f315058938825417bd0782cb9ee6f733b331503d.md`; `provider-b845be9142a64d41879f2d71f315058938825417bd0782cb9ee6f733b331503d`
+- A123X独立知识卡：run_pipeline.sh 1不是SC5336P启动开关: `projects/a123x/archive/provider-c5de979f667e78b0b35ca98a77f7bb3e8193fd3922fd1039ef85b0b5a40761f0.md`; `provider-c5de979f667e78b0b35ca98a77f7bb3e8193fd3922fd1039ef85b0b5a40761f0`
+- A123X独立知识卡：1080p NV12 RGB888帧内存与码率预算: `projects/a123x/archive/provider-8662a4d767b6c3e716a8648c787fee8791c4685c1633f34ba6d62404ff1504d7.md`; `provider-8662a4d767b6c3e716a8648c787fee8791c4685c1633f34ba6d62404ff1504d7`
+- A123X独立知识卡：CB400 PERIPHERALS DEVWIRE EVT1配置区别: `projects/a123x/archive/provider-28a70dd809f2c968ac0edfbaa7d27fda8b7ec1b0230e5a4bb4d9b18da28f4146.md`; `provider-28a70dd809f2c968ac0edfbaa7d27fda8b7ec1b0230e5a4bb4d9b18da28f4146`
+- A123X独立知识卡：SWU hwrevision兼容检查与旧更新器: `projects/a123x/archive/provider-e5d4c15506e4283544902c9c380a7bc1d0132db576452b6e8370704a0471e15e.md`; `provider-e5d4c15506e4283544902c9c380a7bc1d0132db576452b6e8370704a0471e15e`
+- A123X独立知识卡：signed文件与安全启动生产验签: `projects/a123x/archive/provider-fcb11191da4d527c3cac9f0f74b4db22d6ebcbecafb2734565a62d0ff94ecceb.md`; `provider-fcb11191da4d527c3cac9f0f74b4db22d6ebcbecafb2734565a62d0ff94ecceb`
+- A123X独立知识卡：DTB_NODE_OPT与用户态设备树目录不可见: `projects/a123x/archive/provider-2d34b5c6d84df87ddd4b271ee45d854e226c2843e1845d985fe0cda59c73bcaa.md`; `provider-2d34b5c6d84df87ddd4b271ee45d854e226c2843e1845d985fe0cda59c73bcaa`
+- A123X独立知识卡：内核模块与外置驱动最终安装目录: `projects/a123x/archive/provider-20ad5131891f0139dd84eaf69375c4ee27f39bcc55726ef8cbe7ece11b17696f.md`; `provider-20ad5131891f0139dd84eaf69375c4ee27f39bcc55726ef8cbe7ece11b17696f`
+- A123X独立知识卡：core离线调试先匹配ELF SO BuildID: `projects/a123x/archive/provider-c7935634f01bae21ec95809855891ff2da9711246acbc37d8ae2848877928a9d.md`; `provider-c7935634f01bae21ec95809855891ff2da9711246acbc37d8ae2848877928a9d`
+- A123X独立知识卡：NV3006A双SPI显示plan与硬件执行: `projects/a123x/archive/provider-7e04c0e2320b379d7395f8a1e363b092ec54d0e7fc1f70dd074ceabfc3220e9e.md`; `provider-7e04c0e2320b379d7395f8a1e363b092ec54d0e7fc1f70dd074ceabfc3220e9e`
+- A123X接口知识卡：MBI_ADEC_GetFrame: `projects/a123x/archive/provider-d22559bf09c1a0564419721d81528a9e24ccda043a0e7228fc8144a177b3d3a1.md`; `provider-d22559bf09c1a0564419721d81528a9e24ccda043a0e7228fc8144a177b3d3a1`
+- A123X接口知识卡：MBI_ADLA_Forward: `projects/a123x/archive/provider-f015a47cfaf960f9475f1a645a7453686c9d9da8cb5fa4399efc6ceee52bc2c4.md`; `provider-f015a47cfaf960f9475f1a645a7453686c9d9da8cb5fa4399efc6ceee52bc2c4`
+- A123X接口知识卡：MBI_ADLA_GetTskBufSize: `projects/a123x/archive/provider-6ba8cb7446f16c3c4470069977c9b292e81a68b1de91ddc995a648c2b949e65b.md`; `provider-6ba8cb7446f16c3c4470069977c9b292e81a68b1de91ddc995a648c2b949e65b`
+- A123X接口知识卡：MBI_ADLA_LoadModel: `projects/a123x/archive/provider-7fc2bdc667d7685994fb3087ee9631769da6aba7130710f3505801afa9514f28.md`; `provider-7fc2bdc667d7685994fb3087ee9631769da6aba7130710f3505801afa9514f28`
+- A123X接口知识卡：MBI_ADLA_Query: `projects/a123x/archive/provider-60c68bd6adacc5e76d226f4e3576c48dd7dbd6174f63ea686af68b0026c89a53.md`; `provider-60c68bd6adacc5e76d226f4e3576c48dd7dbd6174f63ea686af68b0026c89a53`
+- A123X接口知识卡：MBI_ADLA_UnloadModel: `projects/a123x/archive/provider-53895c2c0692c8d0f19fde771b50d7ace35a19d63b0a6948415143b385330d41.md`; `provider-53895c2c0692c8d0f19fde771b50d7ace35a19d63b0a6948415143b385330d41`
+- A123X接口知识卡：MBI_AENC_GetStream: `projects/a123x/archive/provider-48afd3be617f2590d72478a985ad948a1d0e04ff86201b9008bddf5fc4aa01ff.md`; `provider-48afd3be617f2590d72478a985ad948a1d0e04ff86201b9008bddf5fc4aa01ff`
+- A123X接口知识卡：MBI_AENC_ReleaseStream: `projects/a123x/archive/provider-2995288d6a5fdef924e1df00a04d4be18d8bf505eb69b4acac0de448342cde73.md`; `provider-2995288d6a5fdef924e1df00a04d4be18d8bf505eb69b4acac0de448342cde73`
+- A123X接口知识卡：MBI_AI_GetFrame: `projects/a123x/archive/provider-01d6be36439637b9ea564e699bbf2cae8e8f4167fd087396e0db96239f6d420b.md`; `provider-01d6be36439637b9ea564e699bbf2cae8e8f4167fd087396e0db96239f6d420b`
+- A123X接口知识卡：MBI_AI_ReleaseFrame: `projects/a123x/archive/provider-eaed2a463f1971cbe73382cb16c4ed840da5f843305550f0b7907aa09c2114c6.md`; `provider-eaed2a463f1971cbe73382cb16c4ed840da5f843305550f0b7907aa09c2114c6`
+- A123X接口知识卡：MBI_AO_SendFrame: `projects/a123x/archive/provider-11734b2baf398ae7990b17b5a0d3d048d71350114b665baa871dd98f9597eb34.md`; `provider-11734b2baf398ae7990b17b5a0d3d048d71350114b665baa871dd98f9597eb34`
+- A123X接口知识卡：MBI_DEW_EndJob: `projects/a123x/archive/provider-9bbd9687f3f11ded85c5dc019c40968f04ed4accc70b4e2ce7fac55586d4c8bb.md`; `provider-9bbd9687f3f11ded85c5dc019c40968f04ed4accc70b4e2ce7fac55586d4c8bb`
+- A123X接口知识卡：MBI_GE2D_BeginJob: `projects/a123x/archive/provider-b26f24cc605e0ec5b020251a479d018ef7caeee33fe101508e0c5ca294c57e6e.md`; `provider-b26f24cc605e0ec5b020251a479d018ef7caeee33fe101508e0c5ca294c57e6e`
+- A123X接口知识卡：MBI_GE2D_EndJob: `projects/a123x/archive/provider-779d99aec2f5c62492bb8d52ff08b344f1f4f1da5992c1fe742787749521613c.md`; `provider-779d99aec2f5c62492bb8d52ff08b344f1f4f1da5992c1fe742787749521613c`
+- A123X接口知识卡：MBI_ISP_Exit: `projects/a123x/archive/provider-632975714a59c49c658706168acbdb5673b2bcec986bda0f912d85fc3ffcd290.md`; `provider-632975714a59c49c658706168acbdb5673b2bcec986bda0f912d85fc3ffcd290`
+- A123X接口知识卡：MBI_ISP_Init: `projects/a123x/archive/provider-0f726b21ce052389763cb8ec1d8cf1f0fcd63bb82785c4f80d49812a5c0a01e5.md`; `provider-0f726b21ce052389763cb8ec1d8cf1f0fcd63bb82785c4f80d49812a5c0a01e5`
+- A123X接口知识卡：MBI_ISP_Run: `projects/a123x/archive/provider-c8f3a303cd7129575bd1200b6cd61f9b29e62d3c18ebc88663edc5a1619c743b.md`; `provider-c8f3a303cd7129575bd1200b6cd61f9b29e62d3c18ebc88663edc5a1619c743b`
+- A123X接口知识卡：MBI_MIPI_RX_EnableSensorClock: `projects/a123x/archive/provider-f0380b552e1254a4875ac7a4bf6985a922b913f773ef2ae8bb20bf54075caf5f.md`; `provider-f0380b552e1254a4875ac7a4bf6985a922b913f773ef2ae8bb20bf54075caf5f`
+- A123X接口知识卡：MBI_MIPI_RX_MipiDevExit: `projects/a123x/archive/provider-915fd0e8991cac9d2ed6ac9a0f63697f7c96cc67c45a7c4d2b39707fd67a3601.md`; `provider-915fd0e8991cac9d2ed6ac9a0f63697f7c96cc67c45a7c4d2b39707fd67a3601`
+- A123X接口知识卡：MBI_MIPI_RX_MipiDevInit: `projects/a123x/archive/provider-cf53107b171e8c356ea652643956bb50daf99bebe3d5500dc5437885294d370a.md`; `provider-cf53107b171e8c356ea652643956bb50daf99bebe3d5500dc5437885294d370a`
+- A123X接口知识卡：MBI_MIPI_RX_SetMipiAttr: `projects/a123x/archive/provider-99f269e6aac16a59db042118a09e38d2752d6ecff6f91f7aa270799d4826d31f.md`; `provider-99f269e6aac16a59db042118a09e38d2752d6ecff6f91f7aa270799d4826d31f`
+- A123X接口知识卡：MBI_PPU_GetChnFrame: `projects/a123x/archive/provider-65e9d57170ca5d055fba0e306b76c44c92578a9da12ae92d2f7af818ea3f2012.md`; `provider-65e9d57170ca5d055fba0e306b76c44c92578a9da12ae92d2f7af818ea3f2012`
+- A123X接口知识卡：MBI_PPU_ReleaseChnFrame: `projects/a123x/archive/provider-1e97e51e48acbe199dae56e6a1f847e3ba24aff9a22f4493be0fcab3b99175bf.md`; `provider-1e97e51e48acbe199dae56e6a1f847e3ba24aff9a22f4493be0fcab3b99175bf`
+- A123X接口知识卡：MBI_RGN_Create: `projects/a123x/archive/provider-fadd680550dcf7c4771a229ce3fdb6b279afac1a0ea3e25c3733707d60c1ec4c.md`; `provider-fadd680550dcf7c4771a229ce3fdb6b279afac1a0ea3e25c3733707d60c1ec4c`
+- A123X接口知识卡：MBI_SYS_Bind: `projects/a123x/archive/provider-2011446185c4e99ff86165d84f53b9f0b88442c326920ade9abde677733c58fd.md`; `provider-2011446185c4e99ff86165d84f53b9f0b88442c326920ade9abde677733c58fd`
+- A123X接口知识卡：MBI_SYS_Exit: `projects/a123x/archive/provider-327233f4eaaa14f9a4734680636aa6fe1fb7ef1b653eb022ae3336ad54620dc6.md`; `provider-327233f4eaaa14f9a4734680636aa6fe1fb7ef1b653eb022ae3336ad54620dc6`
+- A123X接口知识卡：MBI_SYS_Init: `projects/a123x/archive/provider-967242ffee78e9307d1d55dccb70d4b8fff12bda7cb15dd147b57339efa10639.md`; `provider-967242ffee78e9307d1d55dccb70d4b8fff12bda7cb15dd147b57339efa10639`
+- A123X接口知识卡：MBI_SYS_PmzAlloc: `projects/a123x/archive/provider-3f6d7a9d9bf9593d30bd4b200bd7074f8aa2a9254e82de20926e95695e5e884b.md`; `provider-3f6d7a9d9bf9593d30bd4b200bd7074f8aa2a9254e82de20926e95695e5e884b`
+- A123X接口知识卡：MBI_SYS_PmzFree: `projects/a123x/archive/provider-b5cc34882f54d73fb869f8a229b447d8a9095f69b21cb1b6936d0e2eb5496f12.md`; `provider-b5cc34882f54d73fb869f8a229b447d8a9095f69b21cb1b6936d0e2eb5496f12`
+- A123X接口知识卡：MBI_SYS_UnBind: `projects/a123x/archive/provider-c6448d2717fd6104a37f32cb4c2bbbc50b3cd17e25db4d2a7b53944be1166746.md`; `provider-c6448d2717fd6104a37f32cb4c2bbbc50b3cd17e25db4d2a7b53944be1166746`
+- A123X接口知识卡：MBI_VBP_GetVb: `projects/a123x/archive/provider-4dfba454e8fef9368345a4d26a9153a8b21264c04d9767f2ada43bcf2357e09f.md`; `provider-4dfba454e8fef9368345a4d26a9153a8b21264c04d9767f2ada43bcf2357e09f`
+- A123X接口知识卡：MBI_VBP_ReleaseVb: `projects/a123x/archive/provider-4dadcb47913000fb51e2132b945eae8881dc2944efe6f74002a4968226ae91bb.md`; `provider-4dadcb47913000fb51e2132b945eae8881dc2944efe6f74002a4968226ae91bb`
+- A123X接口知识卡：MBI_VDEC_GetFrame: `projects/a123x/archive/provider-a5c93070a8aec99f72b205dc34863ff8a072a50b0dedc818d066a69873867cca.md`; `provider-a5c93070a8aec99f72b205dc34863ff8a072a50b0dedc818d066a69873867cca`
+- A123X接口知识卡：MBI_VDEC_ReleaseFrame: `projects/a123x/archive/provider-2225a0a3b62705887afeca8045789f66c1ec3b6839aa9150e2b87d5a8815e68a.md`; `provider-2225a0a3b62705887afeca8045789f66c1ec3b6839aa9150e2b87d5a8815e68a`
+- A123X接口知识卡：MBI_VENC_CreateChn: `projects/a123x/archive/provider-f0cffcc9e201810ac4da64083c989e848ff2ba2e111f4f2dbb338cfc8d2f65dd.md`; `provider-f0cffcc9e201810ac4da64083c989e848ff2ba2e111f4f2dbb338cfc8d2f65dd`
+- A123X接口知识卡：MBI_VENC_GetStream: `projects/a123x/archive/provider-3de58201b7c4efc477eccb38fc3033ad4b3a18ef2b4805648808598a6484a59a.md`; `provider-3de58201b7c4efc477eccb38fc3033ad4b3a18ef2b4805648808598a6484a59a`
+- A123X接口知识卡：MBI_VENC_ReleaseStream: `projects/a123x/archive/provider-b6cfc726f686eed7e325689f15960b72a1f18074eec652b2fe84262da5fa81e4.md`; `provider-b6cfc726f686eed7e325689f15960b72a1f18074eec652b2fe84262da5fa81e4`
+- A123X接口知识卡：MBI_VI_EnableDev: `projects/a123x/archive/provider-b0a6db34ade0d09196e133bc9c419f9c72522e37a28554eec080f26bbdbf495c.md`; `provider-b0a6db34ade0d09196e133bc9c419f9c72522e37a28554eec080f26bbdbf495c`
+- A123X接口知识卡：MBI_VI_SetDevAttr: `projects/a123x/archive/provider-106fda13c26b855bb448864a58fac0bcd2a407142eba2bce6ccf499b102ea86c.md`; `provider-106fda13c26b855bb448864a58fac0bcd2a407142eba2bce6ccf499b102ea86c`
+- A123X接口知识卡：MBI_VO_Enable: `projects/a123x/archive/provider-ea2bddc915fd0ec3e5d9e09656e37c3fd37184a15bce395fe958b281c24f0fd5.md`; `provider-ea2bddc915fd0ec3e5d9e09656e37c3fd37184a15bce395fe958b281c24f0fd5`
+- A123X独立知识登记与原生Provider检索验收: `projects/a123x/validation/provider-86141f435a97a39a8460542dbbade1c7b465825310a5fd184caab257359b2b03.md`; `provider-86141f435a97a39a8460542dbbade1c7b465825310a5fd184caab257359b2b03`
+- A123X音频与传感器原生软件集成及离线验证: `projects/a123x/validation/provider-b07bbea9d1ec8ac9d7f48b7f5a22747c84f36f1f59f89dd4f918d06c42f33cec.md`; `provider-b07bbea9d1ec8ac9d7f48b7f5a22747c84f36f1f59f89dd4f918d06c42f33cec`
+- AISpeech 两小时 N08 独立验证与测试候选结果: `projects/gros/validation/provider-b3ce6032baa4857ec7b1aa68de001b6f0eb0fa0533a4b6fca1df60a13c02471d.md`; `provider-b3ce6032baa4857ec7b1aa68de001b6f0eb0fa0533a4b6fca1df60a13c02471d`
+- A123X：Bootloader中BL2、BL30、BL31、BL32、BL33分别如何看待: `projects/a123x/archive/provider-7e46d8506b860f35fc98d249fa4068300fe9e86f46b5ee58c9b56ffd29ed2408.md`; `provider-7e46d8506b860f35fc98d249fa4068300fe9e86f46b5ee58c9b56ffd29ed2408`
+- A123X：U-Boot裸机工具链为何不能直接当Linux应用工具链: `projects/a123x/archive/provider-42e9817f4676a3bda127a6856278e607f0c2e68d286c1101db9d6668b6dc219a.md`; `provider-42e9817f4676a3bda127a6856278e607f0c2e68d286c1101db9d6668b6dc219a`
+- A123X：替换BL阶段二进制和从源码重编阶段有什么区别: `projects/a123x/archive/provider-61f33b013a9e6753e057edebf5d88a961a91ca9abb89af637845312b389fa945.md`; `provider-61f33b013a9e6753e057edebf5d88a961a91ca9abb89af637845312b389fa945`
+- A123X：SD、USB、存储启动的U-Boot镜像如何区分: `projects/a123x/archive/provider-0bec75e3b07616c613d1bbae92daf38d2dc8df7b0311f2de1ad59bcd34a0eda3.md`; `provider-0bec75e3b07616c613d1bbae92daf38d2dc8df7b0311f2de1ad59bcd34a0eda3`
+- A123X：GPIO引脚如何从DTS映射到驱动逻辑电平: `projects/a123x/archive/provider-010af46f2d5b06f7a82bb1ba476c9ab05b09d6261019292edc90c4f03654269b.md`; `provider-010af46f2d5b06f7a82bb1ba476c9ab05b09d6261019292edc90c4f03654269b`
+- A123X：GPIO字符设备ioctl应该操作哪个fd: `projects/a123x/archive/provider-0be21c427328bf34d4370b07b20d3b675bbeb4cc33529fffd9d1ccda50080d87.md`; `provider-0be21c427328bf34d4370b07b20d3b675bbeb4cc33529fffd9d1ccda50080d87`
+- A123X：gpiotools_get读取电平会不会改变GPIO方向: `projects/a123x/archive/provider-542b45119feabd593be15ff343ed56ad12f63ead8964203d07662ecd954a2bba.md`; `provider-542b45119feabd593be15ff343ed56ad12f63ead8964203d07662ecd954a2bba`
+- A123X：I2C设备不通时如何区分adapter和从设备驱动: `projects/a123x/archive/provider-74513277c9248798fc08b4e47630edfcccd7f200cda08044555dd2a53e60331d.md`; `provider-74513277c9248798fc08b4e47630edfcccd7f200cda08044555dd2a53e60331d`
+- A123X：16位寄存器地址怎样用i2ctransfer组织组合读: `projects/a123x/archive/provider-614c8287395007bfd8ef1937c1c99ef0ca342c1176b5d626a4969518ce25a62c.md`; `provider-614c8287395007bfd8ef1937c1c99ef0ca342c1176b5d626a4969518ce25a62c`
+- A123X：SPI片选、频率和CPOL/CPHA应该配置在哪: `projects/a123x/archive/provider-8f0dd6a0b3753a167c0a4f62eee490b5d371bc461d092cb56b8f71a8d3b1f2df.md`; `provider-8f0dd6a0b3753a167c0a4f62eee490b5d371bc461d092cb56b8f71a8d3b1f2df`
+- A123X：U-Boot sspi命令的bit_len、word_len、speed单位是什么: `projects/a123x/archive/provider-f4839da232619d9e2498b0901f3f7480816971461eb7030975454f5d8e02a9b5.md`; `provider-f4839da232619d9e2498b0901f3f7480816971461eb7030975454f5d8e02a9b5`
+- A123X：PWM周期和占空比如何从Hz换算为纳秒: `projects/a123x/archive/provider-966a8db394ae94a2569443efac84973967af636fb7d0180a3244c487ba7b9fea.md`; `provider-966a8db394ae94a2569443efac84973967af636fb7d0180a3244c487ba7b9fea`
+- A123X：为什么pwmchip0不一定是预期的PWM引脚: `projects/a123x/archive/provider-ff05a2cd8da80068cc020255c923c42218d9acc1911c9747c72765b923ee4650.md`; `provider-ff05a2cd8da80068cc020255c923c42218d9acc1911c9747c72765b923ee4650`
+- A123X：UART驱动路径和earlycon为何要按内核版本核对: `projects/a123x/archive/provider-8d4ff6c6972d75597c8216c0554db39e1524b97bf2f01dfce41b4b2b2a83e7dd.md`; `provider-8d4ff6c6972d75597c8216c0554db39e1524b97bf2f01dfce41b4b2b2a83e7dd`
+- A123X：共享reset和独占reset句柄应该如何选择: `projects/a123x/archive/provider-2f7b70a802ce5d539f6141df912ead6a51eb2a72a4674c2d24c34d4d8054558f.md`; `provider-2f7b70a802ce5d539f6141df912ead6a51eb2a72a4674c2d24c34d4d8054558f`
+- A123X：RTC设备节点、sysfs与proc之间是什么关系: `projects/a123x/archive/provider-4fac1dbb86ad96dcc277e718153b6732ce5573b4e63eb6f721e0b2e924686229.md`; `provider-4fac1dbb86ad96dcc277e718153b6732ce5573b4e63eb6f721e0b2e924686229`
+- A123X：cpufreq的policy、related_cpus和affected_cpus如何理解: `projects/a123x/archive/provider-45eebeeb44f8b2291d566518e86d162721b06bb6b0378f239cb5602b2a7b8436.md`; `provider-45eebeeb44f8b2291d566518e86d162721b06bb6b0378f239cb5602b2a7b8436`
+- A123X：CPU频率sysfs读数是kHz还是Hz，当前值为何不同: `projects/a123x/archive/provider-d25bf55763a8d9516c3c1ae0ea7f1d437581eaddf6abd46ef27f31ed3f48bbf8.md`; `provider-d25bf55763a8d9516c3c1ae0ea7f1d437581eaddf6abd46ef27f31ed3f48bbf8`
+- A123X：修改CPU governor前应该查询哪些信息: `projects/a123x/archive/provider-29fe9158c8c5798d4c5b75c62361b946fa454217f4a07b50ecd6860ff1b9b53c.md`; `provider-29fe9158c8c5798d4c5b75c62361b946fa454217f4a07b50ecd6860ff1b9b53c`
+- A123X：thermal_zone0是否一定是SoC温度，温度如何读: `projects/a123x/archive/provider-c4dd412729e14bc6e60ce2fc072c4cc88fd61cadffcf6ca091c6a7b708c92cd3.md`; `provider-c4dd412729e14bc6e60ce2fc072c4cc88fd61cadffcf6ca091c6a7b708c92cd3`
+- A123X：温控hysteresis为什么能避免反复插拔CPU: `projects/a123x/archive/provider-14c55f7bdfd0fd0e25bee60aa54d27bc435b38d736270eb8a32d0588ffee356f.md`; `provider-14c55f7bdfd0fd0e25bee60aa54d27bc435b38d736270eb8a32d0588ffee356f`
+- A123X：CMA保留内存是否永久不能给普通内存使用: `projects/a123x/archive/provider-6ab9b19c1d15192beac43525354777a90bc67c7815916c35a74d1b42a542a18b.md`; `provider-6ab9b19c1d15192beac43525354777a90bc67c7815916c35a74d1b42a542a18b`
+- A123X：cma_alloc和dma_alloc_coherent的size单位相同吗: `projects/a123x/archive/provider-5ea95367ebbb459bedd1db02bb092d5c30e5cd38c4d13ef219a1c7eee5bfb9f5.md`; `provider-5ea95367ebbb459bedd1db02bb092d5c30e5cd38c4d13ef219a1c7eee5bfb9f5`
+- A123X：CMA调试节点哪些可读，哪些会改变分配状态: `projects/a123x/archive/provider-9ac9f292b00cbb6c42c5d5ce1718e6e4eab19f8efa1474820302cf06c3040753.md`; `provider-9ac9f292b00cbb6c42c5d5ce1718e6e4eab19f8efa1474820302cf06c3040753`
+- A123X：MIPI黑屏时proc中应先看哪些状态字段: `projects/a123x/archive/provider-88788e2115be564c79648365e5009dff954584981b674f8af655e7042756bbcc.md`; `provider-88788e2115be564c79648365e5009dff954584981b674f8af655e7042756bbcc`
+- A123X：MIPI LaneCnt与Lane1到Lane4状态能否直接证明Sensor出图: `projects/a123x/archive/provider-ddce98b4ba1c11fe88d0441d51387065d9be2385b93b0b9a6ff8c6f42e1f7ec7.md`; `provider-ddce98b4ba1c11fe88d0441d51387065d9be2385b93b0b9a6ff8c6f42e1f7ec7`
+- A123X：PPU取到的图像帧怎样成对归还: `projects/a123x/archive/provider-441531f5a785f98ec9e54f365f30b23609482410d00dcec244eca465d454584e.md`; `provider-441531f5a785f98ec9e54f365f30b23609482410d00dcec244eca465d454584e`
+- A123X：PPU扩展通道可以绑定另一个扩展通道吗: `projects/a123x/archive/provider-ec3d0bcbc5a189697db3a169c845601b0f04ebe7a532588537c2469be146e2f2.md`; `provider-ec3d0bcbc5a189697db3a169c845601b0f04ebe7a532588537c2469be146e2f2`
+- A123X：A123X的VENC码流缓冲u32BufSize和JPEG缓冲怎样配置: `projects/a123x/archive/provider-a3e692293c5382f7e4921f2a6bcaf9373929b236021a878d3e613920e2ff5e12.md`; `provider-a3e692293c5382f7e4921f2a6bcaf9373929b236021a878d3e613920e2ff5e12`
+- A123X：VENC GetStream后的缓冲何时ReleaseStream: `projects/a123x/archive/provider-7d847664c9b157565ba0a13048150d5b04562edb4ad8ae9004463b91cd096c9a.md`; `provider-7d847664c9b157565ba0a13048150d5b04562edb4ad8ae9004463b91cd096c9a`
+- A123X：一帧VENC码流为何不能只读取pstPack第一个包: `projects/a123x/archive/provider-d89783241c9654b430131fe0f540b3f0ff2fa0c882e8a15d3bd92641c343ade1.md`; `provider-d89783241c9654b430131fe0f540b3f0ff2fa0c882e8a15d3bd92641c343ade1`
+- A123X：请求IDR接口返回成功是否代表新关键帧已经发出: `projects/a123x/archive/provider-15a6d720d3a6d2137f710ea93337eccfb44815dd012c7c8f42613c0635473bc8.md`; `provider-15a6d720d3a6d2137f710ea93337eccfb44815dd012c7c8f42613c0635473bc8`
+- A123X：AI GetFrame的s32MilliSec是否真的支持阻塞超时: `projects/a123x/archive/provider-283f3899c16be969803adc5cd5db588ddf63a2d5354f403c3a17a9eb5e49af05.md`; `provider-283f3899c16be969803adc5cd5db588ddf63a2d5354f403c3a17a9eb5e49af05`
+- A123X：AI采集帧与AEC参考帧应该怎样归还: `projects/a123x/archive/provider-8a3796ba78b7967a5dae7883c9d307aa1c26afa6df251e9f9266465d51b45b70.md`; `provider-8a3796ba78b7967a5dae7883c9d307aa1c26afa6df251e9f9266465d51b45b70`
+- A123X：音频每帧采样点数如何换算时长与PCM字节数: `projects/a123x/archive/provider-afce50989fd13b8f4255465dc26ae5841b6fa3439962197d2252ddb78cb43936.md`; `provider-afce50989fd13b8f4255465dc26ae5841b6fa3439962197d2252ddb78cb43936`
+- A123X：AUDIO_FRAME_T哪些字段可用于排查丢帧和格式错误: `projects/a123x/archive/provider-ecd8f90df1e917f56d7dd73595f2dbc4865e4ecf2dd51718812b775b0f5ef6c6.md`; `provider-ecd8f90df1e917f56d7dd73595f2dbc4865e4ecf2dd51718812b775b0f5ef6c6`
+- A123X：ADLA LoadModel应该传模型文件名还是内存地址: `projects/a123x/archive/provider-e84d2cd8b23c2a060350ac1a332fd2750f028e19ccba020ffe112bea2882f7c9.md`; `provider-e84d2cd8b23c2a060350ac1a332fd2750f028e19ccba020ffe112bea2882f7c9`
+- A123X：ADLA任务缓冲大小能否按图片宽高直接猜: `projects/a123x/archive/provider-2d54a85133476e9fbe7b4fedc240f3bf5f6ab4442db828875232f98ac7bc82f2.md`; `provider-2d54a85133476e9fbe7b4fedc240f3bf5f6ab4442db828875232f98ac7bc82f2`
+- A123X：ADLA Query返回0是否就表示推理完成: `projects/a123x/archive/provider-cb8b8595848c86bf96fb910f79ccf650a146e5bdea5d605aa7677f73274b804c.md`; `provider-cb8b8595848c86bf96fb910f79ccf650a146e5bdea5d605aa7677f73274b804c`
+- A123X：ADLA blob的u32Stride是像素数还是字节数: `projects/a123x/archive/provider-5766c326ededa1fbab68d34f26d73f0eb64afce392458188825f7923e4506d50.md`; `provider-5766c326ededa1fbab68d34f26d73f0eb64afce392458188825f7923e4506d50`
+- A123X：挂载失败时如何判断文件系统驱动或压缩支持缺失: `projects/a123x/archive/provider-98d3233c55cb798a37476fb954a0e434f7032c8a2851e80c02773bcdc9802886.md`; `provider-98d3233c55cb798a37476fb954a0e434f7032c8a2851e80c02773bcdc9802886`
+- A123X：SquashFS根文件系统为什么不能直接写入修改: `projects/a123x/archive/provider-df531360d223aa583bf39bcfd7095310695972d8581a7c1419c3571bef328746.md`; `provider-df531360d223aa583bf39bcfd7095310695972d8581a7c1419c3571bef328746`
+- A123X：eMMC出现CRC错误时为何要做降速对照和波形检查: `projects/a123x/archive/provider-49265034962904b8f61d41254fe7ce6e6195f6bc6187fd034fb6a9495d10ffb6.md`; `provider-49265034962904b8f61d41254fe7ce6e6195f6bc6187fd034fb6a9495d10ffb6`
+- A123X：eMMC调试采样窗口路径能否跨板照搬: `projects/a123x/archive/provider-c6e0d2ca264c526c3f613144c8bb3e1e02f27120c0d091aa551d952bbc8e259f.md`; `provider-c6e0d2ca264c526c3f613144c8bb3e1e02f27120c0d091aa551d952bbc8e259f`
+- A123X：Unifykey的normal与efuse后端是否可以互换: `projects/a123x/archive/provider-8019ae39f4d271bdb6fee758b130a4f20ee8a3375788c0a0f667f8054bf710fc.md`; `provider-8019ae39f4d271bdb6fee758b130a4f20ee8a3375788c0a0f667f8054bf710fc`
+- A123X：Unifykey查询返回失败时能否判断key未烧录: `projects/a123x/archive/provider-275a7c9ee712c3ee8c47f54559437d34971d11f4822b40959f3bc61ec24f09dc.md`; `provider-275a7c9ee712c3ee8c47f54559437d34971d11f4822b40959f3bc61ec24f09dc`
+- A123X：打开dev watchdog返回busy是否代表看门狗故障: `projects/a123x/archive/provider-bc47ae5e6d22fd8d42eaa0d014660eec84a63f60b64aa3a4909c74c82f9686ee.md`; `provider-bc47ae5e6d22fd8d42eaa0d014660eec84a63f60b64aa3a4909c74c82f9686ee`
+- A123X：怎样只读查看看门狗，为什么不要试写nowayout: `projects/a123x/archive/provider-8e079fad5356e51d04f1e030d85fd17551f6c5b994b2f8b988103176be8292ea.md`; `provider-8e079fad5356e51d04f1e030d85fd17551f6c5b994b2f8b988103176be8292ea`
+- A123X：Mailbox用户态设备节点不存在是否表示AOCPU坏了: `projects/a123x/archive/provider-17f72ef713a99e8ba290580bb3c88ae5507a13bd67afa7378c71e13f767b5574.md`; `provider-17f72ef713a99e8ba290580bb3c88ae5507a13bd67afa7378c71e13f767b5574`
+- A123X：Mailbox虚拟通道能否并发直接写同一物理通道: `projects/a123x/archive/provider-8ecd41243d1be12cb1656de5f0e063a9ee497da07365f94ba4e6c53282ec6b28.md`; `provider-8ecd41243d1be12cb1656de5f0e063a9ee497da07365f94ba4e6c53282ec6b28`
+- A123X：hardlockup应该收集哪个CPU的现场: `projects/a123x/archive/provider-54879aaf019cb62739e05b7fd64f28a88735ec8e06dce1d9e34478b098afa5e7.md`; `provider-54879aaf019cb62739e05b7fd64f28a88735ec8e06dce1d9e34478b098afa5e7`
+- A123X：softlockup与普通高CPU负载应该如何区分: `projects/a123x/archive/provider-4b9808875b4a21c9c0c8f6f667b5c9072c327df632214d698e66c3e9d9e12fc6.md`; `provider-4b9808875b4a21c9c0c8f6f667b5c9072c327df632214d698e66c3e9d9e12fc6`
+- A123X：生产镜像bin与mbn是否要成对交付，能否套用C3工具: `projects/a123x/archive/provider-2e404f397cdf99034cc31216dbbe6805d77881e73b36698c319e712a7e7a27bf.md`; `provider-2e404f397cdf99034cc31216dbbe6805d77881e73b36698c319e712a7e7a27bf`
+- A123X：AOCPU手册中的任务时间片和DDR限制能直接套A123X吗: `projects/a123x/archive/provider-89be07d2095363542862d7be45267225a44eaf5819c54d8214bcdd9209e0efc9.md`; `provider-89be07d2095363542862d7be45267225a44eaf5819c54d8214bcdd9209e0efc9`
+- A123X：UBIFS的LZO和ZLIB压缩应该如何权衡: `projects/a123x/archive/provider-d7c2e96f45f06088af0cdf77ce2bf64c6bfddb1c67c1728b6fcbb70a72840819.md`; `provider-d7c2e96f45f06088af0cdf77ce2bf64c6bfddb1c67c1728b6fcbb70a72840819`
+- A123X跨领域独立知识归档与原生检索验收 2026-10-24: `projects/a123x/validation/provider-8448e4cb3fff53ef1d26185920d8227b052e045da9a8bf8b912448c1323bd636.md`; `provider-8448e4cb3fff53ef1d26185920d8227b052e045da9a8bf8b912448c1323bd636`
+- A123X 音视频与传感器数据工具软件验证: `projects/a123x/validation/provider-6af0fe580b21ade759bf89ce3bc00c04a25194924fa2a205fe9b59e349faa14a.md`; `provider-6af0fe580b21ade759bf89ce3bc00c04a25194924fa2a205fe9b59e349faa14a`
+- A123X 音视频与传感器数据工具软件验证: `projects/a123x/validation/provider-3e7e7ee6118bbf85a4f217b41afc002fe7ff3a194f4f6dc7202f1731344d52dd.md`; `provider-3e7e7ee6118bbf85a4f217b41afc002fe7ff3a194f4f6dc7202f1731344d52dd`
+- A123X：ISP初始化前必须具备哪些驱动、回调和公共属性: `projects/a123x/archive/provider-af710e8ac9e90cd1fe7aade124161ee1e1a3313887a1f512db39634ada1251f5.md`; `provider-af710e8ac9e90cd1fe7aade124161ee1e1a3313887a1f512db39634ada1251f5`
+- A123X：ISP公共属性中的Sensor尺寸、裁剪窗口和输出通道尺寸相同吗: `projects/a123x/archive/provider-f07fef0c11f61a20d606cf70093762d490687f15cf80a3ec027763b99a3a9fbe.md`; `provider-f07fef0c11f61a20d606cf70093762d490687f15cf80a3ec027763b99a3a9fbe`
+- A123X：手动曝光u32ExpTime能否直接按PDF的x除4096毫秒设置: `projects/a123x/archive/provider-026b94288458bb56265ba6037b6036bb607be76cc7f17f8447d767ccaf9efa19.md`; `provider-026b94288458bb56265ba6037b6036bb607be76cc7f17f8447d767ccaf9efa19`
+- A123X：手动模拟数字增益是log2乘4096还是线性Q22.10: `projects/a123x/archive/provider-5490e6d7b0eeb4cec9ce415053780b76552193357f037b0987717b32337c1ba8.md`; `provider-5490e6d7b0eeb4cec9ce415053780b76552193357f037b0987717b32337c1ba8`
+- A123X：AWB的bByPass是否等于PDF中的bEnable字段: `projects/a123x/archive/provider-638c134843ff7f998688617b2ee8d31f91fe5cf47b52a9718e4ac2056e43802a.md`; `provider-638c134843ff7f998688617b2ee8d31f91fe5cf47b52a9718e4ac2056e43802a`
+- A123X：AE ROI与视频编码ROI是否是一套矩形配置: `projects/a123x/archive/provider-62919c5435c674e0db2dd26cec4f02604620db058a9b7efa5290383318c1a2fd.md`; `provider-62919c5435c674e0db2dd26cec4f02604620db058a9b7efa5290383318c1a2fd`
+- A123X：50Hz与60Hz防频闪模式和LIMIT模式有什么区别: `projects/a123x/archive/provider-01e5acbc9a73b0a564de706a44d72020ab751fee95f6647d51ee9924c0c447b6.md`; `provider-01e5acbc9a73b0a564de706a44d72020ab751fee95f6647d51ee9924c0c447b6`
+- A123X：暗光帧率下降一定是视频编码器丢帧吗: `projects/a123x/archive/provider-27b34ff47d82f483fc623e34a24e181ed292a390c026fa332525cdf56e1aff07.md`; `provider-27b34ff47d82f483fc623e34a24e181ed292a390c026fa332525cdf56e1aff07`
+- A123X：CCM系数能否只分配普通3乘3的9个元素: `projects/a123x/archive/provider-38a1465db5827fbfb2df0e7abb41bb2dfa42fc79baaa87145d6d0451ce867a94.md`; `provider-38a1465db5827fbfb2df0e7abb41bb2dfa42fc79baaa87145d6d0451ce867a94`
+- A123X：开启DRC是否等于Sensor已经切换到WDR模式: `projects/a123x/archive/provider-b741c029d0099bc0979718524de27f791db651379e009f6facbc0a2f441da113.md`; `provider-b741c029d0099bc0979718524de27f791db651379e009f6facbc0a2f441da113`
+- A123X：GE2D EndJob失败后为什么必须CancelJob: `projects/a123x/archive/provider-122740db5ddeda7f132b1929224a71ee5564c10fe9dfb1dfeff2dc69d97c835f.md`; `provider-122740db5ddeda7f132b1929224a71ee5564c10fe9dfb1dfeff2dc69d97c835f`
+- A123X：GE2D surface能否只填一个首地址和图像宽度: `projects/a123x/archive/provider-bbc6088f32275a24bf694cc4f5349dc56e19847c743a98a8120edad4b4277397.md`; `provider-bbc6088f32275a24bf694cc4f5349dc56e19847c743a98a8120edad4b4277397`
+- A123X：GE2D透明度异常应该检查哪些alpha选项: `projects/a123x/archive/provider-8d076968337a63cee9dcee915791b0356c7d5cbaf0ac66f91254f18e4f1f023b.md`; `provider-8d076968337a63cee9dcee915791b0356c7d5cbaf0ac66f91254f18e4f1f023b`
+- A123X：GE2D结构体有bCompress就能启用压缩吗: `projects/a123x/archive/provider-285230df3c2cc86dedccbd3c63d6caf09c4d9880c111351f4f9e6fb7ce0cd044.md`; `provider-285230df3c2cc86dedccbd3c63d6caf09c4d9880c111351f4f9e6fb7ce0cd044`
+- A123X：GE2D WaitAllDone是等待一个job还是全部任务: `projects/a123x/archive/provider-d1c9abf3958f9b8dabe81cc5905cfe96ba8f9db978adb0db49ef2a5c282ca6cc.md`; `provider-d1c9abf3958f9b8dabe81cc5905cfe96ba8f9db978adb0db49ef2a5c282ca6cc`
+- A123X：REGION创建成功为什么还没有显示OSD: `projects/a123x/archive/provider-229b2c21b9315a12b5676f415d2c4f7e5c77943011a6c43a546b0601378f28ba.md`; `provider-229b2c21b9315a12b5676f415d2c4f7e5c77943011a6c43a546b0601378f28ba`
+- A123X：OSD位图大小和格式不匹配时会自动缩放吗: `projects/a123x/archive/provider-bc417a640a7d9076c531f8fec807df3c147407363fbbdeaa03c787cb5fe932e4.md`; `provider-bc417a640a7d9076c531f8fec807df3c147407363fbbdeaa03c787cb5fe932e4`
+- A123X：直接写REGION canvas后为何还需要UpdateCanvas: `projects/a123x/archive/provider-efa051bd98e845f30fb1a62043e6b38eb586055719e6528d58e785908bf776cd.md`; `provider-efa051bd98e845f30fb1a62043e6b38eb586055719e6528d58e785908bf776cd`
+- A123X：纯色遮挡COVER和位图OVERLAY应该怎样选择: `projects/a123x/archive/provider-40f331f15714dfd6fc7bdad6e1cb40cbf025881bcebba8785ca36801f3a31111.md`; `provider-40f331f15714dfd6fc7bdad6e1cb40cbf025881bcebba8785ca36801f3a31111`
+- A123X：DEWARP非阻塞EndJob后什么时候可以复用图像缓冲: `projects/a123x/archive/provider-9c3e32ed130a8a9116456d8d7a4359a15a10047045871dcea8fb97b3ebf0a117.md`; `provider-9c3e32ed130a8a9116456d8d7a4359a15a10047045871dcea8fb97b3ebf0a117`
+- A123X：DEWARP加载FW文件和按参数生成FW有何区别: `projects/a123x/archive/provider-0e0cbae2ac66647ed891f383931db21c2614aa077a4d55a02d9bbc63e67950f4.md`; `provider-0e0cbae2ac66647ed891f383931db21c2614aa077a4d55a02d9bbc63e67950f4`
+- A123X：DEWARP画框的起点终点和边框宽度有哪些奇偶要求: `projects/a123x/archive/provider-536ae46fac589034b4299b0af271ab81859bb4d11835609a0b12da41011ef322.md`; `provider-536ae46fac589034b4299b0af271ab81859bb4d11835609a0b12da41011ef322`
+- A123X：CVE异步查询成功和任务完成应如何区分: `projects/a123x/archive/provider-6b724616fb46389104b3cf3cbbac5698ba2b0239e3f3703098ab38e601907208.md`; `provider-6b724616fb46389104b3cf3cbbac5698ba2b0239e3f3703098ab38e601907208`
+- A123X：CVE的U8C3 PACKAGE和PLANAR能否用同一份地址布局: `projects/a123x/archive/provider-bc0548c08c5becf61e6fc81b3af52edd40511b5a59e9bb6d7618c64d0a5347c5.md`; `provider-bc0548c08c5becf61e6fc81b3af52edd40511b5a59e9bb6d7618c64d0a5347c5`
+- A123X：A123X CVE Filter能否直接复制老C302X的参数列表: `projects/a123x/archive/provider-bdc8cf7a315121010505d4fc9bfb6c69587e641b125ebb54f1485702b4ebd4db.md`; `provider-bdc8cf7a315121010505d4fc9bfb6c69587e641b125ebb54f1485702b4ebd4db`
+- A123X：CannyHysEdge和CannyEdge两步各做什么: `projects/a123x/archive/provider-564c45f90d47039d030484bdc9f4fe42d3eb8e9949dfaa71f8085d5d16e9e702.md`; `provider-564c45f90d47039d030484bdc9f4fe42d3eb8e9949dfaa71f8085d5d16e9e702`
+- A123X：USB Host和Gadget驱动能否只看接口外形判断: `projects/a123x/archive/provider-5e7dd2f28a7893348757a61250e20870d6f908372aed6dff02585df536108061.md`; `provider-5e7dd2f28a7893348757a61250e20870d6f908372aed6dff02585df536108061`
+- A123X：USB摄像头输入与把设备做成USB摄像头使用同一配置吗: `projects/a123x/archive/provider-211e00cf117a50c153a4a440236b37d9da8c2dda7dec29eb0b5c5a601000b0e9.md`; `provider-211e00cf117a50c153a4a440236b37d9da8c2dda7dec29eb0b5c5a601000b0e9`
+- A123X：lsusb能看到U盘为什么还没有可挂载分区: `projects/a123x/archive/provider-fa209ce1b9cd345198e64eb02f20c75c37456cdc81f768ae6cd27ebbf80edff3.md`; `provider-fa209ce1b9cd345198e64eb02f20c75c37456cdc81f768ae6cd27ebbf80edff3`
+- A123X：USB复合设备为什么有多个接口和不同Driver: `projects/a123x/archive/provider-afcad1c9effe377340641d59a9f40fb892743146194f9b3efaaaf21c259bf83a.md`; `provider-afcad1c9effe377340641d59a9f40fb892743146194f9b3efaaaf21c259bf83a`
+- A123X：以太网PHY寄存器和MAC寄存器能用同一地址读法吗: `projects/a123x/archive/provider-10ce06886e4161ac4d4c780b516cb91803918946f4ed89561a84325b5b816b96.md`; `provider-10ce06886e4161ac4d4c780b516cb91803918946f4ed89561a84325b5b816b96`
+- A123X：RGMII调试为什么应扫有效窗口而不是抄一个delay值: `projects/a123x/archive/provider-3f39a8e395ba6329745bde0704b8c1f6cdcd828ee0a58603c5b584862ae13867.md`; `provider-3f39a8e395ba6329745bde0704b8c1f6cdcd828ee0a58603c5b584862ae13867`
+- A123X：mDNS唤醒和mDNS Offload是否等同，能否同时支持Magic: `projects/a123x/archive/provider-0f42b78d4d72c301e60028394883a1aa4f7ed3c5b98a67e62151ce0b9c2b6424.md`; `provider-0f42b78d4d72c301e60028394883a1aa4f7ed3c5b98a67e62151ce0b9c2b6424`
+- A123X：nand read和read.raw为什么不能互换备份或恢复: `projects/a123x/archive/provider-c58fd1704df517a998de677a792b3c1a019beb5e21bb379964888ce3095c1289.md`; `provider-c58fd1704df517a998de677a792b3c1a019beb5e21bb379964888ce3095c1289`
+- A123X：哪些NAND调试命令会破坏数据或坏块标记: `projects/a123x/archive/provider-991547c1e7b74204567b24e84adb77cc692b64ddfd7f2004ac7fdf679257cf3a.md`; `provider-991547c1e7b74204567b24e84adb77cc692b64ddfd7f2004ac7fdf679257cf3a`
+- A123X：NAND根文件系统挂载失败是否应该先重刷: `projects/a123x/archive/provider-c27d4a56701a9bd59781ff86a98ac5c055b5b183eab378aac898b74c053f678f.md`; `provider-c27d4a56701a9bd59781ff86a98ac5c055b5b183eab378aac898b74c053f678f`
+- A123X：clocks和clock-names、assigned-clock-rates分别负责什么: `projects/a123x/archive/provider-d3b3186fc35da5caaf591a5cb1bf4fc37913a49ebb66922f257966efc4888cca.md`; `provider-d3b3186fc35da5caaf591a5cb1bf4fc37913a49ebb66922f257966efc4888cca`
+- A123X：clk_set_rate成功为什么实际频率仍可能不同: `projects/a123x/archive/provider-d60d43e3b87e8926e19b59aa185e92436a6e9078d49ea7593521d7b52da73068.md`; `provider-d60d43e3b87e8926e19b59aa185e92436a6e9078d49ea7593521d7b52da73068`
+- A123X：为什么调共享PLL会影响另一个外设: `projects/a123x/archive/provider-9717f88aebaa797034561d5313aa841aa1d9b8da8e4dfa76332bcdbf7f009f91.md`; `provider-9717f88aebaa797034561d5313aa841aa1d9b8da8e4dfa76332bcdbf7f009f91`
+- A123X：Slab增长应该怎样区分可回收缓存与不可回收对象: `projects/a123x/archive/provider-648d891bcf2214718f9a6a692ec61bd820c1ab20e552d4a5a6430916e8de5e72.md`; `provider-648d891bcf2214718f9a6a692ec61bd820c1ab20e552d4a5a6430916e8de5e72`
+- A123X：空闲内存还有剩余为什么大块分配或vmalloc会失败: `projects/a123x/archive/provider-ca89701ca9ba78cee5f80eff250966caf56fbf7a75921340a3e7f0ede1c5341a.md`; `provider-ca89701ca9ba78cee5f80eff250966caf56fbf7a75921340a3e7f0ede1c5341a`
+- A123X：KASAN和KMEMLEAK各适合定位什么问题: `projects/a123x/archive/provider-57484119d83decfa015cf49a29027dc8c9c4da1600e8ccbdcb78dd0648088f88.md`; `provider-57484119d83decfa015cf49a29027dc8c9c4da1600e8ccbdcb78dd0648088f88`
+- A123X：内存手册中的sysrq和printk采样是否完全只读: `projects/a123x/archive/provider-5e12661200bb84256d1839db730e6b5b673985e0b30c467f0e4a09208cab9c7d.md`; `provider-5e12661200bb84256d1839db730e6b5b673985e0b30c467f0e4a09208cab9c7d`
+- AISpeech一小时候选否决与v70双讲新反例: `projects/gros/validation/provider-bb47aed2e10680c4fc7196f72d2fae32b28c711af5e24bbb36498e55157abc1e.md`; `provider-bb47aed2e10680c4fc7196f72d2fae32b28c711af5e24bbb36498e55157abc1e`
+- A123X：DMIPS或CoreMark高是否说明视频AI并发性能好: `projects/a123x/archive/provider-a747bb1009fdd2885510505b90b50f0c792d70f281b7c5973eb6e0385a6f00c0.md`; `provider-a747bb1009fdd2885510505b90b50f0c792d70f281b7c5973eb6e0385a6f00c0`
+- A123X：应该用STREAM还是LMbench排查系统变慢: `projects/a123x/archive/provider-9144a251febb6f47333f07362bf7016dae342b7882d4f91bb8d071793417ab08.md`; `provider-9144a251febb6f47333f07362bf7016dae342b7882d4f91bb8d071793417ab08`
+- A123X：poweroff命令执行后是否一定切断整机电源: `projects/a123x/archive/provider-1410b1f1f5b063f3cfdeab4f1550c2bde52c7ff467539a74f397e4ed49ee148c.md`; `provider-1410b1f1f5b063f3cfdeab4f1550c2bde52c7ff467539a74f397e4ed49ee148c`
+- A123X：进入mem休眠前驱动和后台任务需要怎样收敛: `projects/a123x/archive/provider-fc10b9694d79cf2fa7d800bff24d4e0f07127e7d624458d3afd070548d18adae.md`; `provider-fc10b9694d79cf2fa7d800bff24d4e0f07127e7d624458d3afd070548d18adae`
+- A123X：SARADC的raw、mean_raw和input返回的都是毫伏吗: `projects/a123x/archive/provider-d23d658a7c43d027a8fe2d0f4e7e3d303bbeceb3bb20d3d8390f2de244829e31.md`; `provider-d23d658a7c43d027a8fe2d0f4e7e3d303bbeceb3bb20d3d8390f2de244829e31`
+- A123X：IIO缓冲格式le:u12/16大于大于0应该如何解析: `projects/a123x/archive/provider-91bc00a09115c0df489fe94a57aaeb3bb85bcd5a640367d5b1f9cbf9dbe0b28c.md`; `provider-91bc00a09115c0df489fe94a57aaeb3bb85bcd5a640367d5b1f9cbf9dbe0b28c`
+- A123X：SARADC自检一定要切换channel7吗: `projects/a123x/archive/provider-c1fdd169ce4d6bd1b8163d7c5a314227853686b5a931c23c53e65ec84f05863a.md`; `provider-c1fdd169ce4d6bd1b8163d7c5a314227853686b5a931c23c53e65ec84f05863a`
+- A123X第二批跨领域独立知识与原生检索验收 2026-10-24: `projects/a123x/validation/provider-64bb0a4a74ed3573f330943e33102f0826b61d5f54e4b47a0ced312c71dd8182.md`; `provider-64bb0a4a74ed3573f330943e33102f0826b61d5f54e4b47a0ced312c71dd8182`
+- A123X平台知识库整体验收NG及未闭环项 2026-10-24: `projects/a123x/validation/provider-1aa2dbdeffc0b644b6668211a5476e23b1f5dbf7fc5b8150af7674a5871472d0.md`; `provider-1aa2dbdeffc0b644b6668211a5476e23b1f5dbf7fc5b8150af7674a5871472d0`
+- AISpeech双讲保护八候选否决与448例基线审计: `projects/gros/validation/provider-89e7a54779ce0634a47dcc0975cfe9dac45f196e2eacc40c0d5af8c7639afc00.md`; `provider-89e7a54779ce0634a47dcc0975cfe9dac45f196e2eacc40c0d5af8c7639afc00`
+- A123X独立接口：MBI_ADEC_CreateChn: `projects/a123x/archive/provider-6293e802e71a6985d65e43658f1011ccdcebe7f8e3a0674bc9ff8b8ad7f8250a.md`; `provider-6293e802e71a6985d65e43658f1011ccdcebe7f8e3a0674bc9ff8b8ad7f8250a`
+- A123X独立接口：MBI_ADEC_DestroyChn: `projects/a123x/archive/provider-cd615966d8dfd692d2fbf408caed1f7a1d50d3873dc1b62f650080901c974eef.md`; `provider-cd615966d8dfd692d2fbf408caed1f7a1d50d3873dc1b62f650080901c974eef`
+- A123X独立接口：MBI_ADEC_RegisterDecoder: `projects/a123x/archive/provider-e8e677cacaa0c6e9e55e7b76c4587ab5b95bfe956b0411205970696364036a1c.md`; `provider-e8e677cacaa0c6e9e55e7b76c4587ab5b95bfe956b0411205970696364036a1c`
+- A123X独立接口：MBI_ADEC_ReleaseFrame: `projects/a123x/archive/provider-18fe05c2d98f0e8a7c91d485496ab1862e7f7c00f932f7f87599cad24c347b5e.md`; `provider-18fe05c2d98f0e8a7c91d485496ab1862e7f7c00f932f7f87599cad24c347b5e`
+- A123X独立接口：MBI_ADEC_SendEndOfStream: `projects/a123x/archive/provider-ec84b0ec00fb81b590a08e15d187057278d65b66ebeb45465875ab6d5e1eb14d.md`; `provider-ec84b0ec00fb81b590a08e15d187057278d65b66ebeb45465875ab6d5e1eb14d`
+- A123X独立接口：MBI_ADEC_SendStream: `projects/a123x/archive/provider-1515e872e1c5f8454d40acb28fff438bc60e1004662f27d4a59e9860496baa86.md`; `provider-1515e872e1c5f8454d40acb28fff438bc60e1004662f27d4a59e9860496baa86`
+- A123X独立接口：MBI_ADEC_UnRegisterDecoder: `projects/a123x/archive/provider-921bcd7a5523c5d58b225a04e9f8ec3a99dd36b9b6f2d7434df44f13049c8440.md`; `provider-921bcd7a5523c5d58b225a04e9f8ec3a99dd36b9b6f2d7434df44f13049c8440`
+- A123X独立接口：MBI_ADLA_AddTskBuf: `projects/a123x/archive/provider-71e6acf16a59f95299821a0caa2df67a6dcc2b59bf53b6992d0b35515a10c9d6.md`; `provider-71e6acf16a59f95299821a0caa2df67a6dcc2b59bf53b6992d0b35515a10c9d6`
+- A123X独立接口：MBI_ADLA_ForwardWithBbox: `projects/a123x/archive/provider-344608e7126c105e82748cd00932153914188fbcc1984684ac543f2ba78f71c9.md`; `provider-344608e7126c105e82748cd00932153914188fbcc1984684ac543f2ba78f71c9`
+- A123X独立接口：MBI_ADLA_RemoveTskBuf: `projects/a123x/archive/provider-46da6dc3059cc593535c6d23e42351b8b503dab8745de6dc86d3dad2ed02d970.md`; `provider-46da6dc3059cc593535c6d23e42351b8b503dab8745de6dc86d3dad2ed02d970`
+- A123X独立接口：MBI_AENC_CreateChn: `projects/a123x/archive/provider-b9bc15d399cd98cab62ceff2a10ed1387c536b63a2e8a9716744ac8206e75a1d.md`; `provider-b9bc15d399cd98cab62ceff2a10ed1387c536b63a2e8a9716744ac8206e75a1d`
+- A123X独立接口：MBI_AENC_DestroyChn: `projects/a123x/archive/provider-c10dd53ff11e127dc2ed0aa785991156e6b47e244ec330014e6da8d8274e7e34.md`; `provider-c10dd53ff11e127dc2ed0aa785991156e6b47e244ec330014e6da8d8274e7e34`
+- A123X独立接口：MBI_AENC_GetFd: `projects/a123x/archive/provider-95e96079eac8173b0bc7831d95c6b3fc451c1b2bbe1963248d40840a86f425b2.md`; `provider-95e96079eac8173b0bc7831d95c6b3fc451c1b2bbe1963248d40840a86f425b2`
+- A123X独立接口：MBI_AENC_GetStreamBufInfo: `projects/a123x/archive/provider-80c1f7ea468cb2c61bd6fe41bf303a335ba866c4e90805b9a589f6f90d70d622.md`; `provider-80c1f7ea468cb2c61bd6fe41bf303a335ba866c4e90805b9a589f6f90d70d622`
+- A123X独立接口：MBI_AENC_RegisterEncoder: `projects/a123x/archive/provider-a5a58d02555819138099097f45a89727aaab156bf23345e3923c71d96d5889de.md`; `provider-a5a58d02555819138099097f45a89727aaab156bf23345e3923c71d96d5889de`
+- A123X独立接口：MBI_AENC_SendFrame: `projects/a123x/archive/provider-79b2d04df63df03a819ede6ff8f97b04057b46a9d8d0f5a24acde68dee8bbd92.md`; `provider-79b2d04df63df03a819ede6ff8f97b04057b46a9d8d0f5a24acde68dee8bbd92`
+- A123X独立接口：MBI_AENC_UnRegisterEncoder: `projects/a123x/archive/provider-294bf8d8165356e0fc7550764ee5a2a31e71468af4a007cebe777017ec642b39.md`; `provider-294bf8d8165356e0fc7550764ee5a2a31e71468af4a007cebe777017ec642b39`
+- A123X独立接口：MBI_AE_Register: `projects/a123x/archive/provider-802b20282b66b96523de828436901405ed1dbde16973dbc90cda0d985a741b44.md`; `provider-802b20282b66b96523de828436901405ed1dbde16973dbc90cda0d985a741b44`
+- A123X独立接口：MBI_AE_UnRegister: `projects/a123x/archive/provider-b1839ebd25ae28557d8bb6376c5417a737e9578c1fbf3ab37a43a2a0d3dae930.md`; `provider-b1839ebd25ae28557d8bb6376c5417a737e9578c1fbf3ab37a43a2a0d3dae930`
+- A123X独立接口：MBI_AIISP_ExitFunc: `projects/a123x/archive/provider-436596822c92c82eeec90acd21689532ebbc74a48394ea3f10c3b7010bdf1512.md`; `provider-436596822c92c82eeec90acd21689532ebbc74a48394ea3f10c3b7010bdf1512`
+- A123X独立接口：MBI_AIISP_InitFunc: `projects/a123x/archive/provider-a7b7236f9d6d703021b8b7ca43eb0df9fabe77044ef17b01aa9e3fb0929db042.md`; `provider-a7b7236f9d6d703021b8b7ca43eb0df9fabe77044ef17b01aa9e3fb0929db042`
+- A123X独立接口：MBI_AIISP_SnrModelFunc: `projects/a123x/archive/provider-da6a6b504013b5119d3db095f9a3e9c6f9929fa6ca87acb20596aa3e8b41119a.md`; `provider-da6a6b504013b5119d3db095f9a3e9c6f9929fa6ca87acb20596aa3e8b41119a`
+- A123X独立接口：MBI_AIISP_SnrPostdealFunc: `projects/a123x/archive/provider-15c618ad6260c5c69be17bbb0ed0369606dc23d6ebbd5b93f6414f280e693003.md`; `provider-15c618ad6260c5c69be17bbb0ed0369606dc23d6ebbd5b93f6414f280e693003`
+- A123X独立接口：MBI_AIISP_SnrPredealFunc: `projects/a123x/archive/provider-71d6bfa33ff2f576d39d45a805ec4d34a8bab4d8d9e567e8396676f7306293b4.md`; `provider-71d6bfa33ff2f576d39d45a805ec4d34a8bab4d8d9e567e8396676f7306293b4`
+- A123X独立接口：MBI_AIISP_TnrModelFunc: `projects/a123x/archive/provider-db20025d63cd4b90848f600870b238983112fd6ab4a0cd8519888ece9629ba94.md`; `provider-db20025d63cd4b90848f600870b238983112fd6ab4a0cd8519888ece9629ba94`
+- A123X独立接口：MBI_AIISP_TnrPostdealFunc: `projects/a123x/archive/provider-b0f8dcb92a1b0342e8d9a4b451584062595c74edf94cced8056dbdc5a3cf7f29.md`; `provider-b0f8dcb92a1b0342e8d9a4b451584062595c74edf94cced8056dbdc5a3cf7f29`
+- A123X独立接口：MBI_AIISP_TnrPredealFunc: `projects/a123x/archive/provider-03f30afa120ca80d6df327bb2ebecdfac5a941429d1de64d61bfd12c82f32f82.md`; `provider-03f30afa120ca80d6df327bb2ebecdfac5a941429d1de64d61bfd12c82f32f82`
+- A123X独立接口：MBI_AI_Disable: `projects/a123x/archive/provider-066b71969c57fe80259beb3f9aaea59d5dcd2edccd02b905acf1b9421e29dc6a.md`; `provider-066b71969c57fe80259beb3f9aaea59d5dcd2edccd02b905acf1b9421e29dc6a`
+- A123X独立接口：MBI_AI_DisableChn: `projects/a123x/archive/provider-ffda8fec6dfe5def984b10ee8c25e7fba25bd035cb6d7745be309416b997bcbd.md`; `provider-ffda8fec6dfe5def984b10ee8c25e7fba25bd035cb6d7745be309416b997bcbd`
+- A123X独立接口：MBI_AI_DisableReSmp: `projects/a123x/archive/provider-c3bb141669d85d39079cb63ea40a3eb88818d9adf952434d119db3d8ee16e42e.md`; `provider-c3bb141669d85d39079cb63ea40a3eb88818d9adf952434d119db3d8ee16e42e`
+- A123X独立接口：MBI_AI_DisableSnoop: `projects/a123x/archive/provider-c58235b8f962ff7962488d5c19a6045148e3d5e2ce0f52dbdab5e6427bf09f71.md`; `provider-c58235b8f962ff7962488d5c19a6045148e3d5e2ce0f52dbdab5e6427bf09f71`
+- A123X独立接口：MBI_AI_DisableVqe: `projects/a123x/archive/provider-1f056b989132a198546c92677b1e2a0f248a837b3db985a91c7851bfd08dc367.md`; `provider-1f056b989132a198546c92677b1e2a0f248a837b3db985a91c7851bfd08dc367`
+- A123X独立接口：MBI_AI_Enable: `projects/a123x/archive/provider-a56507d278cb31c6d3f6cb9aa4c8108b0d89a626a5daf3b4094d018285df2a3f.md`; `provider-a56507d278cb31c6d3f6cb9aa4c8108b0d89a626a5daf3b4094d018285df2a3f`
+- A123X独立接口：MBI_AI_EnableChn: `projects/a123x/archive/provider-ca6bfc8f8f813fa8eb98131175a52c389ab0a84eec0f72de98d72313247f9764.md`; `provider-ca6bfc8f8f813fa8eb98131175a52c389ab0a84eec0f72de98d72313247f9764`
+- A123X独立接口：MBI_AI_EnableReSmp: `projects/a123x/archive/provider-fb70af2c9892be734916aae15e695f4f24f6b62548ae01b4163447740d18d4a6.md`; `provider-fb70af2c9892be734916aae15e695f4f24f6b62548ae01b4163447740d18d4a6`
+- A123X独立接口：MBI_AI_EnableSnoop: `projects/a123x/archive/provider-7a177828a7d5a9c54ff1a4b76e9875556aaf86177af7ce3eb07c4e451a9e74ec.md`; `provider-7a177828a7d5a9c54ff1a4b76e9875556aaf86177af7ce3eb07c4e451a9e74ec`
+- A123X独立接口：MBI_AI_EnableVqe: `projects/a123x/archive/provider-f545e2372934ce58a49d30e5b25a6dbc0ba867622bf7ae9592c22cf1ced25426.md`; `provider-f545e2372934ce58a49d30e5b25a6dbc0ba867622bf7ae9592c22cf1ced25426`
+- A123X独立接口：MBI_AI_GetPGAGain: `projects/a123x/archive/provider-8925b26dd411ad82b8a7e15f5c49a8b1c30d92562963899788661b12113484bc.md`; `provider-8925b26dd411ad82b8a7e15f5c49a8b1c30d92562963899788661b12113484bc`
+- A123X独立接口：MBI_AI_GetPubAttr: `projects/a123x/archive/provider-cb6ef49674e76dcbdf65f726cd6f709ad205130879ca212eff298746562791a9.md`; `provider-cb6ef49674e76dcbdf65f726cd6f709ad205130879ca212eff298746562791a9`
+- A123X独立接口：MBI_AI_GetVolume: `projects/a123x/archive/provider-2dcb906a5de51bf0d1c4eafb3b9ff542ae6dc33ea1e90c82bec60e5ed85180c2.md`; `provider-2dcb906a5de51bf0d1c4eafb3b9ff542ae6dc33ea1e90c82bec60e5ed85180c2`
+- A123X独立接口：MBI_AI_GetVqeAttr: `projects/a123x/archive/provider-d7ed006f024440af15dc8b47ab1e31a0efe3cc3097875f03005553a88a4b3794.md`; `provider-d7ed006f024440af15dc8b47ab1e31a0efe3cc3097875f03005553a88a4b3794`
+- A123X独立接口：MBI_AI_SetPGAGain: `projects/a123x/archive/provider-42c3bf984e6e8ee94a8696568635b32312f2a08b7235a2876c90279312c50bc8.md`; `provider-42c3bf984e6e8ee94a8696568635b32312f2a08b7235a2876c90279312c50bc8`
+- A123X独立接口：MBI_AI_SetPubAttr: `projects/a123x/archive/provider-878772bac6e6a2a26a5b498bfcdaeb57e6201ce4653160d0fb592a5d363986aa.md`; `provider-878772bac6e6a2a26a5b498bfcdaeb57e6201ce4653160d0fb592a5d363986aa`
+- A123X独立接口：MBI_AI_SetVolume: `projects/a123x/archive/provider-a5d2e8534ab1337a06787b18d4e9aaaf068cd3c21e7e3d3d33fc7dc131f645ef.md`; `provider-a5d2e8534ab1337a06787b18d4e9aaaf068cd3c21e7e3d3d33fc7dc131f645ef`
+- A123X独立接口：MBI_AI_SetVqeAttr: `projects/a123x/archive/provider-5430a7c18ebd95079394ad5f664c4583656807bac4a7b32f7f1d5b6716fd99a8.md`; `provider-5430a7c18ebd95079394ad5f664c4583656807bac4a7b32f7f1d5b6716fd99a8`
+- A123X独立接口：MBI_ALG_AeRegCallBack: `projects/a123x/archive/provider-5484b5852db23f95732aee2dc44681dd37bf439c1a0d40bff9a152692c220d8f.md`; `provider-5484b5852db23f95732aee2dc44681dd37bf439c1a0d40bff9a152692c220d8f`
+- A123X独立接口：MBI_ALG_AeUnRegCallBack: `projects/a123x/archive/provider-f4ac5f6862e936a40c4e0c55f87ae0cd97be683ea2ef3cd647013b6c33d201b3.md`; `provider-f4ac5f6862e936a40c4e0c55f87ae0cd97be683ea2ef3cd647013b6c33d201b3`
+- A123X独立接口：MBI_ALG_AwbRegCallBack: `projects/a123x/archive/provider-efffce189e4f0f1db4e97e85d329addf3652cd4f7c5d0b46ae70f06227181414.md`; `provider-efffce189e4f0f1db4e97e85d329addf3652cd4f7c5d0b46ae70f06227181414`
+- A123X独立接口：MBI_ALG_AwbUnRegCallBack: `projects/a123x/archive/provider-014193f18dec189679715e3b2b7aadee0d3c294f69a62273fad08b7b02e388f4.md`; `provider-014193f18dec189679715e3b2b7aadee0d3c294f69a62273fad08b7b02e388f4`
+- A123X独立接口：MBI_ALG_LensRegCallBack: `projects/a123x/archive/provider-53ce3513e50df06f7700f239101511f497501e840aa0e40df3c46f96c296321e.md`; `provider-53ce3513e50df06f7700f239101511f497501e840aa0e40df3c46f96c296321e`
+- A123X独立接口：MBI_ALG_LensUnRegCallBack: `projects/a123x/archive/provider-24c5aed0fa1776d986d8f475def346af8d346bcef549d1ee2331c0c163c35ef3.md`; `provider-24c5aed0fa1776d986d8f475def346af8d346bcef549d1ee2331c0c163c35ef3`
+- A123X独立接口：MBI_ALG_Register: `projects/a123x/archive/provider-1458fd365cafe554c4a6b3fe2a7c59923cf6b4edc663925fda3e2712b3ecb882.md`; `provider-1458fd365cafe554c4a6b3fe2a7c59923cf6b4edc663925fda3e2712b3ecb882`
+- A123X独立接口：MBI_ALG_SensorRegCallBack: `projects/a123x/archive/provider-3e714c25ead0e1913f69cb0288d1f71626f5e498a9b088d26e3d808fb12d9ffa.md`; `provider-3e714c25ead0e1913f69cb0288d1f71626f5e498a9b088d26e3d808fb12d9ffa`
+- A123X独立接口：MBI_ALG_SensorUnRegCallBack: `projects/a123x/archive/provider-321a400ff7660d88068fd12b25e9ac4095073e27ce6fc562566006ee487b34fd.md`; `provider-321a400ff7660d88068fd12b25e9ac4095073e27ce6fc562566006ee487b34fd`
+- A123X独立接口：MBI_ALG_SetStitchMode: `projects/a123x/archive/provider-c4011c69a2eb6fab0f698192e6488f78f2d2bd19aa210e98ccd43d2d4372cdea.md`; `provider-c4011c69a2eb6fab0f698192e6488f78f2d2bd19aa210e98ccd43d2d4372cdea`
+- A123X独立接口：MBI_ALG_UnRegister: `projects/a123x/archive/provider-cf6c04315962242740eb3603ba82fe8989a49a7fbe716bb8f695879825d8fcfe.md`; `provider-cf6c04315962242740eb3603ba82fe8989a49a7fbe716bb8f695879825d8fcfe`
+- A123X独立接口：MBI_AO_Disable: `projects/a123x/archive/provider-2a16a367b75741635a308bf89a879f744fc42143bdbe97907a043fd6e63bcf13.md`; `provider-2a16a367b75741635a308bf89a879f744fc42143bdbe97907a043fd6e63bcf13`
+- A123X独立接口：MBI_AO_DisableChn: `projects/a123x/archive/provider-097201bee0e339babf13f5efb18950a754781af66b191647a9b90b95e856f457.md`; `provider-097201bee0e339babf13f5efb18950a754781af66b191647a9b90b95e856f457`
+- A123X独立接口：MBI_AO_DisableMixer: `projects/a123x/archive/provider-695df8b66cbc7078ce213f877789e407f79eb7484af8f0fb7ec303ef3f5ebc38.md`; `provider-695df8b66cbc7078ce213f877789e407f79eb7484af8f0fb7ec303ef3f5ebc38`
+- A123X独立接口：MBI_AO_DisableReSmp: `projects/a123x/archive/provider-0c9b8df0bdae6b192f8029c95570138fb71bf4d07281035005e2faf07e21fb47.md`; `provider-0c9b8df0bdae6b192f8029c95570138fb71bf4d07281035005e2faf07e21fb47`
+- A123X独立接口：MBI_AO_DisableVqe: `projects/a123x/archive/provider-6bba77054b84e2fc980ef89158c6ae6774cd6fe887cf0b7d7cc22077b04fcbbe.md`; `provider-6bba77054b84e2fc980ef89158c6ae6774cd6fe887cf0b7d7cc22077b04fcbbe`
+- A123X独立接口：MBI_AO_Disable_VariableSpeed: `projects/a123x/archive/provider-fc251532ea36bf7c32f7e821a29a284b5481e4d79ff3ce3d17c517aa5cd37cc6.md`; `provider-fc251532ea36bf7c32f7e821a29a284b5481e4d79ff3ce3d17c517aa5cd37cc6`
+- A123X独立接口：MBI_AO_Enable: `projects/a123x/archive/provider-bcb85f730dcb8d5c2c821cb2a276018bf03a07b3c6919e4d10e4896a475dc446.md`; `provider-bcb85f730dcb8d5c2c821cb2a276018bf03a07b3c6919e4d10e4896a475dc446`
+- A123X独立接口：MBI_AO_EnableChn: `projects/a123x/archive/provider-37d6bf6ad14a8d69180aac9d2ea4f95ea82ff25404c1cca38b49bc43b8853cc8.md`; `provider-37d6bf6ad14a8d69180aac9d2ea4f95ea82ff25404c1cca38b49bc43b8853cc8`
+- A123X独立接口：MBI_AO_EnableMixer: `projects/a123x/archive/provider-653c907317a7c2bfab63c6901eb7cc0aa7f26957d6e9af456b5e8d51473f16d2.md`; `provider-653c907317a7c2bfab63c6901eb7cc0aa7f26957d6e9af456b5e8d51473f16d2`
+- A123X独立接口：MBI_AO_EnableReSmp: `projects/a123x/archive/provider-f1b3e61c90cb9438710f29d90ef5d645ff8ccda1368eeba49c2603fe12f615a8.md`; `provider-f1b3e61c90cb9438710f29d90ef5d645ff8ccda1368eeba49c2603fe12f615a8`
+- A123X独立接口：MBI_AO_EnableVqe: `projects/a123x/archive/provider-fb6b2d6cb9974c261fa941934d69853eb1e539a3d76abda55517f456a53c9698.md`; `provider-fb6b2d6cb9974c261fa941934d69853eb1e539a3d76abda55517f456a53c9698`
+- A123X独立接口：MBI_AO_Enable_VariableSpeed: `projects/a123x/archive/provider-e7dc7b936984a59a96b33f08683b3473bf0ce5b406b6c011ba0e87a042331777.md`; `provider-e7dc7b936984a59a96b33f08683b3473bf0ce5b406b6c011ba0e87a042331777`
+- A123X独立接口：MBI_AO_GetPubAttr: `projects/a123x/archive/provider-042d5b35fc03aa1903ff6f4965cedde50f7ccb9a62065c8311652d866d39ca15.md`; `provider-042d5b35fc03aa1903ff6f4965cedde50f7ccb9a62065c8311652d866d39ca15`
+- A123X独立接口：MBI_AO_GetVolume: `projects/a123x/archive/provider-82676d32eabe0277504769a79e1abfbaff34f67688932cc671e4d587f7512621.md`; `provider-82676d32eabe0277504769a79e1abfbaff34f67688932cc671e4d587f7512621`
+- A123X独立接口：MBI_AO_GetVqeAttr: `projects/a123x/archive/provider-91dccb897e5d5d9b9e60432a854557bb0ab0def02ef41ad21a816c2a51e457fd.md`; `provider-91dccb897e5d5d9b9e60432a854557bb0ab0def02ef41ad21a816c2a51e457fd`
+- A123X独立接口：MBI_AO_QueryChnStat: `projects/a123x/archive/provider-f65ae6f234d59b000d0e70c7678659ad7b01585472246a1e384cd8f7f943ce73.md`; `provider-f65ae6f234d59b000d0e70c7678659ad7b01585472246a1e384cd8f7f943ce73`
+- A123X独立接口：MBI_AO_RegisterVariableSpeed: `projects/a123x/archive/provider-f30b43fc2bb67149ce497530f1060eacae4497a223bddda876032e9f3729fcf2.md`; `provider-f30b43fc2bb67149ce497530f1060eacae4497a223bddda876032e9f3729fcf2`
+- A123X独立接口：MBI_AO_SetMute: `projects/a123x/archive/provider-811ac3ca7ae7526a94f2cc24dac791ac56d696ee85e22847374d6569ba1f026b.md`; `provider-811ac3ca7ae7526a94f2cc24dac791ac56d696ee85e22847374d6569ba1f026b`
+- A123X独立接口：MBI_AO_SetPubAttr: `projects/a123x/archive/provider-0963d572b1b11ae805959920f729bf3296cc09738225df859b8736623fd731a9.md`; `provider-0963d572b1b11ae805959920f729bf3296cc09738225df859b8736623fd731a9`
+- A123X独立接口：MBI_AO_SetVolume: `projects/a123x/archive/provider-edbb1b96f37dae74d77b59eef5fdedd67a890f99dec2309ac06718acf13917eb.md`; `provider-edbb1b96f37dae74d77b59eef5fdedd67a890f99dec2309ac06718acf13917eb`
+- A123X独立接口：MBI_AO_SetVqeAttr: `projects/a123x/archive/provider-9e5be7fb81a1ac5b8cd4aea911aa18fca55f3ccbb19db949575f65fb05af720a.md`; `provider-9e5be7fb81a1ac5b8cd4aea911aa18fca55f3ccbb19db949575f65fb05af720a`
+- A123X独立接口：MBI_AO_UnRegisterVariableSpeed: `projects/a123x/archive/provider-ae20adac5ddb2c7a832437b85647265045b2a525dcec04033787e8e9ed3350b9.md`; `provider-ae20adac5ddb2c7a832437b85647265045b2a525dcec04033787e8e9ed3350b9`
+- A123X独立接口：MBI_AP_DisableChn: `projects/a123x/archive/provider-d6ea87ebb9dab68a2dfbfe29f07e8f1a6212cff67474332dad9c5d5bf794a45b.md`; `provider-d6ea87ebb9dab68a2dfbfe29f07e8f1a6212cff67474332dad9c5d5bf794a45b`
+- A123X独立接口：MBI_AP_EnableChn: `projects/a123x/archive/provider-2f40b1c147a09c07a632fd03561690ca9b71da155f4a92590ddd56f284534ae1.md`; `provider-2f40b1c147a09c07a632fd03561690ca9b71da155f4a92590ddd56f284534ae1`
+- A123X独立接口：MBI_AP_GetFrame: `projects/a123x/archive/provider-9cec66a1a00a002b15ec413c0a0dc9e7ed6f16a1981983e56a818a923821c051.md`; `provider-9cec66a1a00a002b15ec413c0a0dc9e7ed6f16a1981983e56a818a923821c051`
+- A123X独立接口：MBI_AP_QueryChn: `projects/a123x/archive/provider-c21c02d2e09e44042d92936fbbf7a922ac246d66a54594df8f00e52e761ef0eb.md`; `provider-c21c02d2e09e44042d92936fbbf7a922ac246d66a54594df8f00e52e761ef0eb`
+- A123X独立接口：MBI_AP_ReleaseFrame: `projects/a123x/archive/provider-48f6ed792da6f74bc47eecc4d46eb7465039f9eecd458072c6e3cc9ff7a43ed5.md`; `provider-48f6ed792da6f74bc47eecc4d46eb7465039f9eecd458072c6e3cc9ff7a43ed5`
+- A123X独立接口：MBI_AUDIO_RegisterResampler: `projects/a123x/archive/provider-cb5c9a91443ed1057452cb7802d8816d856b8f2b483b64062220c9f926c728cd.md`; `provider-cb5c9a91443ed1057452cb7802d8816d856b8f2b483b64062220c9f926c728cd`
+- A123X独立接口：MBI_AUDIO_UnRegisterResampler: `projects/a123x/archive/provider-6272fd89c951f6816f245b20853c9f03af4d5cd8661bd2bbf6f3c87c7ff080d1.md`; `provider-6272fd89c951f6816f245b20853c9f03af4d5cd8661bd2bbf6f3c87c7ff080d1`
+- A123X独立接口：MBI_AWB_Register: `projects/a123x/archive/provider-517d1713b4705ea465b874d4d260428bc23e4b80eca50785bf7f1e282f947a94.md`; `provider-517d1713b4705ea465b874d4d260428bc23e4b80eca50785bf7f1e282f947a94`
+- A123X独立接口：MBI_AWB_UnRegister: `projects/a123x/archive/provider-f4b79cc6f43c9f3badb0112d78f90f16a34b184e03b24c44486b32bb91ddfb86.md`; `provider-f4b79cc6f43c9f3badb0112d78f90f16a34b184e03b24c44486b32bb91ddfb86`
+- A123X独立接口：MBI_CVE_16BitTo8Bit: `projects/a123x/archive/provider-6fdc113fc7c5951b24a6c5281b3acbbd7e3e8be30ad1f1201be685799e065048.md`; `provider-6fdc113fc7c5951b24a6c5281b3acbbd7e3e8be30ad1f1201be685799e065048`
+- A123X独立接口：MBI_CVE_ADP_THRESH: `projects/a123x/archive/provider-959030d768c9c06a5cbff241a1f5d3d219abbbe9106efd20082e220611a016dd.md`; `provider-959030d768c9c06a5cbff241a1f5d3d219abbbe9106efd20082e220611a016dd`
+- F20 EVT1 IO分配v0.3评审与31条候选覆盖: `projects/a123x/validation/provider-3a02fb586d3096de33ca02e0cc41b40512723fb8afafb800a517733c98b6f17c.md`; `provider-3a02fb586d3096de33ca02e0cc41b40512723fb8afafb800a517733c98b6f17c`
+- A123X独立接口：MBI_CVE_AIISP_SNR_MFNR_PROCESS: `projects/a123x/archive/provider-1ee265d7c957a222ae67f626ed6a068120d9808989a9410dfc72172430dabf81.md`; `provider-1ee265d7c957a222ae67f626ed6a068120d9808989a9410dfc72172430dabf81`
+- A123X独立接口：MBI_CVE_AIISP_SNR_POST_PROCESS: `projects/a123x/archive/provider-43bab912de3e09aa67b9f5bc7a9cdb18b590429f2bea18c37530febea8c5b6d1.md`; `provider-43bab912de3e09aa67b9f5bc7a9cdb18b590429f2bea18c37530febea8c5b6d1`
+- A123X独立接口：MBI_CVE_AIISP_TNR_MFNR_PROCESS: `projects/a123x/archive/provider-250b219677eeee23afa563c6b0fea1782f27d4b965f69a3203c3f93b04f34676.md`; `provider-250b219677eeee23afa563c6b0fea1782f27d4b965f69a3203c3f93b04f34676`
+- A123X独立接口：MBI_CVE_AIISP_TNR_POST_PROCESS: `projects/a123x/archive/provider-c52528053b37609c3a71b48608d65a655a666b64d2702d3111b862eb9b407cf5.md`; `provider-c52528053b37609c3a71b48608d65a655a666b64d2702d3111b862eb9b407cf5`
+- A123X独立接口：MBI_CVE_AIISP_TNR_PRE_PROCESS: `projects/a123x/archive/provider-f99d32332812fa91c246fb35213cb71d11381a300169dcb000e705bf6c6bf5f8.md`; `provider-f99d32332812fa91c246fb35213cb71d11381a300169dcb000e705bf6c6bf5f8`
+- A123X独立接口：MBI_CVE_Add: `projects/a123x/archive/provider-d72bff18c56245b38a3f0fe4c930ca3b01d83477e623ffd0610a3e0df3e68f53.md`; `provider-d72bff18c56245b38a3f0fe4c930ca3b01d83477e623ffd0610a3e0df3e68f53`
+- A123X独立接口：MBI_CVE_AddMap255To1: `projects/a123x/archive/provider-7a955a9e55d8ca4b92558c995da2266e2346a1d8ee9ee89de53436477e621b8c.md`; `provider-7a955a9e55d8ca4b92558c995da2266e2346a1d8ee9ee89de53436477e621b8c`
+- A123X独立接口：MBI_CVE_And: `projects/a123x/archive/provider-289161e87e5213161ab141ce9bf76ef454e114901c99459ea547292f481aab8e.md`; `provider-289161e87e5213161ab141ce9bf76ef454e114901c99459ea547292f481aab8e`
+- A123X独立接口：MBI_CVE_Bernsen: `projects/a123x/archive/provider-c501cfaf672e6103ed42f80bd9747094be9c603d7a4d231c8f0d89a2b61d14c3.md`; `provider-c501cfaf672e6103ed42f80bd9747094be9c603d7a4d231c8f0d89a2b61d14c3`
+- A123X独立接口：MBI_CVE_BuildLKOpticalFlowPyr: `projects/a123x/archive/provider-e0627a56ecc59f5bf1bb3650b5036b18ea3d2d0a40de96cc916bfb892fd95f97.md`; `provider-e0627a56ecc59f5bf1bb3650b5036b18ea3d2d0a40de96cc916bfb892fd95f97`
+- A123X独立接口：MBI_CVE_CCL: `projects/a123x/archive/provider-0dc8e0832d8b60083da0975b87415b98483092c58a489a06e670d8544f351a4d.md`; `provider-0dc8e0832d8b60083da0975b87415b98483092c58a489a06e670d8544f351a4d`
+- A123X独立接口：MBI_CVE_CSC: `projects/a123x/archive/provider-850bad56e61c74b2e9f4a604bbd4c96b1e1176b3c1a32d3d5d91fb388f2c7653.md`; `provider-850bad56e61c74b2e9f4a604bbd4c96b1e1176b3c1a32d3d5d91fb388f2c7653`
+- A123X独立接口：MBI_CVE_CannyEdge: `projects/a123x/archive/provider-66228ac52481afb1adb667104a744947cf4dd054cc0702b47fb74345325fc19c.md`; `provider-66228ac52481afb1adb667104a744947cf4dd054cc0702b47fb74345325fc19c`
+- A123X独立接口：MBI_CVE_CannyHysEdge: `projects/a123x/archive/provider-fe934ee4c0624130b391f889ac744c22abc3bb0cba237c79afe8bc6eb9fbf19a.md`; `provider-fe934ee4c0624130b391f889ac744c22abc3bb0cba237c79afe8bc6eb9fbf19a`
+- A123X独立接口：MBI_CVE_DMA: `projects/a123x/archive/provider-73d9df28ad877d1905f8ad46d96884c8fb094479e185363b4df03c98f1fc5ec6.md`; `provider-73d9df28ad877d1905f8ad46d96884c8fb094479e185363b4df03c98f1fc5ec6`
+- A123X独立接口：MBI_CVE_Dilate: `projects/a123x/archive/provider-916e604428abf8dcbca924d4f268664c9cffc4e13bc61cf480cb1f0bd8d74bf4.md`; `provider-916e604428abf8dcbca924d4f268664c9cffc4e13bc61cf480cb1f0bd8d74bf4`
+- A123X独立接口：MBI_CVE_Dot: `projects/a123x/archive/provider-b3f03d7d3a877727a4745974b421026a3e5bc739c2ccea09bb2221b1c487ed87.md`; `provider-b3f03d7d3a877727a4745974b421026a3e5bc739c2ccea09bb2221b1c487ed87`
+- A123X独立接口：MBI_CVE_EqualizeHist: `projects/a123x/archive/provider-b26d8ee7f0129e4be4f53335bc280abf4884fa7383cf4efb0cb368425425c163.md`; `provider-b26d8ee7f0129e4be4f53335bc280abf4884fa7383cf4efb0cb368425425c163`
+- A123X独立接口：MBI_CVE_Erode: `projects/a123x/archive/provider-07bc9c91975b124f3381f5198c506e8a6dd27a6f228fcb6e40724c586747a67d.md`; `provider-07bc9c91975b124f3381f5198c506e8a6dd27a6f228fcb6e40724c586747a67d`
+- A123X独立接口：MBI_CVE_FAST_GUIDE_FILTER: `projects/a123x/archive/provider-5fde27b4be9c8895c67b2e5114d83eaeaa7f328631c5e0445fbc9fab7a9b18d7.md`; `provider-5fde27b4be9c8895c67b2e5114d83eaeaa7f328631c5e0445fbc9fab7a9b18d7`
+- A123X独立接口：MBI_CVE_FilterAndCSC: `projects/a123x/archive/provider-0387de1b8831055d246709b80b1a5545367efffd2cc5e2e0fafe0ffb30429ed1.md`; `provider-0387de1b8831055d246709b80b1a5545367efffd2cc5e2e0fafe0ffb30429ed1`
+- A123X独立接口：MBI_CVE_GEMM: `projects/a123x/archive/provider-e13a90cb0af64a228e124d17060b62a869d5b4a3220d80189164ec524e01d40e.md`; `provider-e13a90cb0af64a228e124d17060b62a869d5b4a3220d80189164ec524e01d40e`
+- A123X独立接口：MBI_CVE_GMM: `projects/a123x/archive/provider-4e6fc7c929e3d20b95baed6b4f152182acc624fa95fa82de8071a59c67e62694.md`; `provider-4e6fc7c929e3d20b95baed6b4f152182acc624fa95fa82de8071a59c67e62694`
+- A123X独立接口：MBI_CVE_HOG: `projects/a123x/archive/provider-505c32812182f1fa18bd22aeb2cf155d11fe833066879478a131a1c33e177eb3.md`; `provider-505c32812182f1fa18bd22aeb2cf155d11fe833066879478a131a1c33e177eb3`
+- A123X独立接口：MBI_CVE_Hist: `projects/a123x/archive/provider-58936d9dfde52b00f19a0fd8ddbc53d2d924d8691c8a2e80a16126235360f8ea.md`; `provider-58936d9dfde52b00f19a0fd8ddbc53d2d924d8691c8a2e80a16126235360f8ea`
+- A123X独立接口：MBI_CVE_IM2COL: `projects/a123x/archive/provider-7550f8947b3c7859aeecf4fa059cac49a486ed2becbc02c2202ef198dff83143.md`; `provider-7550f8947b3c7859aeecf4fa059cac49a486ed2becbc02c2202ef198dff83143`
+- A123X独立接口：MBI_CVE_Integ: `projects/a123x/archive/provider-6587414d9712ff3efb790387a1c1d9234b5a959119b4c377a3ea4a11d565dcfd.md`; `provider-6587414d9712ff3efb790387a1c1d9234b5a959119b4c377a3ea4a11d565dcfd`
+- A123X独立接口：MBI_CVE_KCF_GET_FEATURE: `projects/a123x/archive/provider-1ec52bf04641305bd01a089fd6df92d644fe2512c8cdafdde91e4b921901a2c2.md`; `provider-1ec52bf04641305bd01a089fd6df92d644fe2512c8cdafdde91e4b921901a2c2`
+- A123X独立接口：MBI_CVE_KCF_GET_TRAIN_AND_TRACK: `projects/a123x/archive/provider-e6ac666141b37cf657f95094ac4cff9dccf436bbc826085c0b608871ba1c28d1.md`; `provider-e6ac666141b37cf657f95094ac4cff9dccf436bbc826085c0b608871ba1c28d1`
+- A123X独立接口：MBI_CVE_KCF_GET_YF: `projects/a123x/archive/provider-361c84396ef85e920be0abc6f7cc17ea5dea3d82d3320dda935e000b8f23d4d6.md`; `provider-361c84396ef85e920be0abc6f7cc17ea5dea3d82d3320dda935e000b8f23d4d6`
+- A123X独立接口：MBI_CVE_LBP: `projects/a123x/archive/provider-d83d4bc921b616560cbff46f396b851409dbad52cad594e9bf261881fc734d39.md`; `provider-d83d4bc921b616560cbff46f396b851409dbad52cad594e9bf261881fc734d39`
+- A123X独立接口：MBI_CVE_LINE_FILTER: `projects/a123x/archive/provider-e487aca9e7880b63d57db210976966f2eb2e6fce10ccfef026f7552fffb60502.md`; `provider-e487aca9e7880b63d57db210976966f2eb2e6fce10ccfef026f7552fffb60502`
+- A123X独立接口：MBI_CVE_LKOpticalFlowPyr: `projects/a123x/archive/provider-8eb660afac54c3004dccbf3b8529451757ba108bf6439093ce92f2bf3294e9fc.md`; `provider-8eb660afac54c3004dccbf3b8529451757ba108bf6439093ce92f2bf3294e9fc`
+- A123X独立接口：MBI_CVE_LumaStatArray: `projects/a123x/archive/provider-0741a8484929a08912107a05222b6a92f052dfc25f820bb6a02a0e33087f9da8.md`; `provider-0741a8484929a08912107a05222b6a92f052dfc25f820bb6a02a0e33087f9da8`
+- A123X独立接口：MBI_CVE_MagAndAng: `projects/a123x/archive/provider-c59a0bdf056475a62eea247c4c1bfd115a54f777ebe8ebf4473e16f673dbd5fb.md`; `provider-c59a0bdf056475a62eea247c4c1bfd115a54f777ebe8ebf4473e16f673dbd5fb`
+- A123X独立接口：MBI_CVE_Map: `projects/a123x/archive/provider-d01d125ca46852b0d2fc144a894e55c7f535a6514c5a75efeabb8699ec05abb8.md`; `provider-d01d125ca46852b0d2fc144a894e55c7f535a6514c5a75efeabb8699ec05abb8`
+- A123X独立接口：MBI_CVE_MatchBgModel: `projects/a123x/archive/provider-dc838d50ca8524bb00e5ad3e9c33c5c1e69e0b65acbbc475ba48e2167f45678c.md`; `provider-dc838d50ca8524bb00e5ad3e9c33c5c1e69e0b65acbbc475ba48e2167f45678c`
+- A123X独立接口：MBI_CVE_NCC: `projects/a123x/archive/provider-cbe715beacc247e92a48e5f01cf1dccd6d3d7892aa6d489eccea55a5097314db.md`; `provider-cbe715beacc247e92a48e5f01cf1dccd6d3d7892aa6d489eccea55a5097314db`
+- A123X独立接口：MBI_CVE_NOISE_REMOVE: `projects/a123x/archive/provider-c58066ca3aae2aa76a6b771820a282355ebc0ccf2402d64c5d857ab62bf88c43.md`; `provider-c58066ca3aae2aa76a6b771820a282355ebc0ccf2402d64c5d857ab62bf88c43`
+- A123X独立接口：MBI_CVE_NormGrad: `projects/a123x/archive/provider-8757db9e88b401108c3679fe22ab97f08158cfda86abdefaeef4185c555dd366.md`; `provider-8757db9e88b401108c3679fe22ab97f08158cfda86abdefaeef4185c555dd366`
+- A123X独立接口：MBI_CVE_Or: `projects/a123x/archive/provider-4a363eac9fb3876db2ea197a939894a1d784bfe32e52645f6f7ddb1fd62aefb3.md`; `provider-4a363eac9fb3876db2ea197a939894a1d784bfe32e52645f6f7ddb1fd62aefb3`
+- A123X独立接口：MBI_CVE_OrdStatFilter: `projects/a123x/archive/provider-1328f6021d45251921d71c1242a039bbdf35b185384f3d58ffde0be3eb961127.md`; `provider-1328f6021d45251921d71c1242a039bbdf35b185384f3d58ffde0be3eb961127`
+- A123X独立接口：MBI_CVE_PERSP_TRANS: `projects/a123x/archive/provider-3d502f8f070e4de31849e8b9053c6299a5e777ed189ed0110b4887857df617de.md`; `provider-3d502f8f070e4de31849e8b9053c6299a5e777ed189ed0110b4887857df617de`
+- A123X独立接口：MBI_CVE_POOLING: `projects/a123x/archive/provider-dd860d78cf272503f78ad05b8cf5472aef8c5ef3d907711923f3b8e110bf8be0.md`; `provider-dd860d78cf272503f78ad05b8cf5472aef8c5ef3d907711923f3b8e110bf8be0`
+- A123X独立接口：MBI_CVE_Query: `projects/a123x/archive/provider-eb03e3360ec42d0f7ab465b6977fc53654bfa6309fcc58df4a38137878fa9dfe.md`; `provider-eb03e3360ec42d0f7ab465b6977fc53654bfa6309fcc58df4a38137878fa9dfe`
+- A123X独立接口：MBI_CVE_REDUCE: `projects/a123x/archive/provider-24480bb3653a19ab840078b6ce3a2bfceb72adcf1db88db6da3fd4d63e3d38a4.md`; `provider-24480bb3653a19ab840078b6ce3a2bfceb72adcf1db88db6da3fd4d63e3d38a4`
+- A123X独立接口：MBI_CVE_RESHAPE: `projects/a123x/archive/provider-0484b0001b7d46cce8dcdb20568d2275ff77cf79b7373c3207cfef3dab3e2454.md`; `provider-0484b0001b7d46cce8dcdb20568d2275ff77cf79b7373c3207cfef3dab3e2454`
+- A123X独立接口：MBI_CVE_RESIZE: `projects/a123x/archive/provider-e5bdaadf7c54b310335b06032424a85c0b48ecfbcbfab90de2cec966788b9ff3.md`; `provider-e5bdaadf7c54b310335b06032424a85c0b48ecfbcbfab90de2cec966788b9ff3`
+- A123X独立接口：MBI_CVE_SAD: `projects/a123x/archive/provider-d265a8bc9acc26df4e359dfe1e0b1370443874f4827b1589827f3bddd524878e.md`; `provider-d265a8bc9acc26df4e359dfe1e0b1370443874f4827b1589827f3bddd524878e`
+- A123X独立接口：MBI_CVE_STCandiCorner: `projects/a123x/archive/provider-7b1260a653bdd0df05bf84ee8eda171a5b0aa15e59726ea83a90151ae0a8d724.md`; `provider-7b1260a653bdd0df05bf84ee8eda171a5b0aa15e59726ea83a90151ae0a8d724`
+- A123X独立接口：MBI_CVE_STCorner: `projects/a123x/archive/provider-9b19ca3af14b3f4bb87cd4a11863dd2ba29f3989780f7cfb58ef598812d56b05.md`; `provider-9b19ca3af14b3f4bb87cd4a11863dd2ba29f3989780f7cfb58ef598812d56b05`
+- A123X独立接口：MBI_CVE_SVM_KERNEL: `projects/a123x/archive/provider-13a18fb29929ab92a0bf0aa49b6b721ea9629685d885364d2dbbb83e6cb9b9fb.md`; `provider-13a18fb29929ab92a0bf0aa49b6b721ea9629685d885364d2dbbb83e6cb9b9fb`
+- A123X独立接口：MBI_CVE_SVM_PREDICT: `projects/a123x/archive/provider-8eb32e0284f83dec6ec5a91ca8cf77871314e2ff96c1ef9ce231fc13189403a1.md`; `provider-8eb32e0284f83dec6ec5a91ca8cf77871314e2ff96c1ef9ce231fc13189403a1`
+- A123X独立接口：MBI_CVE_Sobel: `projects/a123x/archive/provider-5445c5c8353d3cf894ef1aadfba05aaf0a09568d0a50f7802d2787105c9ed2dd.md`; `provider-5445c5c8353d3cf894ef1aadfba05aaf0a09568d0a50f7802d2787105c9ed2dd`
+- A123X独立接口：MBI_CVE_Sub: `projects/a123x/archive/provider-84a7587b732c6a2a3e384518c2c73b575c8e385360c7e7174dc7a6a1476d6e46.md`; `provider-84a7587b732c6a2a3e384518c2c73b575c8e385360c7e7174dc7a6a1476d6e46`
+- A123X独立接口：MBI_CVE_Thresh: `projects/a123x/archive/provider-7529c318f39b8c8fadd6a71f65e1e8600f829931cb64ac8776e237f037797c8c.md`; `provider-7529c318f39b8c8fadd6a71f65e1e8600f829931cb64ac8776e237f037797c8c`
+- A123X独立接口：MBI_CVE_Thresh_S16: `projects/a123x/archive/provider-c2ef3a56c14fd2770a300d56e4aae71575b2e06b84665ebf653f032fccf356f8.md`; `provider-c2ef3a56c14fd2770a300d56e4aae71575b2e06b84665ebf653f032fccf356f8`
+- A123X独立接口：MBI_CVE_Thresh_U16: `projects/a123x/archive/provider-fe09af25879bd10a56071dcd010182a3c05018e24a165c8f829df6f5aa98121b.md`; `provider-fe09af25879bd10a56071dcd010182a3c05018e24a165c8f829df6f5aa98121b`
+- A123X独立接口：MBI_CVE_UpdateBgModel: `projects/a123x/archive/provider-3f7ce2c343a023afe3427827fa3dbc1deaf1126c947d093a38c6ea6c91883a5c.md`; `provider-3f7ce2c343a023afe3427827fa3dbc1deaf1126c947d093a38c6ea6c91883a5c`
+- A123X独立接口：MBI_CVE_Xor: `projects/a123x/archive/provider-1bc37b7c6ea656ef1ebfdfce7af07261c4c2b7cecfc8e0ed20b86cc21bdf1d10.md`; `provider-1bc37b7c6ea656ef1ebfdfce7af07261c4c2b7cecfc8e0ed20b86cc21bdf1d10`
+- A123X独立接口：MBI_DEW_AddCorrectionTask: `projects/a123x/archive/provider-8d4f0e8f7fbe52e7e8b774b28ee6261d9386ea0e3ff405871c8a159f1498783d.md`; `provider-8d4f0e8f7fbe52e7e8b774b28ee6261d9386ea0e3ff405871c8a159f1498783d`
+- A123X独立接口：MBI_DEW_AddRectBoxTask: `projects/a123x/archive/provider-c48afab211ef9175664366ccdf359eb5a90c78c0cd2fcb82d8557642c1fd1502.md`; `provider-c48afab211ef9175664366ccdf359eb5a90c78c0cd2fcb82d8557642c1fd1502`
+- A123X独立接口：MBI_DEW_Append_RectBox_CalcAndLoadFirmware: `projects/a123x/archive/provider-28329484ef42a4721a4e7db1e5abc94f74883526bb6f0df73eca0d3e1e2fcd67.md`; `provider-28329484ef42a4721a4e7db1e5abc94f74883526bb6f0df73eca0d3e1e2fcd67`
+- A123X独立接口：MBI_DEW_BeginJob: `projects/a123x/archive/provider-0f16b98636f4329c852fd3282d70b1dc62eab124a5580750f45ab554da9163c2.md`; `provider-0f16b98636f4329c852fd3282d70b1dc62eab124a5580750f45ab554da9163c2`
+- A123X独立接口：MBI_DEW_CalcAndLoadFirmware: `projects/a123x/archive/provider-a7f75649aab3676866fdd781be2ff75e00a0fde5b13b904085c4464ec727c0e3.md`; `provider-a7f75649aab3676866fdd781be2ff75e00a0fde5b13b904085c4464ec727c0e3`
+- A123X独立接口：MBI_DEW_CancelJob: `projects/a123x/archive/provider-1698c9e67b20463b0cceaa10853d0936cdd43f67789da2970e89a37958722e4a.md`; `provider-1698c9e67b20463b0cceaa10853d0936cdd43f67789da2970e89a37958722e4a`
+- A123X独立接口：MBI_DEW_Close: `projects/a123x/archive/provider-947fea9f0df3705136649466bdc5dea07acd1b08919ef786ec03aa9b98fee741.md`; `provider-947fea9f0df3705136649466bdc5dea07acd1b08919ef786ec03aa9b98fee741`
+- A123X独立接口：MBI_DEW_ConnectOnlineMode: `projects/a123x/archive/provider-30f0b4a1e929acfe9be7ac240a9e51c3ecac0b01c981ce0654a47ee603feec2a.md`; `provider-30f0b4a1e929acfe9be7ac240a9e51c3ecac0b01c981ce0654a47ee603feec2a`
+- A123X独立接口：MBI_DEW_DisconnectOnlineMode: `projects/a123x/archive/provider-ff185dedb1a7f616508ba20eb5321dee0e11e4ae292ec1c6955e92ca8fe87f26.md`; `provider-ff185dedb1a7f616508ba20eb5321dee0e11e4ae292ec1c6955e92ca8fe87f26`
+- A123X独立接口：MBI_DEW_LoadFirmware: `projects/a123x/archive/provider-e884f50192000162e129ba10c22858b89b903532d810563d5f01885e34779c11.md`; `provider-e884f50192000162e129ba10c22858b89b903532d810563d5f01885e34779c11`
+- A123X独立接口：MBI_DEW_Open: `projects/a123x/archive/provider-4fe9c9920050b9763ddc5bb2fb4d02f58c7ae0ca1b47c39447576d49d54808f0.md`; `provider-4fe9c9920050b9763ddc5bb2fb4d02f58c7ae0ca1b47c39447576d49d54808f0`
+- A123X独立接口：MBI_DEW_RectBox_CalcAndLoadFirmware: `projects/a123x/archive/provider-a5ef3784135412798e543b04ea9158b5a61faeba3a1e60b8f7982bfc7adb3c93.md`; `provider-a5ef3784135412798e543b04ea9158b5a61faeba3a1e60b8f7982bfc7adb3c93`
+- A123X独立接口：MBI_DEW_StoreFirmwareIntoMbd: `projects/a123x/archive/provider-67004b6de82bdc72fdc29637090d7f717b3758e87c1a17ceaba2dc64e5d0a23d.md`; `provider-67004b6de82bdc72fdc29637090d7f717b3758e87c1a17ceaba2dc64e5d0a23d`
+- A123X独立接口：MBI_DEW_WaitDone: `projects/a123x/archive/provider-84d4a8eca67480ac67aedb280b55ae2fe94928b95f45830c0d6adcbc326eb9d1.md`; `provider-84d4a8eca67480ac67aedb280b55ae2fe94928b95f45830c0d6adcbc326eb9d1`
+- A123X独立接口：MBI_GE2D_BitmapBlend: `projects/a123x/archive/provider-2be4f0cc45dc912d8107b54b11df8dbdcdd5fe54a8cbbe1d179482d69018e9df.md`; `provider-2be4f0cc45dc912d8107b54b11df8dbdcdd5fe54a8cbbe1d179482d69018e9df`
+- A123X独立接口：MBI_GE2D_CancelJob: `projects/a123x/archive/provider-21a7210d00f46991d327667bd2e5f611daf44d73acbde394192350a4f7103eb7.md`; `provider-21a7210d00f46991d327667bd2e5f611daf44d73acbde394192350a4f7103eb7`
+- A123X独立接口：MBI_GE2D_PixelCSC: `projects/a123x/archive/provider-e398e06b7f63b583a8b5993eef4f90512c046a43168fe5908f1b97622fa9f84b.md`; `provider-e398e06b7f63b583a8b5993eef4f90512c046a43168fe5908f1b97622fa9f84b`
+- A123X独立接口：MBI_GE2D_QuickCopy: `projects/a123x/archive/provider-08c257cba6ca955bcef0adf580918accd6801e9f0c0c9d1ff8bf77bd103e8b76.md`; `provider-08c257cba6ca955bcef0adf580918accd6801e9f0c0c9d1ff8bf77bd103e8b76`
+- A123X独立接口：MBI_GE2D_QuickFill: `projects/a123x/archive/provider-b528003000d282708b569023a4b6749aeb04c3ba74514075967e8cac359a1a80.md`; `provider-b528003000d282708b569023a4b6749aeb04c3ba74514075967e8cac359a1a80`
+- A123X独立接口：MBI_GE2D_QuickResize: `projects/a123x/archive/provider-60cf905385b2e4e9516342a6e4aa63069b497f220f2410d1bc34fbdc03a345a6.md`; `provider-60cf905385b2e4e9516342a6e4aa63069b497f220f2410d1bc34fbdc03a345a6`
+- A123X独立接口：MBI_GE2D_Reset: `projects/a123x/archive/provider-28216c4a6b2db1657bdecee854698f7ee19acf704f5319145a634387d694aa43.md`; `provider-28216c4a6b2db1657bdecee854698f7ee19acf704f5319145a634387d694aa43`
+- A123X独立接口：MBI_GE2D_Rotate: `projects/a123x/archive/provider-3924212385241ee52bd0f0a29d2d7e8e3c3c6fa13e55bc4cf08879f15cfe6575.md`; `provider-3924212385241ee52bd0f0a29d2d7e8e3c3c6fa13e55bc4cf08879f15cfe6575`
+- A123X独立接口：MBI_GE2D_WaitAllDone: `projects/a123x/archive/provider-cf107428c34c7a954d9ec6118cce7d2f26f62bdae374b5df83c573f35ef55ea2.md`; `provider-cf107428c34c7a954d9ec6118cce7d2f26f62bdae374b5df83c573f35ef55ea2`
+- A123X独立接口：MBI_ISP_AELibRegCallBack: `projects/a123x/archive/provider-78d999093c2a2a4a69e1d9366db8596de706c978857f1b9eeac0db439b3ddd69.md`; `provider-78d999093c2a2a4a69e1d9366db8596de706c978857f1b9eeac0db439b3ddd69`
+- A123X独立接口：MBI_ISP_AELibUnRegCallBack: `projects/a123x/archive/provider-c3e175019d17233e884a5dbf67fce133a1893d7b27b77b11888345d4d57142a6.md`; `provider-c3e175019d17233e884a5dbf67fce133a1893d7b27b77b11888345d4d57142a6`
+- A123X独立接口：MBI_ISP_ALGLibRegCallBack: `projects/a123x/archive/provider-4f8e387d0553b27910ca555f8a50e88ba2541bb6d815841a4eebb8c3346006b1.md`; `provider-4f8e387d0553b27910ca555f8a50e88ba2541bb6d815841a4eebb8c3346006b1`
+- A123X独立接口：MBI_ISP_ALGLibUnRegCallBack: `projects/a123x/archive/provider-acc7edd37d595547aca73c36155b09051e8590bb12abd56d7679a9ffd73188cd.md`; `provider-acc7edd37d595547aca73c36155b09051e8590bb12abd56d7679a9ffd73188cd`
+- A123X独立接口：MBI_ISP_AWBLibRegCallBack: `projects/a123x/archive/provider-b62c209e488b2197bd06c30586e2d4a44e5dacc41dc48b9ab17363ae35242559.md`; `provider-b62c209e488b2197bd06c30586e2d4a44e5dacc41dc48b9ab17363ae35242559`
+- A123X独立接口：MBI_ISP_AWBLibUnRegCallBack: `projects/a123x/archive/provider-e50f6a447be08384de358d20dd057f55d20fcbe30a5258be08f4481d4fcfac2d.md`; `provider-e50f6a447be08384de358d20dd057f55d20fcbe30a5258be08f4481d4fcfac2d`
+- A123X独立接口：MBI_ISP_CalGainByTemp: `projects/a123x/archive/provider-d9847f520981dfe547708ef410effdd0405c965b6933a2b0b8602a4ee06446d0.md`; `provider-d9847f520981dfe547708ef410effdd0405c965b6933a2b0b8602a4ee06446d0`
+- A123X独立接口：MBI_ISP_Calibration: `projects/a123x/archive/provider-e71e458537e06cbaf6abaad39c25d25aad9bb3e6fde10b9d2b51fcf49d53b94e.md`; `provider-e71e458537e06cbaf6abaad39c25d25aad9bb3e6fde10b9d2b51fcf49d53b94e`
+- A123X独立接口：MBI_ISP_DisableChn: `projects/a123x/archive/provider-f52b713d721d50a1a22ac726b7b00dbf8a272183b15687cabb5a6c5c71ce9eca.md`; `provider-f52b713d721d50a1a22ac726b7b00dbf8a272183b15687cabb5a6c5c71ce9eca`
+- A123X独立接口：MBI_ISP_EnableChn: `projects/a123x/archive/provider-719a2bcc3eee5342655015500e04c60d4e931a69dcbfad10880b249ec4f83d74.md`; `provider-719a2bcc3eee5342655015500e04c60d4e931a69dcbfad10880b249ec4f83d74`
+- A123X独立接口：MBI_ISP_FPNCalibrate: `projects/a123x/archive/provider-71efcd6faeaf736149075ca984fc4a4f12e52c9b57c8dd7a02a6baa61b8ad9f7.md`; `provider-71efcd6faeaf736149075ca984fc4a4f12e52c9b57c8dd7a02a6baa61b8ad9f7`
+- A123X独立接口：MBI_ISP_GetAERoiAttr: `projects/a123x/archive/provider-9e4de5398341e0256c226b39ec07f2d5f73d862c287247b8a6f6b224b6126729.md`; `provider-9e4de5398341e0256c226b39ec07f2d5f73d862c287247b8a6f6b224b6126729`
+- A123X独立接口：MBI_ISP_GetAERouteAttrEx: `projects/a123x/archive/provider-ae2eb3642c9a02cbfd18713baa1f018a76be6a421bc46a0018a52d9064198508.md`; `provider-ae2eb3642c9a02cbfd18713baa1f018a76be6a421bc46a0018a52d9064198508`
+- A123X独立接口：MBI_ISP_GetAEStatistics: `projects/a123x/archive/provider-508d08f7c955b0c6098a01b5f6c3d51f134c5153c8ad9d7663c71f9cdc2c9928.md`; `provider-508d08f7c955b0c6098a01b5f6c3d51f134c5153c8ad9d7663c71f9cdc2c9928`
+- A123X独立接口：MBI_ISP_GetAIispMode: `projects/a123x/archive/provider-86210a4a7ebd09d2ea4911285b03bef6593877427d9008b1f87228fda3f2bc65.md`; `provider-86210a4a7ebd09d2ea4911285b03bef6593877427d9008b1f87228fda3f2bc65`
+- A123X独立接口：MBI_ISP_GetAWBAttrEx: `projects/a123x/archive/provider-2a7b3676a68469a54f628287f6ffd42e877913d104b75b23591a020940d811ff.md`; `provider-2a7b3676a68469a54f628287f6ffd42e877913d104b75b23591a020940d811ff`
+- A123X独立接口：MBI_ISP_GetBindAttr: `projects/a123x/archive/provider-87a9ae0841a30b3e648ea27640519701e1ef90caf2fff33072dee8218ddd524c.md`; `provider-87a9ae0841a30b3e648ea27640519701e1ef90caf2fff33072dee8218ddd524c`
+- A123X独立接口：MBI_ISP_GetBlackLevelAttr: `projects/a123x/archive/provider-9e0c6f4517974b30fd56625cbb3884b714c9d1f210ef10b6f64c1b016dcd2f92.md`; `provider-9e0c6f4517974b30fd56625cbb3884b714c9d1f210ef10b6f64c1b016dcd2f92`
+- A123X独立接口：MBI_ISP_GetCCMAttr: `projects/a123x/archive/provider-52c84271ed70c3cf9e623c530aa2b18ef1ddfd893f62c685da683b563cf2c4f1.md`; `provider-52c84271ed70c3cf9e623c530aa2b18ef1ddfd893f62c685da683b563cf2c4f1`
+- A123X独立接口：MBI_ISP_GetCM2AttrEx: `projects/a123x/archive/provider-0db106dd16ec6c0b421c2846c5583c81c6ed7644975ed5276a4673a6cc3059e1.md`; `provider-0db106dd16ec6c0b421c2846c5583c81c6ed7644975ed5276a4673a6cc3059e1`
+- A123X独立接口：MBI_ISP_GetCNRAttr: `projects/a123x/archive/provider-b9c3312cef249dd6c9fb435cd6caa10309b1152661fea9715b3bc5d528a2ba81.md`; `provider-b9c3312cef249dd6c9fb435cd6caa10309b1152661fea9715b3bc5d528a2ba81`
+- A123X独立接口：MBI_ISP_GetCSCAttr: `projects/a123x/archive/provider-c29afe2f238aaa56a94ecc452598077ab9430b2d5d99bfc07b16e817d98d9a95.md`; `provider-c29afe2f238aaa56a94ecc452598077ab9430b2d5d99bfc07b16e817d98d9a95`
+- A123X独立接口：MBI_ISP_GetCaaControlAttr: `projects/a123x/archive/provider-9ba6c2d92ba6e2970b37ffc6ffe589af90860fd28dff5596487af68f19d4a423.md`; `provider-9ba6c2d92ba6e2970b37ffc6ffe589af90860fd28dff5596487af68f19d4a423`
+- A123X独立接口：MBI_ISP_GetCalcFlickerType: `projects/a123x/archive/provider-4ad049b5bcc2e733e04785d67bc9d49b3f385483d4d24c5c0ed393b15d27b339.md`; `provider-4ad049b5bcc2e733e04785d67bc9d49b3f385483d4d24c5c0ed393b15d27b339`
+- A123X独立接口：MBI_ISP_GetChnAttr: `projects/a123x/archive/provider-6e7dc76129791930a668373023e714293b8552b55176f0a44ff965669ef6a61a.md`; `provider-6e7dc76129791930a668373023e714293b8552b55176f0a44ff965669ef6a61a`
+- A123X独立接口：MBI_ISP_GetChnCrop: `projects/a123x/archive/provider-2b34795e8bc2650e36ad7186f7b954713f17047b04130ad22a927d889143252a.md`; `provider-2b34795e8bc2650e36ad7186f7b954713f17047b04130ad22a927d889143252a`
+- A123X独立接口：MBI_ISP_GetChnDrawAttr: `projects/a123x/archive/provider-2e90ed277a414e89928cbf99c98a19b011fd5d6ee2bd74f72021a58feb58740b.md`; `provider-2e90ed277a414e89928cbf99c98a19b011fd5d6ee2bd74f72021a58feb58740b`
+- A123X独立接口：MBI_ISP_GetChnFps: `projects/a123x/archive/provider-9e5bfb08e38fc5a4eb796a588c36423d29f4dc259fee0916fd5c55e67564b7f9.md`; `provider-9e5bfb08e38fc5a4eb796a588c36423d29f4dc259fee0916fd5c55e67564b7f9`
+- A123X独立接口：MBI_ISP_GetChnFrame: `projects/a123x/archive/provider-b46ad26c9c0ab3426dc08334f64dbfc16af6c093f6fcde51ba50bfa968eb0629.md`; `provider-b46ad26c9c0ab3426dc08334f64dbfc16af6c093f6fcde51ba50bfa968eb0629`
+- A123X独立接口：MBI_ISP_GetChnLowmem: `projects/a123x/archive/provider-82018189e6b3acaea1b4bd108cdf59b8fabb8b775f577ec736998eb92b37b89b.md`; `provider-82018189e6b3acaea1b4bd108cdf59b8fabb8b775f577ec736998eb92b37b89b`
+- A123X独立接口：MBI_ISP_GetChnRot: `projects/a123x/archive/provider-963088f9aefd57ac12ab36bf09054fd20beae41aa06bd25396b76f2f35143731.md`; `provider-963088f9aefd57ac12ab36bf09054fd20beae41aa06bd25396b76f2f35143731`
+- A123X独立接口：MBI_ISP_GetCrosstalkAttr: `projects/a123x/archive/provider-706581135efbf1d584a934f6e823487fa3cad7bb94d71ed85cf62a2a4416d633.md`; `provider-706581135efbf1d584a934f6e823487fa3cad7bb94d71ed85cf62a2a4416d633`
+- A123X独立接口：MBI_ISP_GetDMSAttr: `projects/a123x/archive/provider-20b6042c14191d2c06ae8758e5edd5980624376b3fbdc2b41bff24e815d36568.md`; `provider-20b6042c14191d2c06ae8758e5edd5980624376b3fbdc2b41bff24e815d36568`
+- A123X独立接口：MBI_ISP_GetDNLPAttr: `projects/a123x/archive/provider-5fdff967c08c62d467e17d1934dabdcbc47a9d323ff33eff0de3fe9e4a851c58.md`; `provider-5fdff967c08c62d467e17d1934dabdcbc47a9d323ff33eff0de3fe9e4a851c58`
+- A123X独立接口：MBI_ISP_GetDRCAttr: `projects/a123x/archive/provider-4406eb38475f39f06c3afb1e02882c4cf25d4c875877b6b9717f6ec0dd065442.md`; `provider-4406eb38475f39f06c3afb1e02882c4cf25d4c875877b6b9717f6ec0dd065442`
+- A123X独立接口：MBI_ISP_GetDRCGammaAttr: `projects/a123x/archive/provider-a7474d082249ba2b371fef225e1b52d049377a7d55a6b846f57a1b16eefea67e.md`; `provider-a7474d082249ba2b371fef225e1b52d049377a7d55a6b846f57a1b16eefea67e`
+- A123X独立接口：MBI_ISP_GetDataType: `projects/a123x/archive/provider-e17d1ff0acd28859bad7694e3846cf49ef479b75d1ae05f66599dc326d8a1d87.md`; `provider-e17d1ff0acd28859bad7694e3846cf49ef479b75d1ae05f66599dc326d8a1d87`
+- A123X独立接口：MBI_ISP_GetDehazeAttr: `projects/a123x/archive/provider-299c392b169681698a3bf3b11844d15d55efad00a75410a84273f1b13f1f6977.md`; `provider-299c392b169681698a3bf3b11844d15d55efad00a75410a84273f1b13f1f6977`
+- A123X独立接口：MBI_ISP_GetDistance: `projects/a123x/archive/provider-effcef0a9080d758f2ffe3d61f9576a9d91121dd12cf9ed1a392cbf1f1a5c84b.md`; `provider-effcef0a9080d758f2ffe3d61f9576a9d91121dd12cf9ed1a392cbf1f1a5c84b`
+- A123X独立接口：MBI_ISP_GetDpcAttr: `projects/a123x/archive/provider-4242309e9027b4f9779e9f36ba9e90debd9ccb624ef564f6b94b6404060dfda4.md`; `provider-4242309e9027b4f9779e9f36ba9e90debd9ccb624ef564f6b94b6404060dfda4`
+- A123X独立接口：MBI_ISP_GetExposureAttr: `projects/a123x/archive/provider-413f3c1ca3fedc1dc423b256423e58c5dd267c9ae6478a810a794715bbb36088.md`; `provider-413f3c1ca3fedc1dc423b256423e58c5dd267c9ae6478a810a794715bbb36088`
+- A123X独立接口：MBI_ISP_GetFMWState: `projects/a123x/archive/provider-2ac65bf7ea666fe44aac7569c11e072dc1733fc60dfb47020e74eb826dcdb7a6.md`; `provider-2ac65bf7ea666fe44aac7569c11e072dc1733fc60dfb47020e74eb826dcdb7a6`
+- A123X独立接口：MBI_ISP_GetFPNAttr: `projects/a123x/archive/provider-720864342fc130cfc63675f06851d9b4d321db2003554e8b173dc51941426952.md`; `provider-720864342fc130cfc63675f06851d9b4d321db2003554e8b173dc51941426952`
+- A123X独立接口：MBI_ISP_GetFSWDRAttr: `projects/a123x/archive/provider-61edc81fa7b915afbdd32331cb674c591ca44de45ab70a562bb137dd62e5873e.md`; `provider-61edc81fa7b915afbdd32331cb674c591ca44de45ab70a562bb137dd62e5873e`
+- A123X独立接口：MBI_ISP_GetFlickerOutput: `projects/a123x/archive/provider-a16feccab5971540602dbf42f03e719dd5e0bddbd66d7c7e014c351fea96e849.md`; `provider-a16feccab5971540602dbf42f03e719dd5e0bddbd66d7c7e014c351fea96e849`
+- A123X独立接口：MBI_ISP_GetFocusVal: `projects/a123x/archive/provider-0de746b7da3c6a9c76037d6c163f1c922beb1b1994dcb8273f41e7a03c7bfeeb.md`; `provider-0de746b7da3c6a9c76037d6c163f1c922beb1b1994dcb8273f41e7a03c7bfeeb`
+- A123X独立接口：MBI_ISP_GetGammaAttr: `projects/a123x/archive/provider-6e698effe89a451c6d3387d247454ef726638b2ff5f3cf89d82712d70d844a12.md`; `provider-6e698effe89a451c6d3387d247454ef726638b2ff5f3cf89d82712d70d844a12`
+- A123X独立接口：MBI_ISP_GetHighLightAttr: `projects/a123x/archive/provider-546846efe4d6205ddabee8e17fd3b6dee2397c1a72c64f3e009e3353dccadc97.md`; `provider-546846efe4d6205ddabee8e17fd3b6dee2397c1a72c64f3e009e3353dccadc97`
+- A123X独立接口：MBI_ISP_GetIPPDoneBuff: `projects/a123x/archive/provider-0881043b89856b6fe9559b14c2110b622085f9a3a330f36fa1bed5b0756c414d.md`; `provider-0881043b89856b6fe9559b14c2110b622085f9a3a330f36fa1bed5b0756c414d`
+- A123X独立接口：MBI_ISP_GetIRAttr: `projects/a123x/archive/provider-ba4e0998b0da132a735d2f679d35d7043602ecd53d1fc5a4ece243b1e59070c5.md`; `provider-ba4e0998b0da132a735d2f679d35d7043602ecd53d1fc5a4ece243b1e59070c5`
+- A123X独立接口：MBI_ISP_GetISPRegAttr: `projects/a123x/archive/provider-cbf68547eabd08565598064af147a30a2d179156952a39921c326d8424f8945f.md`; `provider-cbf68547eabd08565598064af147a30a2d179156952a39921c326d8424f8945f`
+- A123X独立接口：MBI_ISP_GetIspHlcAttr: `projects/a123x/archive/provider-1b0fb605813e7a52cc321599ef6426339fbbe57a09113c10babd9a6ae6574015.md`; `provider-1b0fb605813e7a52cc321599ef6426339fbbe57a09113c10babd9a6ae6574015`
+- A123X独立接口：MBI_ISP_GetIspSharpenAttr: `projects/a123x/archive/provider-cb4deb86347488056e4595a7d14e8dba0d6d639bc2869acdea88c09f7aa96ab8.md`; `provider-cb4deb86347488056e4595a7d14e8dba0d6d639bc2869acdea88c09f7aa96ab8`
+- A123X独立接口：MBI_ISP_GetLDCIAttr: `projects/a123x/archive/provider-5fff2f600f2fd82fed3a7276b86d73b3ede4086f69d8e759096900c7bab3bc59.md`; `provider-5fff2f600f2fd82fed3a7276b86d73b3ede4086f69d8e759096900c7bab3bc59`
+- A123X独立接口：MBI_ISP_GetLDCILutAttr: `projects/a123x/archive/provider-1195fee4081004127646e5fc5f95c81801fec20128a15ec1e7266848a646ca10.md`; `provider-1195fee4081004127646e5fc5f95c81801fec20128a15ec1e7266848a646ca10`
+- A123X独立接口：MBI_ISP_GetMeshShadingAttr: `projects/a123x/archive/provider-d844ac839667d1b594cf829c10d538751c661eb7eae4cb64f68ad4870ebf1482.md`; `provider-d844ac839667d1b594cf829c10d538751c661eb7eae4cb64f68ad4870ebf1482`
+- A123X独立接口：MBI_ISP_GetMeshShadingGainLutAttr: `projects/a123x/archive/provider-0df8db5611b715d39752567adb9775e2dd3ecf620e411d8d80947674220d3a19.md`; `provider-0df8db5611b715d39752567adb9775e2dd3ecf620e411d8d80947674220d3a19`
+- A123X独立接口：MBI_ISP_GetModuleControl: `projects/a123x/archive/provider-e13dcdd780eeda4bc40954729a6725e03923a85926d6a39e514f065045bfaf9a.md`; `provider-e13dcdd780eeda4bc40954729a6725e03923a85926d6a39e514f065045bfaf9a`
+- A123X独立接口：MBI_ISP_GetNPAttr: `projects/a123x/archive/provider-4e29b2ede001f95d80d7c8e2d23757abe626f9003f7df7986ba7c92cec78db1f.md`; `provider-4e29b2ede001f95d80d7c8e2d23757abe626f9003f7df7986ba7c92cec78db1f`
+- A123X独立接口：MBI_ISP_GetPreRollLocation: `projects/a123x/archive/provider-e6efc97a9a3b1a75910b60c8a6149078b4fa23531a92a48b9c4124c40469b234.md`; `provider-e6efc97a9a3b1a75910b60c8a6149078b4fa23531a92a48b9c4124c40469b234`
+- A123X独立接口：MBI_ISP_GetPreset: `projects/a123x/archive/provider-a984fb89ea2f9b72c898c7b1a361836cd96c6883819636c87ce8cfd15dd34a99.md`; `provider-a984fb89ea2f9b72c898c7b1a361836cd96c6883819636c87ce8cfd15dd34a99`
+- A123X独立接口：MBI_ISP_GetPurpleAttr: `projects/a123x/archive/provider-a8d5f5430954e8e8eb7196a878e6e0416257eb98d2f086dc4e5f77d76bcd3617.md`; `provider-a8d5f5430954e8e8eb7196a878e6e0416257eb98d2f086dc4e5f77d76bcd3617`
+- A123X独立接口：MBI_ISP_GetRAWNRAttr: `projects/a123x/archive/provider-883201f2c2db2c4b8f4749485c8660db3406258fd6c94f5ce68981b7f598d03c.md`; `provider-883201f2c2db2c4b8f4749485c8660db3406258fd6c94f5ce68981b7f598d03c`
+- A123X独立接口：MBI_ISP_GetRadialShadingAttr: `projects/a123x/archive/provider-6d1d0a506b0605660b05111459f9968ca1dca2829e6e383f650c381916405b53.md`; `provider-6d1d0a506b0605660b05111459f9968ca1dca2829e6e383f650c381916405b53`
+- A123X独立接口：MBI_ISP_GetRadialShadingLUT: `projects/a123x/archive/provider-2a8b12d9f47bb329da70aa066e323e6fb64415ff69d4dbc5163b5345701801e8.md`; `provider-2a8b12d9f47bb329da70aa066e323e6fb64415ff69d4dbc5163b5345701801e8`
+- A123X独立接口：MBI_ISP_GetRegister: `projects/a123x/archive/provider-a91eb801ab4008a57bd3f13be14e5c4a85ec61aee071c3118bb3a9d7bd2e019f.md`; `provider-a91eb801ab4008a57bd3f13be14e5c4a85ec61aee071c3118bb3a9d7bd2e019f`
+- A123X独立接口：MBI_ISP_GetSNRAttr: `projects/a123x/archive/provider-03f3e4ccc178d2dfe38c2ed0ecb462d8171334adfa4093d7a50b8092b625fded.md`; `provider-03f3e4ccc178d2dfe38c2ed0ecb462d8171334adfa4093d7a50b8092b625fded`
+- A123X独立接口：MBI_ISP_GetSaturationAttr: `projects/a123x/archive/provider-d47e9a2134f3f478e2717a8acdd8594e977d41eb2aae4617fa9084f7aa4d6c7d.md`; `provider-d47e9a2134f3f478e2717a8acdd8594e977d41eb2aae4617fa9084f7aa4d6c7d`
+- A123X独立接口：MBI_ISP_GetTNRAttr: `projects/a123x/archive/provider-68963eb313b9e96a31ef3ab2eeb19459dff0fef6547220756b97bf7897e63a4a.md`; `provider-68963eb313b9e96a31ef3ab2eeb19459dff0fef6547220756b97bf7897e63a4a`
+- A123X独立接口：MBI_ISP_GetWBAttr: `projects/a123x/archive/provider-94fd9baa4c3e5abfbd1ab95ce0706a57f755656ad38d9e57f7631bbf3caa71a4.md`; `provider-94fd9baa4c3e5abfbd1ab95ce0706a57f755656ad38d9e57f7631bbf3caa71a4`
+- A123X独立接口：MBI_ISP_GetWBCorr: `projects/a123x/archive/provider-6f53a615a262b4914bfd90b5ece7ee12ef5e9920f1668f67fff0c09f16cfc12c.md`; `provider-6f53a615a262b4914bfd90b5ece7ee12ef5e9920f1668f67fff0c09f16cfc12c`
+- A123X独立接口：MBI_ISP_GetWBStatistics: `projects/a123x/archive/provider-e2d183228326494a9bef4f81d89b0fe7f557641486e97f0e5a86496c30e68eb1.md`; `provider-e2d183228326494a9bef4f81d89b0fe7f557641486e97f0e5a86496c30e68eb1`
+- A123X独立接口：MBI_ISP_GetZoom: `projects/a123x/archive/provider-c2880b2ce2751a838e374f096baa1c2ae81905ac22e3f2011fe33bb08ad2fde4.md`; `provider-c2880b2ce2751a838e374f096baa1c2ae81905ac22e3f2011fe33bb08ad2fde4`
+- A123X独立接口：MBI_ISP_Get_FrameEnd: `projects/a123x/archive/provider-b7994e2ecb34f155cb09078310730b41e3bab5d91956c3e318df74ce38edda20.md`; `provider-b7994e2ecb34f155cb09078310730b41e3bab5d91956c3e318df74ce38edda20`
+- A123X独立接口：MBI_ISP_Get_RunStatus: `projects/a123x/archive/provider-a4cfdac4740801b8f65d09fba5de0444047df1e1c59a644f71a8162c82a8d011.md`; `provider-a4cfdac4740801b8f65d09fba5de0444047df1e1c59a644f71a8162c82a8d011`
+- A123X独立接口：MBI_ISP_IPPDevStart: `projects/a123x/archive/provider-fad9df8d84a985f7dd925398135049f0101b3e07dbec37d41ab1c9c2b2522c93.md`; `provider-fad9df8d84a985f7dd925398135049f0101b3e07dbec37d41ab1c9c2b2522c93`
+- A123X独立接口：MBI_ISP_IPPDevStop: `projects/a123x/archive/provider-aba138a423464afdd85289319a950703d0a367040a9e40b3128177491c0374c9.md`; `provider-aba138a423464afdd85289319a950703d0a367040a9e40b3128177491c0374c9`
+- A123X独立接口：MBI_ISP_IPPReqBuffs: `projects/a123x/archive/provider-3a5da8e881026f465d5b724559b3432cf0bb020aeaca2108c1f56249b5a84d0f.md`; `provider-3a5da8e881026f465d5b724559b3432cf0bb020aeaca2108c1f56249b5a84d0f`
+- A123X独立接口：MBI_ISP_MemInit: `projects/a123x/archive/provider-bb0fd756c05a6118e7f06d5f8ab00034bb7f6fc75325fb2ec7f683406dc8f6ce.md`; `provider-bb0fd756c05a6118e7f06d5f8ab00034bb7f6fc75325fb2ec7f683406dc8f6ce`
+- A123X独立接口：MBI_ISP_PutChnFrame: `projects/a123x/archive/provider-e5556b460c57d36715a5948cd13b6b298b724b5db2e1cbd32e0adb80590bc02a.md`; `provider-e5556b460c57d36715a5948cd13b6b298b724b5db2e1cbd32e0adb80590bc02a`
+- A123X独立接口：MBI_ISP_PutIPPDoneBuff: `projects/a123x/archive/provider-8799c7bbdc383003fae5529327308bb522655e740508def98ebc7b1595399aab.md`; `provider-8799c7bbdc383003fae5529327308bb522655e740508def98ebc7b1595399aab`
+- A123X独立接口：MBI_ISP_Put_OfflineBuff: `projects/a123x/archive/provider-51454f1de4725d5de5bd0155a10c0b7cc59dd4e5641f5a441d33c7367fee69ac.md`; `provider-51454f1de4725d5de5bd0155a10c0b7cc59dd4e5641f5a441d33c7367fee69ac`
+- A123X独立接口：MBI_ISP_QueryAEStats: `projects/a123x/archive/provider-9560df07f245fd6c1dba2e0c40ee7b979e63c6d2c771c7dddf95aa3a14269b46.md`; `provider-9560df07f245fd6c1dba2e0c40ee7b979e63c6d2c771c7dddf95aa3a14269b46`
+- A123X独立接口：MBI_ISP_QueryExposureInfo: `projects/a123x/archive/provider-97ef94243718c483b27c9b96d0041e0102dd2e938ee0cf5148f01b43f239d6b3.md`; `provider-97ef94243718c483b27c9b96d0041e0102dd2e938ee0cf5148f01b43f239d6b3`
+- A123X独立接口：MBI_ISP_QueryWBInfo: `projects/a123x/archive/provider-3cf8d32e1e8c94f943d40c216a1020744d27ae0ae00e3a489e3ec769565f351e.md`; `provider-3cf8d32e1e8c94f943d40c216a1020744d27ae0ae00e3a489e3ec769565f351e`
+- A123X独立接口：MBI_ISP_QueryWBObj: `projects/a123x/archive/provider-86111be89023438c8fba9bc6950b18ae637c1a83dd255d2e85c1aadef2940721.md`; `provider-86111be89023438c8fba9bc6950b18ae637c1a83dd255d2e85c1aadef2940721`
+- A123X独立接口：MBI_ISP_QueryWBStats: `projects/a123x/archive/provider-4d627a273bb89f4fc2fca448aef57866b2fa113962ceb24c15c524f9b92a289a.md`; `provider-4d627a273bb89f4fc2fca448aef57866b2fa113962ceb24c15c524f9b92a289a`
+- A123X独立接口：MBI_ISP_RegDump: `projects/a123x/archive/provider-2e5f92844377b854fedc08b0b5bc78a392550366d501ba49560069598d202334.md`; `provider-2e5f92844377b854fedc08b0b5bc78a392550366d501ba49560069598d202334`
+- A123X独立接口：MBI_ISP_RunOnce: `projects/a123x/archive/provider-b5864e602aa55ddbe202c08d53754fe419fda6ef6a2e2e2b988497041878a71b.md`; `provider-b5864e602aa55ddbe202c08d53754fe419fda6ef6a2e2e2b988497041878a71b`
+- A123X独立接口：MBI_ISP_SensorReadReg: `projects/a123x/archive/provider-0037b3c0e98f97c663bb90cb6e8ff76175e732c0fa542b8e6dbfda0636edee1f.md`; `provider-0037b3c0e98f97c663bb90cb6e8ff76175e732c0fa542b8e6dbfda0636edee1f`
+- A123X独立接口：MBI_ISP_SensorRegCallBack: `projects/a123x/archive/provider-1944cb9aa77fa08bdac4e5c82a0805a94aed3154a0a42ad80a3dca871af35f3b.md`; `provider-1944cb9aa77fa08bdac4e5c82a0805a94aed3154a0a42ad80a3dca871af35f3b`
+- A123X独立接口：MBI_ISP_SensorSetMode: `projects/a123x/archive/provider-22835c910a11b868a81ade5d3b20fa5690d48843eb59d6b84ca01acc4c4f7cf2.md`; `provider-22835c910a11b868a81ade5d3b20fa5690d48843eb59d6b84ca01acc4c4f7cf2`
+- A123X独立接口：MBI_ISP_SensorUnRegCallBack: `projects/a123x/archive/provider-52afd80cdab80946dafe35f5ed298095bbdd9c30b8d1567217fbb7663e488c6f.md`; `provider-52afd80cdab80946dafe35f5ed298095bbdd9c30b8d1567217fbb7663e488c6f`
+- A123X独立接口：MBI_ISP_SensorWriteReg: `projects/a123x/archive/provider-0f6a8d2f811ae5861f81d5732c7ed5e89b33494fa838e0c03e927572bae86cd4.md`; `provider-0f6a8d2f811ae5861f81d5732c7ed5e89b33494fa838e0c03e927572bae86cd4`
+- A123X独立接口：MBI_ISP_SetAERoiAttr: `projects/a123x/archive/provider-aa6398aa315db54b99a551c8a0b6b61f932453d8c4b86f25b0cd3d2d91313c6f.md`; `provider-aa6398aa315db54b99a551c8a0b6b61f932453d8c4b86f25b0cd3d2d91313c6f`
+- A123X独立接口：MBI_ISP_SetAERouteAttrEx: `projects/a123x/archive/provider-f6a3ff685d6dc1c04a1773ecfbda2612d3affe536781bbc891b5c678ddeb36d5.md`; `provider-f6a3ff685d6dc1c04a1773ecfbda2612d3affe536781bbc891b5c678ddeb36d5`
+- A123X独立接口：MBI_ISP_SetAIispMode: `projects/a123x/archive/provider-fa2890d853a80443f6273b97a4dc2d6c7c831156924f7ed953f47a05fb30d706.md`; `provider-fa2890d853a80443f6273b97a4dc2d6c7c831156924f7ed953f47a05fb30d706`
+- A123X独立接口：MBI_ISP_SetAWBAttrEx: `projects/a123x/archive/provider-171264b8041a8a3829ef74256a676e40ccf4423f869bc9647ec2e20ba891e6e3.md`; `provider-171264b8041a8a3829ef74256a676e40ccf4423f869bc9647ec2e20ba891e6e3`
+- A123X独立接口：MBI_ISP_SetBindAttr: `projects/a123x/archive/provider-c81919f101e88f37cb68a4169bfaa9c3f26b9a2bde2e04bd69c41840db47c7b7.md`; `provider-c81919f101e88f37cb68a4169bfaa9c3f26b9a2bde2e04bd69c41840db47c7b7`
+- A123X独立接口：MBI_ISP_SetBlackLevelAttr: `projects/a123x/archive/provider-07f9741518e2beff001b065b7b545dc2ef06ea998060b0d115afce6d309fe88a.md`; `provider-07f9741518e2beff001b065b7b545dc2ef06ea998060b0d115afce6d309fe88a`
+- A123X独立接口：MBI_ISP_SetCCMAttr: `projects/a123x/archive/provider-45b362d6dcbe4dc0b9b0087397119783233225e649163df1848bb4126d536f82.md`; `provider-45b362d6dcbe4dc0b9b0087397119783233225e649163df1848bb4126d536f82`
+- A123X独立接口：MBI_ISP_SetCM2AttrEx: `projects/a123x/archive/provider-f00f1e1f42da6d10872833bff0f0943b723e4dd72a70822de55a168b02caf34a.md`; `provider-f00f1e1f42da6d10872833bff0f0943b723e4dd72a70822de55a168b02caf34a`
+- A123X独立接口：MBI_ISP_SetCNRAttr: `projects/a123x/archive/provider-04ecb6a58f5749486bda49e29b253b4406a2e8890dcefb46c62279ff909fa065.md`; `provider-04ecb6a58f5749486bda49e29b253b4406a2e8890dcefb46c62279ff909fa065`
+- A123X独立接口：MBI_ISP_SetCSCAttr: `projects/a123x/archive/provider-d0f4b3ce222baeaad7637f4fc4a7be3f6c24e0b531e10ab9a4bb3a9117950ca0.md`; `provider-d0f4b3ce222baeaad7637f4fc4a7be3f6c24e0b531e10ab9a4bb3a9117950ca0`
+- A123X独立接口：MBI_ISP_SetCaaControlAttr: `projects/a123x/archive/provider-2466445025f4368672e2154e0844e2164c61f6697c0b64e7d3a23be598e93309.md`; `provider-2466445025f4368672e2154e0844e2164c61f6697c0b64e7d3a23be598e93309`
+- A123X独立接口：MBI_ISP_SetCalcFlickerType: `projects/a123x/archive/provider-da13d3446cca96e22bf54e9caee87a08c88e1ded3744e52e117791e6df19f775.md`; `provider-da13d3446cca96e22bf54e9caee87a08c88e1ded3744e52e117791e6df19f775`
+- A123X独立接口：MBI_ISP_SetChnAttr: `projects/a123x/archive/provider-7972ca04fec50571a7330e95d50133a74520a1d393a272e859a0c483a3a3fb69.md`; `provider-7972ca04fec50571a7330e95d50133a74520a1d393a272e859a0c483a3a3fb69`
+- A123X独立接口：MBI_ISP_SetChnCrop: `projects/a123x/archive/provider-169b33b59e729354e5e38596c96fc97cf0d8164292838002244014ce5931f38b.md`; `provider-169b33b59e729354e5e38596c96fc97cf0d8164292838002244014ce5931f38b`
+- A123X独立接口：MBI_ISP_SetChnDrawAttr: `projects/a123x/archive/provider-6657b72e3413318966ff41056ed97ff421d42f4b4aca46e58cea683036c27cf8.md`; `provider-6657b72e3413318966ff41056ed97ff421d42f4b4aca46e58cea683036c27cf8`
+- A123X独立接口：MBI_ISP_SetChnFps: `projects/a123x/archive/provider-e2446ea15264803920f753c5d5826acb0c15ecd890387e2907a5f0c82f64910a.md`; `provider-e2446ea15264803920f753c5d5826acb0c15ecd890387e2907a5f0c82f64910a`
+- A123X独立接口：MBI_ISP_SetChnLowmem: `projects/a123x/archive/provider-6acc2f53112562055fd4b46bceef4da9e2b9d7f548b43b107458dfda0277205c.md`; `provider-6acc2f53112562055fd4b46bceef4da9e2b9d7f548b43b107458dfda0277205c`
+- A123X独立接口：MBI_ISP_SetChnRot: `projects/a123x/archive/provider-36943228f2d6d44ac711ef46873c27b256ca901ec335062feb8456c29bcfbd59.md`; `provider-36943228f2d6d44ac711ef46873c27b256ca901ec335062feb8456c29bcfbd59`
+- A123X独立接口：MBI_ISP_SetCrosstalkAttr: `projects/a123x/archive/provider-7f650c1e7bc5e1f0cc3c6772fef2bb0f49b0129a013429114f1c1243dae6fc28.md`; `provider-7f650c1e7bc5e1f0cc3c6772fef2bb0f49b0129a013429114f1c1243dae6fc28`
+- A123X独立接口：MBI_ISP_SetDMSAttr: `projects/a123x/archive/provider-7a62e0ab8ab934bc2ae89e9fc35e8cae443c350679276b038a2eb4a0c4f725e8.md`; `provider-7a62e0ab8ab934bc2ae89e9fc35e8cae443c350679276b038a2eb4a0c4f725e8`
+- A123X独立接口：MBI_ISP_SetDNLPAttr: `projects/a123x/archive/provider-ed6ff8b8687322afc8585d20e3148a952928d9662f9808a309a25d3a7947ad28.md`; `provider-ed6ff8b8687322afc8585d20e3148a952928d9662f9808a309a25d3a7947ad28`
+- A123X独立接口：MBI_ISP_SetDRCAttr: `projects/a123x/archive/provider-0898e1aebf8d00b7815ea70e2ad89b128589608d8f935c9a4591a733134cc85e.md`; `provider-0898e1aebf8d00b7815ea70e2ad89b128589608d8f935c9a4591a733134cc85e`
+- A123X独立接口：MBI_ISP_SetDRCGammaAttr: `projects/a123x/archive/provider-25a2082740e5761f6d7f7d3503e38952a88c8a07bbe723f01f313c3d78276e9f.md`; `provider-25a2082740e5761f6d7f7d3503e38952a88c8a07bbe723f01f313c3d78276e9f`
+- A123X独立接口：MBI_ISP_SetDehazeAttr: `projects/a123x/archive/provider-174c61598f8bcf043b876ba6a30b61e34a97ddc45fb69cb386bbb94d079be4fd.md`; `provider-174c61598f8bcf043b876ba6a30b61e34a97ddc45fb69cb386bbb94d079be4fd`
+- A123X独立接口：MBI_ISP_SetDistance: `projects/a123x/archive/provider-d14063a808f4ce937717c620574fd03b5a539c7cc89de3886990c662477148b5.md`; `provider-d14063a808f4ce937717c620574fd03b5a539c7cc89de3886990c662477148b5`
+- A123X独立接口：MBI_ISP_SetDpcAttr: `projects/a123x/archive/provider-1d3ba551aa51eab8abb1e99dd6dc859eb2dd9cb367fddf0fcbc59571de6513c2.md`; `provider-1d3ba551aa51eab8abb1e99dd6dc859eb2dd9cb367fddf0fcbc59571de6513c2`
+- A123X独立接口：MBI_ISP_SetExposureAttr: `projects/a123x/archive/provider-b6857badd3200f09a761b9e9c72b1f0ad30f4c4d25860da4e81edbe65c470bd0.md`; `provider-b6857badd3200f09a761b9e9c72b1f0ad30f4c4d25860da4e81edbe65c470bd0`
+- A123X独立接口：MBI_ISP_SetFMWState: `projects/a123x/archive/provider-8c256ec58328d2bb0f387e0499b863d1c5ead30a9be16345bab8e68303752372.md`; `provider-8c256ec58328d2bb0f387e0499b863d1c5ead30a9be16345bab8e68303752372`
+- A123X独立接口：MBI_ISP_SetFPNAttr: `projects/a123x/archive/provider-c0c81f9c0e77612d1a3f471d9ef801a2d20c211814700e981d786bf011b1b4d3.md`; `provider-c0c81f9c0e77612d1a3f471d9ef801a2d20c211814700e981d786bf011b1b4d3`
+- A123X独立接口：MBI_ISP_SetFSWDRAttr: `projects/a123x/archive/provider-648133aa3b194bd2f61fd29c3126e9663777475360bf1974eb7178b120f44281.md`; `provider-648133aa3b194bd2f61fd29c3126e9663777475360bf1974eb7178b120f44281`
+- A123X独立接口：MBI_ISP_SetGammaAttr: `projects/a123x/archive/provider-c44a4dae939901ce2f8fccd045d2cb20535b13a59dab650ff96cbe439de0fa73.md`; `provider-c44a4dae939901ce2f8fccd045d2cb20535b13a59dab650ff96cbe439de0fa73`
+- A123X独立接口：MBI_ISP_SetHighLightAttr: `projects/a123x/archive/provider-76b7375028b51e5d00fe79727c4b4e8519e5a010671af996535b48bcd1174db9.md`; `provider-76b7375028b51e5d00fe79727c4b4e8519e5a010671af996535b48bcd1174db9`
+- A123X独立接口：MBI_ISP_SetIPPAttr: `projects/a123x/archive/provider-27e63e9ba0620597543c77ce32ea24fb53662ba1a44ecfd46942a7a169a91f91.md`; `provider-27e63e9ba0620597543c77ce32ea24fb53662ba1a44ecfd46942a7a169a91f91`
+- A123X独立接口：MBI_ISP_SetIRAttr: `projects/a123x/archive/provider-663480d188ed327b036b9afecbd859c335b5b5d818de8592a02c77dc0d19ad46.md`; `provider-663480d188ed327b036b9afecbd859c335b5b5d818de8592a02c77dc0d19ad46`
+- A123X独立接口：MBI_ISP_SetIspDwarpMod: `projects/a123x/archive/provider-a95b050c8cd5daa5fb68b43bb42d4fdc60c1599d2e62ed4ea8c8cdc5a7d56d32.md`; `provider-a95b050c8cd5daa5fb68b43bb42d4fdc60c1599d2e62ed4ea8c8cdc5a7d56d32`
+- A123X独立接口：MBI_ISP_SetIspHlcAttr: `projects/a123x/archive/provider-d25a00d1a82b4f1eccbedc8d145c40278674c9096e2bd3881bf17ad516489957.md`; `provider-d25a00d1a82b4f1eccbedc8d145c40278674c9096e2bd3881bf17ad516489957`
+- A123X独立接口：MBI_ISP_SetIspSharpenAttr: `projects/a123x/archive/provider-c33c9f83fef8bb7bfebff9b8c28de2b90d79403f174f0b7b246e2cc0adbf2376.md`; `provider-c33c9f83fef8bb7bfebff9b8c28de2b90d79403f174f0b7b246e2cc0adbf2376`
+- A123X独立接口：MBI_ISP_SetLDCIAttr: `projects/a123x/archive/provider-396e3ab50da729c7fb2d935c250ed96082afe5cea59bdd7cf5d62a58677082e4.md`; `provider-396e3ab50da729c7fb2d935c250ed96082afe5cea59bdd7cf5d62a58677082e4`
+- A123X独立接口：MBI_ISP_SetLDCILutAttr: `projects/a123x/archive/provider-223995ee5515d607f3941d7b40bd0b79bd069c3858a0362262e07fd32b0f59de.md`; `provider-223995ee5515d607f3941d7b40bd0b79bd069c3858a0362262e07fd32b0f59de`
+- A123X独立接口：MBI_ISP_SetMeshShadingAttr: `projects/a123x/archive/provider-c1be47b68cefab110858ae19729f8679708eb82082ab5011ec0c44c54d07128f.md`; `provider-c1be47b68cefab110858ae19729f8679708eb82082ab5011ec0c44c54d07128f`
+- A123X独立接口：MBI_ISP_SetMeshShadingGainLutAttr: `projects/a123x/archive/provider-52419259a08d6d903f8c7673f243af5e8c811f6433273034d81393d4944792a0.md`; `provider-52419259a08d6d903f8c7673f243af5e8c811f6433273034d81393d4944792a0`
+- A123X独立接口：MBI_ISP_SetModuleControl: `projects/a123x/archive/provider-5baeb71e100ea9f1e0ef7051fdba84c218d46d55ddd1f2adda8738edc784baa9.md`; `provider-5baeb71e100ea9f1e0ef7051fdba84c218d46d55ddd1f2adda8738edc784baa9`
+- A123X独立接口：MBI_ISP_SetNPAttr: `projects/a123x/archive/provider-ca37fdca29ed30b8b797ddc1f471dee0ec6f01a2f408eaaebcc475d16c157c43.md`; `provider-ca37fdca29ed30b8b797ddc1f471dee0ec6f01a2f408eaaebcc475d16c157c43`
+- A123X独立接口：MBI_ISP_SetPubAttr: `projects/a123x/archive/provider-c35b5ac5336f28e0061be8ba55d6b1f4144dcaf582ad603c61a20d3cda33a2d2.md`; `provider-c35b5ac5336f28e0061be8ba55d6b1f4144dcaf582ad603c61a20d3cda33a2d2`
+- A123X独立接口：MBI_ISP_SetPurpleAttr: `projects/a123x/archive/provider-0fc875da3342561a59c45b9ae09b9ae781d77a01571f90e06a5c4e50a2d33e5f.md`; `provider-0fc875da3342561a59c45b9ae09b9ae781d77a01571f90e06a5c4e50a2d33e5f`
+- A123X独立接口：MBI_ISP_SetRAWNRAttr: `projects/a123x/archive/provider-8aba27bb48e640af90475033921b0b525c11f050f85b6bef967ac4480c5c32d8.md`; `provider-8aba27bb48e640af90475033921b0b525c11f050f85b6bef967ac4480c5c32d8`
+- A123X独立接口：MBI_ISP_SetRadialShadingAttr: `projects/a123x/archive/provider-0555d6899c00992b381b83c199df3b04c003b23d24eaa34e46e57d9ca2e83786.md`; `provider-0555d6899c00992b381b83c199df3b04c003b23d24eaa34e46e57d9ca2e83786`
+- A123X独立接口：MBI_ISP_SetRadialShadingLUT: `projects/a123x/archive/provider-736f1e74d153afb19d00f245c54e5c5637906d4c3bf3d0af1f77c9297ac3f094.md`; `provider-736f1e74d153afb19d00f245c54e5c5637906d4c3bf3d0af1f77c9297ac3f094`
+- A123X独立接口：MBI_ISP_SetRegister: `projects/a123x/archive/provider-fa819ea139c04f2be5aa6b97341594d00cf8ce6948b4414af005b2661a608c31.md`; `provider-fa819ea139c04f2be5aa6b97341594d00cf8ce6948b4414af005b2661a608c31`
+- A123X独立接口：MBI_ISP_SetSNRAttr: `projects/a123x/archive/provider-295d6af043d2dad82a70f8102447b9c9e936aec72ff610fc339076c3fc2f554d.md`; `provider-295d6af043d2dad82a70f8102447b9c9e936aec72ff610fc339076c3fc2f554d`
+- A123X独立接口：MBI_ISP_SetSaturationAttr: `projects/a123x/archive/provider-f4098950659fee0e825b7747e1a917bdb859fa9b0fc9530af4544b33a6bfbf94.md`; `provider-f4098950659fee0e825b7747e1a917bdb859fa9b0fc9530af4544b33a6bfbf94`
+- A123X独立接口：MBI_ISP_SetTNRAttr: `projects/a123x/archive/provider-6c4b1d93e454f4a33b2052861008a1153d1eed356d3dc11c1b15a122aee43144.md`; `provider-6c4b1d93e454f4a33b2052861008a1153d1eed356d3dc11c1b15a122aee43144`
+- A123X独立接口：MBI_ISP_SetWBAttr: `projects/a123x/archive/provider-a029a4e7110a49e538e50aacc48e2039436cd0da242efaf7435381be6a442352.md`; `provider-a029a4e7110a49e538e50aacc48e2039436cd0da242efaf7435381be6a442352`
+- A123X独立接口：MBI_ISP_SetWBCorr: `projects/a123x/archive/provider-e3074a7cca1c23739d829b1e9fdbdcf4510b4f3bca41ef55469c4bb4edd7e52d.md`; `provider-e3074a7cca1c23739d829b1e9fdbdcf4510b4f3bca41ef55469c4bb4edd7e52d`
+- A123X独立接口：MBI_ISP_Set_SensorOnOff: `projects/a123x/archive/provider-680bbc4654944e057450fd58e3ac0b9e89d36c41fb9680f7d4cf030887d43e16.md`; `provider-680bbc4654944e057450fd58e3ac0b9e89d36c41fb9680f7d4cf030887d43e16`
+- A123X独立接口：MBI_ISP_Start: `projects/a123x/archive/provider-c69bd3020b206bf013f1083086d0d887887551731e2ccc3ab0047127112ba05a.md`; `provider-c69bd3020b206bf013f1083086d0d887887551731e2ccc3ab0047127112ba05a`
+- A123X独立接口：MBI_ISP_StopPreRoll: `projects/a123x/archive/provider-bb3e1010dfc7e34b2317a0bc943a21c2a7a17f809a700e76ea4f3dfb40ce0fce.md`; `provider-bb3e1010dfc7e34b2317a0bc943a21c2a7a17f809a700e76ea4f3dfb40ce0fce`
+- A123X独立接口：MBI_LOG_Close: `projects/a123x/archive/provider-4d922841f8a1ff0ec398d21d96f5fd616ff0eccfa821477ed82da4475fabb0b4.md`; `provider-4d922841f8a1ff0ec398d21d96f5fd616ff0eccfa821477ed82da4475fabb0b4`
+- A123X独立接口：MBI_LOG_GetLevel: `projects/a123x/archive/provider-983ca9748bc9280aea074f23dbe1f77022e078283c56ea77cb01f15e3985bcad.md`; `provider-983ca9748bc9280aea074f23dbe1f77022e078283c56ea77cb01f15e3985bcad`
+- A123X独立接口：MBI_LOG_Read: `projects/a123x/archive/provider-497c77590b180cf263f605ece2d882a200ed70e384781cfefcae46ab94b5bcdb.md`; `provider-497c77590b180cf263f605ece2d882a200ed70e384781cfefcae46ab94b5bcdb`
+- A123X独立接口：MBI_LOG_SetLevel: `projects/a123x/archive/provider-a1c0fcd67a87b638fc8815fd2580c28aa3381f54660a9abee26b928ed1d77b16.md`; `provider-a1c0fcd67a87b638fc8815fd2580c28aa3381f54660a9abee26b928ed1d77b16`
+- A123X独立接口：MBI_LOG_SetWait: `projects/a123x/archive/provider-c71b7ddee8b4a7d2f357af377a3a8902dde184a2d173979889a365dbcbb49318.md`; `provider-c71b7ddee8b4a7d2f357af377a3a8902dde184a2d173979889a365dbcbb49318`
+- A123X独立接口：MBI_MIPI_RX_DisableMipiClock: `projects/a123x/archive/provider-aba932fa009af1f525bc3fed5c5d363806c6bcbdd3f03b7b80f8096b0a33e7e6.md`; `provider-aba932fa009af1f525bc3fed5c5d363806c6bcbdd3f03b7b80f8096b0a33e7e6`
+- A123X独立接口：MBI_MIPI_RX_DisableSensorClock: `projects/a123x/archive/provider-9b6ee3c82dfb49e939b38e62ba1b0746f420b83c390f829297b51597210283b9.md`; `provider-9b6ee3c82dfb49e939b38e62ba1b0746f420b83c390f829297b51597210283b9`
+- A123X独立接口：MBI_MIPI_RX_EnableMipiClock: `projects/a123x/archive/provider-a5fdc3be376ec1babbc7b591e9a858f256e7d7539913131795c99bd887b8681b.md`; `provider-a5fdc3be376ec1babbc7b591e9a858f256e7d7539913131795c99bd887b8681b`
+- A123X独立接口：MBI_MIPI_RX_ResetMipi: `projects/a123x/archive/provider-211055dc3952688c721b970eb92bb59177acd79837feaa8cd2f6383bed6cb520.md`; `provider-211055dc3952688c721b970eb92bb59177acd79837feaa8cd2f6383bed6cb520`
+- A123X独立接口：MBI_MIPI_RX_ResetSensor: `projects/a123x/archive/provider-eab61bc8b878f76f25cd6ff9560bc947929714fd5cb36c0ac22f2ec289c00f5b.md`; `provider-eab61bc8b878f76f25cd6ff9560bc947929714fd5cb36c0ac22f2ec289c00f5b`
+- A123X独立接口：MBI_MIPI_RX_ResumeMipi: `projects/a123x/archive/provider-82c8e6baab15184b87b34b671149d12a081aa7bd5c589e3b5d063f831ac07477.md`; `provider-82c8e6baab15184b87b34b671149d12a081aa7bd5c589e3b5d063f831ac07477`
+- A123X独立接口：MBI_MIPI_RX_ResumeSensor: `projects/a123x/archive/provider-124c39a87a2e337081f431d36f959765c304691c0c9935cbcd68dfe512a56a7e.md`; `provider-124c39a87a2e337081f431d36f959765c304691c0c9935cbcd68dfe512a56a7e`
+- A123X独立接口：MBI_MIPI_RX_SetMipiHsMode: `projects/a123x/archive/provider-89d00464acb8eaf0f9710a305a86376aa4487183c4ac39f666fa823534e9536e.md`; `provider-89d00464acb8eaf0f9710a305a86376aa4487183c4ac39f666fa823534e9536e`
+- A123X独立接口：MBI_PPU_GetChnAttr: `projects/a123x/archive/provider-a51e26676aa6a050f78ddca3009578e832108dfcd67921bcd7bb17915e270eec.md`; `provider-a51e26676aa6a050f78ddca3009578e832108dfcd67921bcd7bb17915e270eec`
+- A123X独立接口：MBI_PPU_GetChnLDCAttr: `projects/a123x/archive/provider-9cf90c73c3cfac1e193ae848e75f163da7b3a957e600ae03a9f2c5f6fef11785.md`; `provider-9cf90c73c3cfac1e193ae848e75f163da7b3a957e600ae03a9f2c5f6fef11785`
+- A123X独立接口：MBI_PPU_GetChnRec: `projects/a123x/archive/provider-c1709eae1b4167461fcf3bdbfb18df182a3eb7509d828d226d118d71abc07495.md`; `provider-c1709eae1b4167461fcf3bdbfb18df182a3eb7509d828d226d118d71abc07495`
+- A123X独立接口：MBI_PPU_GetChnRotateAttr: `projects/a123x/archive/provider-1489e5dd2a61c8fa9174cd5cad2df192059585de86ae420468e262becf7000b0.md`; `provider-1489e5dd2a61c8fa9174cd5cad2df192059585de86ae420468e262becf7000b0`
+- A123X独立接口：MBI_PPU_GetExtChnAttr: `projects/a123x/archive/provider-47928402f78214dacd2def6a4b02d532b163c1f781fedeef0205f4fe65035357.md`; `provider-47928402f78214dacd2def6a4b02d532b163c1f781fedeef0205f4fe65035357`
+- A123X独立接口：MBI_PPU_SetChnAttr: `projects/a123x/archive/provider-dd079f086eb3ca90c4ff51395c93f7f622d47f95d519e43815b289207d405edd.md`; `provider-dd079f086eb3ca90c4ff51395c93f7f622d47f95d519e43815b289207d405edd`
+- A123X独立接口：MBI_PPU_SetChnLDCAttr: `projects/a123x/archive/provider-7a95c01f00384109ae38d11e33d903b80dae8ffae29dfd6f0ede770917167608.md`; `provider-7a95c01f00384109ae38d11e33d903b80dae8ffae29dfd6f0ede770917167608`
+- A123X独立接口：MBI_PPU_SetChnRotateAttr: `projects/a123x/archive/provider-6cfdd064ee12c7945b8e916625b6bfb97fdc6ea52ba1a642eb85680609bb9ae7.md`; `provider-6cfdd064ee12c7945b8e916625b6bfb97fdc6ea52ba1a642eb85680609bb9ae7`
+- A123X独立接口：MBI_PPU_SetDumpAttr: `projects/a123x/archive/provider-5353778c63dc87b3cb6ddd181a780455e651aefba50ffed7a6d49d6e6b90f38b.md`; `provider-5353778c63dc87b3cb6ddd181a780455e651aefba50ffed7a6d49d6e6b90f38b`
+- A123X独立接口：MBI_PPU_SetExtChnAttr: `projects/a123x/archive/provider-37004de6e740b19978892184b32f28a476a0f814982f7fa4ee87ca7e21135d0a.md`; `provider-37004de6e740b19978892184b32f28a476a0f814982f7fa4ee87ca7e21135d0a`
+- A123X独立接口：MBI_PPU_SetIspVencHwlink: `projects/a123x/archive/provider-559f30ea015c12f4bdc50a164b0f1d2de6bb4ba41f667c9fa174a20a673ca75a.md`; `provider-559f30ea015c12f4bdc50a164b0f1d2de6bb4ba41f667c9fa174a20a673ca75a`
+- A123X独立接口：MBI_PPU_SetRec: `projects/a123x/archive/provider-84fc8b569cbb09ef6a3173b2e7c42db5210d35c2afea3dd8ba8ff626424c6861.md`; `provider-84fc8b569cbb09ef6a3173b2e7c42db5210d35c2afea3dd8ba8ff626424c6861`
+- A123X独立接口：MBI_RGN_AttachToChn: `projects/a123x/archive/provider-3b2981877d1e59f14bb65c6fb92fb7162e11e3d5a87502acb1d648b546598837.md`; `provider-3b2981877d1e59f14bb65c6fb92fb7162e11e3d5a87502acb1d648b546598837`
+- A123X独立接口：MBI_RGN_Destroy: `projects/a123x/archive/provider-e2e0ffa7b042d4bad66d71c4a2d1db96aa67018564573941b5785a56c043cbb9.md`; `provider-e2e0ffa7b042d4bad66d71c4a2d1db96aa67018564573941b5785a56c043cbb9`
+- A123X独立接口：MBI_RGN_DetachFromChn: `projects/a123x/archive/provider-93ab626dc45f5115522a07fb303f39777afdd6fe5b17bd462b523943f0d65608.md`; `provider-93ab626dc45f5115522a07fb303f39777afdd6fe5b17bd462b523943f0d65608`
+- A123X独立接口：MBI_RGN_GetAttr: `projects/a123x/archive/provider-2fc5bb0a0b2a223bf578450968e90b2d85b1504af5a98417f8a6a74008842ba2.md`; `provider-2fc5bb0a0b2a223bf578450968e90b2d85b1504af5a98417f8a6a74008842ba2`
+- A123X独立接口：MBI_RGN_GetCanvasInfo: `projects/a123x/archive/provider-12decf239100e996257889c8fe616c6638199bdd170bec1005f90872784e84b7.md`; `provider-12decf239100e996257889c8fe616c6638199bdd170bec1005f90872784e84b7`
+- A123X独立接口：MBI_RGN_GetDisplayAttr: `projects/a123x/archive/provider-d5c950d614ca8b51c97da4568ab05b8e78c717120fc695abab846ff2e9379651.md`; `provider-d5c950d614ca8b51c97da4568ab05b8e78c717120fc695abab846ff2e9379651`
+- A123X独立接口：MBI_RGN_LineUpdate: `projects/a123x/archive/provider-d62638d34e46b6e12f43b16e6af295562d1c9744dc175229c4a88eb256422480.md`; `provider-d62638d34e46b6e12f43b16e6af295562d1c9744dc175229c4a88eb256422480`
+- A123X独立接口：MBI_RGN_RecUpdate: `projects/a123x/archive/provider-276f61610d151012fc3daa73a28a75a0c8f3e0ab80f65c04893bdbf51bf8701f.md`; `provider-276f61610d151012fc3daa73a28a75a0c8f3e0ab80f65c04893bdbf51bf8701f`
+- A123X独立接口：MBI_RGN_SetAttr: `projects/a123x/archive/provider-5890330b4a84caca6ada2729790e2d63782927cc3aa5e37ec1449795b01010be.md`; `provider-5890330b4a84caca6ada2729790e2d63782927cc3aa5e37ec1449795b01010be`
+- A123X独立接口：MBI_RGN_SetBitMap: `projects/a123x/archive/provider-72306d7367f12fe0f610bba684364b5f96f7013e5939a8402fce264620cfca2d.md`; `provider-72306d7367f12fe0f610bba684364b5f96f7013e5939a8402fce264620cfca2d`
+- A123X独立接口：MBI_RGN_SetDisplayAttr: `projects/a123x/archive/provider-bacb3708bc66d2f75a5352956233faba21991a8c9bdb7236dc3e2662089c9a7b.md`; `provider-bacb3708bc66d2f75a5352956233faba21991a8c9bdb7236dc3e2662089c9a7b`
+- A123X独立接口：MBI_RGN_UpdateCanvas: `projects/a123x/archive/provider-f28aba6b7a1630e740567aff345e4604124113bf4e041b23e56c29620b162e29.md`; `provider-f28aba6b7a1630e740567aff345e4604124113bf4e041b23e56c29620b162e29`
+- A123X独立接口：MBI_SYS_CloseFd: `projects/a123x/archive/provider-0123ad4c6e98c133b06dad9c0ebd656e4f23813f92702108ae359e65fd7e909d.md`; `provider-0123ad4c6e98c133b06dad9c0ebd656e4f23813f92702108ae359e65fd7e909d`
+- A123X独立接口：MBI_SYS_GetBindbyDest: `projects/a123x/archive/provider-d2b02b38ae7f33d3e3c53e94014b09035be4760ab9a1d7a7dbfb95981eebb231.md`; `provider-d2b02b38ae7f33d3e3c53e94014b09035be4760ab9a1d7a7dbfb95981eebb231`
+- A123X独立接口：MBI_SYS_GetBindbySrc: `projects/a123x/archive/provider-a5e4dc2fa98481372c2a98d5bef5e8d743a2e8c4bb6e964f9bb605bfdaab5b60.md`; `provider-a5e4dc2fa98481372c2a98d5bef5e8d743a2e8c4bb6e964f9bb605bfdaab5b60`
+- A123X独立接口：MBI_SYS_GetChipId: `projects/a123x/archive/provider-ae4a008e26e4e69b0adf2931b9275241c14059cffbf45574bcbe280e606eae95.md`; `provider-ae4a008e26e4e69b0adf2931b9275241c14059cffbf45574bcbe280e606eae95`
+- A123X独立接口：MBI_SYS_GetCurPTS: `projects/a123x/archive/provider-73ab49f7d25ba32e3c89447f8faeaa54f21d415d5b40c5558452576af33f3070.md`; `provider-73ab49f7d25ba32e3c89447f8faeaa54f21d415d5b40c5558452576af33f3070`
+- A123X独立接口：MBI_SYS_GetISPPPUMode: `projects/a123x/archive/provider-cc15e78b3f2304a8f04b6930ecd838b96d11e20e464796a4cc589c3765ed98a2.md`; `provider-cc15e78b3f2304a8f04b6930ecd838b96d11e20e464796a4cc589c3765ed98a2`
+- A123X独立接口：MBI_SYS_GetVersion: `projects/a123x/archive/provider-5c5979f0d48374831b3921c21bd417f39e88b9d5160e9bbb6256aaa3ab72ccbc.md`; `provider-5c5979f0d48374831b3921c21bd417f39e88b9d5160e9bbb6256aaa3ab72ccbc`
+- A123X独立接口：MBI_SYS_GetVirMemInfo: `projects/a123x/archive/provider-72935f2b73307e285cb1eaa9a7481485222f60d6dd30dd49e3e22769ada15d79.md`; `provider-72935f2b73307e285cb1eaa9a7481485222f60d6dd30dd49e3e22769ada15d79`
+- A123X独立接口：MBI_SYS_InitPTSBase: `projects/a123x/archive/provider-b45747b399857447b1ca5a0809e49c0b348d7418d95b8e776b4500ba41322cec.md`; `provider-b45747b399857447b1ca5a0809e49c0b348d7418d95b8e776b4500ba41322cec`
+- A123X独立接口：MBI_SYS_MflushCache: `projects/a123x/archive/provider-9e2db7f0ab3af4f33da5b9e05cd8e7f703ae3e928f0c195e557f0170bd594a8d.md`; `provider-9e2db7f0ab3af4f33da5b9e05cd8e7f703ae3e928f0c195e557f0170bd594a8d`
+- A123X独立接口：MBI_SYS_Mmap: `projects/a123x/archive/provider-cc6f22b9f19d9e8605f1f0f184add6f6513e7b549307f7d4f61ef29b9d14c684.md`; `provider-cc6f22b9f19d9e8605f1f0f184add6f6513e7b549307f7d4f61ef29b9d14c684`
+- A123X独立接口：MBI_SYS_MmapCache: `projects/a123x/archive/provider-aa18deb59419773660bdb0112350e499e18850c746284fa2141d0b795a458d92.md`; `provider-aa18deb59419773660bdb0112350e499e18850c746284fa2141d0b795a458d92`
+- A123X独立接口：MBI_SYS_Munmap: `projects/a123x/archive/provider-b4cc609216a761591bf6ff208fae86dee9e6328b853227a7e5506beeae44e80a.md`; `provider-b4cc609216a761591bf6ff208fae86dee9e6328b853227a7e5506beeae44e80a`
+- A123X独立接口：MBI_SYS_PmzAllocCached: `projects/a123x/archive/provider-15b660c0a455f607c1d606e42ade575ad5d12f915ae17dd97e8757f2388f0029.md`; `provider-15b660c0a455f607c1d606e42ade575ad5d12f915ae17dd97e8757f2388f0029`
+- A123X独立接口：MBI_SYS_PmzFlushCache: `projects/a123x/archive/provider-1ca774c16d79687e2f8089bd9baa64a034d53e95c9e6c0acb9e64ca245e24621.md`; `provider-1ca774c16d79687e2f8089bd9baa64a034d53e95c9e6c0acb9e64ca245e24621`
+- A123X独立接口：MBI_SYS_SetISPPPUMode: `projects/a123x/archive/provider-aa43216038a04a5fcc9dc141574842c2c3a40bd644bd4e1136b86bc0084d7344.md`; `provider-aa43216038a04a5fcc9dc141574842c2c3a40bd644bd4e1136b86bc0084d7344`
+- A123X独立接口：MBI_SYS_SyncPTS: `projects/a123x/archive/provider-aefd47752c3625bf652b53dee10a2e5e9c923b0a0d39c5628151c1a9fdbee135.md`; `provider-aefd47752c3625bf652b53dee10a2e5e9c923b0a0d39c5628151c1a9fdbee135`
+- A123X独立接口：MBI_VBP_CreatePool: `projects/a123x/archive/provider-4fa3392f7abff00bba72c14abcaa27c72b15c9a4761eff5fd4902cbd63a32b58.md`; `provider-4fa3392f7abff00bba72c14abcaa27c72b15c9a4761eff5fd4902cbd63a32b58`
+- A123X独立接口：MBI_VBP_DestroyPool: `projects/a123x/archive/provider-bfd2579f3ee130f01e2905222cd375cc0543ef30bbf879fb180906493664e935.md`; `provider-bfd2579f3ee130f01e2905222cd375cc0543ef30bbf879fb180906493664e935`
+- A123X独立接口：MBI_VBP_Exit: `projects/a123x/archive/provider-9b5982587ddbd9cea6ebc17367ec125b9e833268b663d1e016e3b74cb55c4bf2.md`; `provider-9b5982587ddbd9cea6ebc17367ec125b9e833268b663d1e016e3b74cb55c4bf2`
+- A123X独立接口：MBI_VBP_ExitModCommPool: `projects/a123x/archive/provider-45c896843051b4b6255ec2f3cc1cd77d4e3f702ef1217f93f9d1124413f30312.md`; `provider-45c896843051b4b6255ec2f3cc1cd77d4e3f702ef1217f93f9d1124413f30312`
+- A123X独立接口：MBI_VBP_GetConfig: `projects/a123x/archive/provider-5afd69ede24f78f0e6095ce6e1b26e8d4922f2d8fa2ed713a5b306f8b8a78bb8.md`; `provider-5afd69ede24f78f0e6095ce6e1b26e8d4922f2d8fa2ed713a5b306f8b8a78bb8`
+- A123X独立接口：MBI_VBP_GetModPoolConfig: `projects/a123x/archive/provider-d913fe5f44202d801088afc272dc7774b04c076556d30d251e388135de8e7147.md`; `provider-d913fe5f44202d801088afc272dc7774b04c076556d30d251e388135de8e7147`
+- A123X独立接口：MBI_VBP_GetSupplementAddr: `projects/a123x/archive/provider-81e9256474b0e8fe8cd61c511ca0715be3c7e3dc2abcd10f8f3171be1dcdb06f.md`; `provider-81e9256474b0e8fe8cd61c511ca0715be3c7e3dc2abcd10f8f3171be1dcdb06f`
+- A123X独立接口：MBI_VBP_GetSupplementConfig: `projects/a123x/archive/provider-9d987fbf227aa69b125070afc908901cb0b0c47c4f4f5f13725619c0cad7f93f.md`; `provider-9d987fbf227aa69b125070afc908901cb0b0c47c4f4f5f13725619c0cad7f93f`
+- A123X独立接口：MBI_VBP_GetVbVirAddr: `projects/a123x/archive/provider-f0f2274893776c5bc5b2e5c15d6e912cda233c4815b70b981ea57b701bd3ec67.md`; `provider-f0f2274893776c5bc5b2e5c15d6e912cda233c4815b70b981ea57b701bd3ec67`
+- A123X独立接口：MBI_VBP_Init: `projects/a123x/archive/provider-292d1850d240a3a58357ffd7de01bd4ed5c438a9f01eea38476fc8f0de0e3a6c.md`; `provider-292d1850d240a3a58357ffd7de01bd4ed5c438a9f01eea38476fc8f0de0e3a6c`
+- A123X独立接口：MBI_VBP_InitModCommPool: `projects/a123x/archive/provider-4409f0f428d388e4ae71cdb34e627a4eea50bd604dba965bf543a61a90aa6b09.md`; `provider-4409f0f428d388e4ae71cdb34e627a4eea50bd604dba965bf543a61a90aa6b09`
+- A123X独立接口：MBI_VBP_InquireUserCnt: `projects/a123x/archive/provider-d9627a430f48aaa068600acc9501374d0bfc25a43107c6f9f01c4313171e3cfc.md`; `provider-d9627a430f48aaa068600acc9501374d0bfc25a43107c6f9f01c4313171e3cfc`
+- A123X独立接口：MBI_VBP_MmapPool: `projects/a123x/archive/provider-07397b9d71f78e09a85c242615efac2b51e26f09ab61f5e794101663b08b5931.md`; `provider-07397b9d71f78e09a85c242615efac2b51e26f09ab61f5e794101663b08b5931`
+- A123X独立接口：MBI_VBP_MunmapPool: `projects/a123x/archive/provider-ad40118cd8b0975e4efad4f8e50763c4e77e33ae2d71eaa2368ea97869936ecf.md`; `provider-ad40118cd8b0975e4efad4f8e50763c4e77e33ae2d71eaa2368ea97869936ecf`
+- A123X独立接口：MBI_VBP_SetConfig: `projects/a123x/archive/provider-ac7e29258e1c774813354e483ba7355a003a7337da4fd9afa49d273102d2f20c.md`; `provider-ac7e29258e1c774813354e483ba7355a003a7337da4fd9afa49d273102d2f20c`
+- A123X独立接口：MBI_VBP_SetModPoolConfig: `projects/a123x/archive/provider-b7b71c4e7133d439f9cb5ce9a1cb664019c93953828b194e78f292a70f8f84f4.md`; `provider-b7b71c4e7133d439f9cb5ce9a1cb664019c93953828b194e78f292a70f8f84f4`
+- A123X独立接口：MBI_VBP_SetSupplementConfig: `projects/a123x/archive/provider-168a17260f3535d86a5ee1b58f2f6d0fb13f979ae43a916dc28aa072da6f46ab.md`; `provider-168a17260f3535d86a5ee1b58f2f6d0fb13f979ae43a916dc28aa072da6f46ab`
+- A123X独立接口：MBI_VBP_VbHandleToPhysAddr: `projects/a123x/archive/provider-c5537dc05c74c17b2067521e176be50275f5e7f3a7f31e3cd327a86fcd9b753e.md`; `provider-c5537dc05c74c17b2067521e176be50275f5e7f3a7f31e3cd327a86fcd9b753e`
+- A123X独立接口：MBI_VBP_VbHandleToPoolHandle: `projects/a123x/archive/provider-712964670801419dcca719dbcdb2d904c3c5ac8223be1da43bd06b07b95403d9.md`; `provider-712964670801419dcca719dbcdb2d904c3c5ac8223be1da43bd06b07b95403d9`
+- A123X独立接口：MBI_VBP_VbPhysAddrToHandle: `projects/a123x/archive/provider-8a5abf949ff1d61a2c629e56adbc3df9050eba100ab090aadd332369734aa738.md`; `provider-8a5abf949ff1d61a2c629e56adbc3df9050eba100ab090aadd332369734aa738`
+- A123X独立接口：MBI_VDEC_CreateChn: `projects/a123x/archive/provider-a968b4d419683232450746b50e96e1165a25a6144b1e3a1474dcd5db854a8650.md`; `provider-a968b4d419683232450746b50e96e1165a25a6144b1e3a1474dcd5db854a8650`
+- A123X独立接口：MBI_VDEC_DestroyChn: `projects/a123x/archive/provider-a746190480d1ccfefbefbf3680a13d889db79d340502b6689c7930dff6db49cb.md`; `provider-a746190480d1ccfefbefbf3680a13d889db79d340502b6689c7930dff6db49cb`
+- A123X独立接口：MBI_VDEC_GetFd: `projects/a123x/archive/provider-235b0009f6d4e5e3374aa9925810f390e99a9629c45abb06beab03e9ee26bf21.md`; `provider-235b0009f6d4e5e3374aa9925810f390e99a9629c45abb06beab03e9ee26bf21`
+- A123X独立接口：MBI_VDEC_QueryStatus: `projects/a123x/archive/provider-9632b813a392d0fbe4c4ad38b4792c9eda116c5cb0a9f63f7254ea0e2a780e46.md`; `provider-9632b813a392d0fbe4c4ad38b4792c9eda116c5cb0a9f63f7254ea0e2a780e46`
+- A123X独立接口：MBI_VDEC_ResetChn: `projects/a123x/archive/provider-8a8e0da3e3ec51050a0c46c7ea9c4927da1b5d6c27cb0ee7f5e96d6281a91426.md`; `provider-8a8e0da3e3ec51050a0c46c7ea9c4927da1b5d6c27cb0ee7f5e96d6281a91426`
+- A123X独立接口：MBI_VDEC_SendStream: `projects/a123x/archive/provider-3f455ded3d1a6b56102aa135483931506136a985d56057a4d73906fb50d002e7.md`; `provider-3f455ded3d1a6b56102aa135483931506136a985d56057a4d73906fb50d002e7`
+- A123X独立接口：MBI_VDEC_StartRecvStream: `projects/a123x/archive/provider-907eba27dcf6c97254c9de872536b6f306099eb6b116aa6f564a8059260ffd1d.md`; `provider-907eba27dcf6c97254c9de872536b6f306099eb6b116aa6f564a8059260ffd1d`
+- A123X独立接口：MBI_VDEC_StopRecvStream: `projects/a123x/archive/provider-d0f9b28975fc6aefd04bd005cbd835a18f33f4e51c3d73965164037207156b98.md`; `provider-d0f9b28975fc6aefd04bd005cbd835a18f33f4e51c3d73965164037207156b98`
+- A123X独立接口：MBI_VENC_CreateOsdRegion: `projects/a123x/archive/provider-a3f2ed33e54492c5d87ccd47818822b6cf741c6b8aeedc26464098ae77fcbd44.md`; `provider-a3f2ed33e54492c5d87ccd47818822b6cf741c6b8aeedc26464098ae77fcbd44`
+- A123X独立接口：MBI_VENC_DestroyChn: `projects/a123x/archive/provider-5cf566b6d8f0a13979b2a2e2ea36817684367ebdf90fc36bbc90730e4a70ba6c.md`; `provider-5cf566b6d8f0a13979b2a2e2ea36817684367ebdf90fc36bbc90730e4a70ba6c`
+- A123X独立接口：MBI_VENC_GetChnAttr: `projects/a123x/archive/provider-427313cf6c70723947b680660965e6a03a795be1e97fa87153b82a5f01684f3f.md`; `provider-427313cf6c70723947b680660965e6a03a795be1e97fa87153b82a5f01684f3f`
+- A123X独立接口：MBI_VENC_GetChnParam: `projects/a123x/archive/provider-ce61ff57bb7ce62fc75b2d78f6625c16442f2d4c4d53193e42a5089adde3e3af.md`; `provider-ce61ff57bb7ce62fc75b2d78f6625c16442f2d4c4d53193e42a5089adde3e3af`
+- A123X独立接口：MBI_VENC_GetFd: `projects/a123x/archive/provider-dc07c4fb0ef8c280320fbd40b20368fa2d5716196f6cd80fb22864bd0c720fe5.md`; `provider-dc07c4fb0ef8c280320fbd40b20368fa2d5716196f6cd80fb22864bd0c720fe5`
+- A123X独立接口：MBI_VENC_GetH265PredUnit: `projects/a123x/archive/provider-86faa1f9b87cd73afd6cc5f767a763a5fb88c8369345445697bd980cbe7363c8.md`; `provider-86faa1f9b87cd73afd6cc5f767a763a5fb88c8369345445697bd980cbe7363c8`
+- A123X独立接口：MBI_VENC_GetH265Sao: `projects/a123x/archive/provider-4f7bf12759eaa3b305910f36d7a70a4c82c810874a9a10a92168bf1bfcb2b65e.md`; `provider-4f7bf12759eaa3b305910f36d7a70a4c82c810874a9a10a92168bf1bfcb2b65e`
+- A123X独立接口：MBI_VENC_GetJpegParam: `projects/a123x/archive/provider-d5525fbfe6ddd778a3646cf2a05c8b4f867c72fd085c16b5264c5c5d97ed6888.md`; `provider-d5525fbfe6ddd778a3646cf2a05c8b4f867c72fd085c16b5264c5c5d97ed6888`
+- A123X独立接口：MBI_VENC_GetRoiMapAddr: `projects/a123x/archive/provider-f3cbb944541b9d0759390ae708967ef607328fccd737eb0017ae174e0432f2db.md`; `provider-f3cbb944541b9d0759390ae708967ef607328fccd737eb0017ae174e0432f2db`
+- A123X独立接口：MBI_VENC_RequestIDR: `projects/a123x/archive/provider-a7276703849c6b8a0096bb0f160cbf684d9d0b0e0dc080139c521e4b102c7731.md`; `provider-a7276703849c6b8a0096bb0f160cbf684d9d0b0e0dc080139c521e4b102c7731`
+- A123X独立接口：MBI_VENC_SendFrame: `projects/a123x/archive/provider-8fb49acd3b33d2bdacf017c3368ffa2032bf73b16ea00358b8136bf191e27bdf.md`; `provider-8fb49acd3b33d2bdacf017c3368ffa2032bf73b16ea00358b8136bf191e27bdf`
+- A123X独立接口：MBI_VENC_SetAdaptiveFps: `projects/a123x/archive/provider-97e4e9eadcbe7d7ceb8aa2d46a20381559aaaa489252d1462ae78bc89718f94a.md`; `provider-97e4e9eadcbe7d7ceb8aa2d46a20381559aaaa489252d1462ae78bc89718f94a`
+- A123X独立接口：MBI_VENC_SetChnAttr: `projects/a123x/archive/provider-088bf34fcf691e99d65110c11b3266b2bda556e1abf9055d71dc4a6637b551da.md`; `provider-088bf34fcf691e99d65110c11b3266b2bda556e1abf9055d71dc4a6637b551da`
+- A123X独立接口：MBI_VENC_SetChnParam: `projects/a123x/archive/provider-dce2fa5f2d81bad8308fb04125089489528a1d2acb0dc6aed6369a2c7408e5d8.md`; `provider-dce2fa5f2d81bad8308fb04125089489528a1d2acb0dc6aed6369a2c7408e5d8`
+- A123X独立接口：MBI_VENC_SetH265PredUnit: `projects/a123x/archive/provider-3b2c4c6e73c094fa476d51ec30e328cc40d652135b6a2bd82177319b6e5aa7dc.md`; `provider-3b2c4c6e73c094fa476d51ec30e328cc40d652135b6a2bd82177319b6e5aa7dc`
+- A123X独立接口：MBI_VENC_SetH265Sao: `projects/a123x/archive/provider-9803ed06f875fe4a5ed568833b926e8960665041f19a4bd15af26f850d747af9.md`; `provider-9803ed06f875fe4a5ed568833b926e8960665041f19a4bd15af26f850d747af9`
+- A123X独立接口：MBI_VENC_SetJpegParam: `projects/a123x/archive/provider-819796b754a074b03b06f98e58597e605d7a2ac23e71a5ae92e55eb6865f3807.md`; `provider-819796b754a074b03b06f98e58597e605d7a2ac23e71a5ae92e55eb6865f3807`
+- A123X独立接口：MBI_VENC_SetOsdRegion: `projects/a123x/archive/provider-f7ae0b204aa6d2c506fa6dfd311cf06f8c2a64b1be4781097ac5e73a82387d14.md`; `provider-f7ae0b204aa6d2c506fa6dfd311cf06f8c2a64b1be4781097ac5e73a82387d14`
+- A123X独立接口：MBI_VENC_SetRoiMap: `projects/a123x/archive/provider-ac6571bd1fb778334816b842e3ada9a84af3967ccd320d33754b3f516ae8c983.md`; `provider-ac6571bd1fb778334816b842e3ada9a84af3967ccd320d33754b3f516ae8c983`
+- A123X独立接口：MBI_VENC_SetRoiRegion: `projects/a123x/archive/provider-e0677dfd7da502d0061036db12025e6446574c3cbc8f481c6bc8e903db0e6f65.md`; `provider-e0677dfd7da502d0061036db12025e6446574c3cbc8f481c6bc8e903db0e6f65`
+- A123X独立接口：MBI_VENC_StartRecvFrame: `projects/a123x/archive/provider-d99000fa922f65da98213a0e647ee1a26f8cb04f325366522df3fd07eef04886.md`; `provider-d99000fa922f65da98213a0e647ee1a26f8cb04f325366522df3fd07eef04886`
+- A123X独立接口：MBI_VENC_StopRecvFrame: `projects/a123x/archive/provider-77a05ffba7ab832a8128da3448520d73e1d2f4afc5f827c9750aebb58d2933bf.md`; `provider-77a05ffba7ab832a8128da3448520d73e1d2f4afc5f827c9750aebb58d2933bf`
+- A123X独立接口：MBI_VI_DisableDev: `projects/a123x/archive/provider-910062535cd46320059e5f35e96baafdde87c613caf1fe9bba6c3c45c4ee7dcd.md`; `provider-910062535cd46320059e5f35e96baafdde87c613caf1fe9bba6c3c45c4ee7dcd`
+- A123X独立接口：MBI_VI_GetDevAttr: `projects/a123x/archive/provider-1844d74f5d00d4e54bda40f34740cddb80566fd3e3449b2d3ed481ad22bff4b3.md`; `provider-1844d74f5d00d4e54bda40f34740cddb80566fd3e3449b2d3ed481ad22bff4b3`
+- A123X独立接口：MBI_VI_GetPicBufferSize: `projects/a123x/archive/provider-7994ba1c67e7c3c548257832f6f00e56e63f988cbc1f88ac2a9c659f25bbf4ee.md`; `provider-7994ba1c67e7c3c548257832f6f00e56e63f988cbc1f88ac2a9c659f25bbf4ee`
+- A123X独立接口：MBI_VI_GetRawBufferSizeEx: `projects/a123x/archive/provider-092b1869594038c06150988c32b7c226cdc7d51e687e725acde48e48e08ef969.md`; `provider-092b1869594038c06150988c32b7c226cdc7d51e687e725acde48e48e08ef969`
+- A123X独立接口：MBI_VO_Disable: `projects/a123x/archive/provider-e6b6d826973e429708f8f425168a8dcb99b6595ac9102fb81cc266c8ff46f4b1.md`; `provider-e6b6d826973e429708f8f425168a8dcb99b6595ac9102fb81cc266c8ff46f4b1`
+- A123X独立接口：MBI_VO_DisableChn: `projects/a123x/archive/provider-d090ef6fdf66782ffabc710acf5064a7e8645fc21b98cf4d971a24430e4a93b0.md`; `provider-d090ef6fdf66782ffabc710acf5064a7e8645fc21b98cf4d971a24430e4a93b0`
+- A123X独立接口：MBI_VO_DisableVideoLayer: `projects/a123x/archive/provider-c7493d7107d7177a7156ba6b1bfb2b6114ef3c40dbbd965529cf892c5984f55a.md`; `provider-c7493d7107d7177a7156ba6b1bfb2b6114ef3c40dbbd965529cf892c5984f55a`
+- A123X独立接口：MBI_VO_EnableChn: `projects/a123x/archive/provider-f0b9cf08d0142f0895038631174ab6a27662d843c5eb53a4dcbcdcb1814c4bc5.md`; `provider-f0b9cf08d0142f0895038631174ab6a27662d843c5eb53a4dcbcdcb1814c4bc5`
+- A123X独立接口：MBI_VO_EnableVideoLayer: `projects/a123x/archive/provider-27b7c54491f84e09cdc9638791069b8cb533aab63ee0ad7d21bf48fbde47238e.md`; `provider-27b7c54491f84e09cdc9638791069b8cb533aab63ee0ad7d21bf48fbde47238e`
+- A123X独立接口：MBI_VO_GetChnAttr: `projects/a123x/archive/provider-326855b622d184ac4188150ecda079ea0509151c98a24bdcab9489d997d98d18.md`; `provider-326855b622d184ac4188150ecda079ea0509151c98a24bdcab9489d997d98d18`
+- A123X独立接口：MBI_VO_GetPubAttr: `projects/a123x/archive/provider-6953105ef2775998f6ab3b803fb575e28ee4f0eb33e8a1c54844474f02cb2154.md`; `provider-6953105ef2775998f6ab3b803fb575e28ee4f0eb33e8a1c54844474f02cb2154`
+- A123X独立接口：MBI_VO_GetVideoLayerAttr: `projects/a123x/archive/provider-1202ff8396f16a448073bcdacd1901fa816fb17c341cad35b01af7f0d3b82efb.md`; `provider-1202ff8396f16a448073bcdacd1901fa816fb17c341cad35b01af7f0d3b82efb`
+- A123X独立接口：MBI_VO_GetVideoLayerCrop: `projects/a123x/archive/provider-5a5b396627a462c05ffcaba83e1019c89e86a031d21c53001c9f93ea715dff4e.md`; `provider-5a5b396627a462c05ffcaba83e1019c89e86a031d21c53001c9f93ea715dff4e`
+- A123X独立接口：MBI_VO_GetVideoLayerPartitionMode: `projects/a123x/archive/provider-acddd0e86270d8402b0432a85c8d651b561586ad0a468be669aebe95b9e42180.md`; `provider-acddd0e86270d8402b0432a85c8d651b561586ad0a468be669aebe95b9e42180`
+- A123X独立接口：MBI_VO_SendFrame: `projects/a123x/archive/provider-d0218f14c4c4455dc1070e14afd0caa12db222a1fd09d939f5d91ba48691958b.md`; `provider-d0218f14c4c4455dc1070e14afd0caa12db222a1fd09d939f5d91ba48691958b`
+- A123X独立接口：MBI_VO_SetChnAttr: `projects/a123x/archive/provider-9d4b648a81bd7ce385cfb9b9d170bf33c49e12c82d2082be7a6860687a2ccd69.md`; `provider-9d4b648a81bd7ce385cfb9b9d170bf33c49e12c82d2082be7a6860687a2ccd69`
+- A123X独立接口：MBI_VO_SetPubAttr: `projects/a123x/archive/provider-33e2e0a29a7a6644bba14998b1e163e01344a627c75218ff890893302c75f95d.md`; `provider-33e2e0a29a7a6644bba14998b1e163e01344a627c75218ff890893302c75f95d`
+- A123X独立接口：MBI_VO_SetVideoLayerAttr: `projects/a123x/archive/provider-edc554130e8766aae538c256331f797ac680e7477137aadad95a9934fc3b5a91.md`; `provider-edc554130e8766aae538c256331f797ac680e7477137aadad95a9934fc3b5a91`
+- A123X独立接口：MBI_VO_SetVideoLayerCrop: `projects/a123x/archive/provider-afd434ed4e746d6d566baf2c7d81080fbd34a03e06365e16986d340ae0a0eead.md`; `provider-afd434ed4e746d6d566baf2c7d81080fbd34a03e06365e16986d340ae0a0eead`
+- A123X独立接口：MBI_VO_SetVideoLayerPartitionMode: `projects/a123x/archive/provider-3987496bc79c0021e80ad2c95e06bad5f30682dec96310646ea6dff30e1ffb14.md`; `provider-3987496bc79c0021e80ad2c95e06bad5f30682dec96310646ea6dff30e1ffb14`
+- A123X独立接口：MBP_ISP_ALGConfigFramerate: `projects/a123x/archive/provider-c740fa9871083bbda6468725287f85df9e2cc0a56f0cbfa64a07acbc9f572130.md`; `provider-c740fa9871083bbda6468725287f85df9e2cc0a56f0cbfa64a07acbc9f572130`
+- A123X独立接口：MBP_ISP_ALGGetCalibMode: `projects/a123x/archive/provider-1545a2ebcfd64750e0c18a1768d6504f733e59454969d242b27ff68b8bc41ebf.md`; `provider-1545a2ebcfd64750e0c18a1768d6504f733e59454969d242b27ff68b8bc41ebf`
+- A123X独立接口：MBP_ISP_ALGGetFramerate: `projects/a123x/archive/provider-11a8b100b88127bbb791f9e222972aaab4d1f8a911d960f315176a4965e71c49.md`; `provider-11a8b100b88127bbb791f9e222972aaab4d1f8a911d960f315176a4965e71c49`
+- A123X独立接口：MBP_ISP_ALGReloadCalibration: `projects/a123x/archive/provider-14652459142fdce355124643bb5bce21d414a7ad905be98ebddd0fd93ffe7933.md`; `provider-14652459142fdce355124643bb5bce21d414a7ad905be98ebddd0fd93ffe7933`
+- A123X独立接口：aml_asp_create: `projects/a123x/archive/provider-03c4ed338a96ecaab95ffacd90cf807f04b5c722c7c5bb43b3c8da252a922a6f.md`; `provider-03c4ed338a96ecaab95ffacd90cf807f04b5c722c7c5bb43b3c8da252a922a6f`
+- A123X独立接口：aml_asp_ctr_get_value: `projects/a123x/archive/provider-9f959972eea0c3bb0ce14964a1125189eafd44d6eadf441b0af11c2873b65d6e.md`; `provider-9f959972eea0c3bb0ce14964a1125189eafd44d6eadf441b0af11c2873b65d6e`
+- A123X独立接口：aml_asp_ctr_set_value: `projects/a123x/archive/provider-ed13a8cc529335fec10663197974f5a7cbf05528cf5d62f7b0bddc0bc1a63f37.md`; `provider-ed13a8cc529335fec10663197974f5a7cbf05528cf5d62f7b0bddc0bc1a63f37`
+- A123X独立接口：aml_asp_destroy: `projects/a123x/archive/provider-7fd9ecc6c29fff0ef8dc96259b8719cccb7e0a49fd5bea8ada19a39f71f1a5df.md`; `provider-7fd9ecc6c29fff0ef8dc96259b8719cccb7e0a49fd5bea8ada19a39f71f1a5df`
+- A123X独立接口：aml_asp_export: `projects/a123x/archive/provider-f0421432a958d8395c39fd07b73af8a1068f230d21dd85fc9a6654582a172166.md`; `provider-f0421432a958d8395c39fd07b73af8a1068f230d21dd85fc9a6654582a172166`
+- A123X独立接口：aml_asp_import: `projects/a123x/archive/provider-8c7f1cab5c8cb3edd74b5d31f2335d946d7f14972e35cf23a4213d81a7f61dd9.md`; `provider-8c7f1cab5c8cb3edd74b5d31f2335d946d7f14972e35cf23a4213d81a7f61dd9`
+- A123X独立接口：aml_asp_process: `projects/a123x/archive/provider-18ef5f8a532d8cb3ddf4d36007e028235ce90159036368e249ae6daffa5d6d97.md`; `provider-18ef5f8a532d8cb3ddf4d36007e028235ce90159036368e249ae6daffa5d6d97`
+- A123X独立接口：aml_asp_speaker_process: `projects/a123x/archive/provider-0a52d772ca8ecd4417a03d6476ecbd17ca0b2efdb400c1dfc9192e9ba8e63c26.md`; `provider-0a52d772ca8ecd4417a03d6476ecbd17ca0b2efdb400c1dfc9192e9ba8e63c26`
+- A123X独立接口：aml_module_create: `projects/a123x/archive/provider-5e7f9aff05f166c482f8d4f95b85cae3392ae855348645fbe434597650364859.md`; `provider-5e7f9aff05f166c482f8d4f95b85cae3392ae855348645fbe434597650364859`
+- A123X独立接口：aml_module_destroy: `projects/a123x/archive/provider-dab43a149e104c5f1e51382290487bfb3b087d66a15361b0e28314eab698afc0.md`; `provider-dab43a149e104c5f1e51382290487bfb3b087d66a15361b0e28314eab698afc0`
+- A123X独立接口：aml_module_input_set: `projects/a123x/archive/provider-9661a3f9c74235fcecd1f0aedc45b97dadcee584b3f3ef814b0f1a0f99de8739.md`; `provider-9661a3f9c74235fcecd1f0aedc45b97dadcee584b3f3ef814b0f1a0f99de8739`
+- A123X独立接口：aml_module_output_get: `projects/a123x/archive/provider-084bb98973910e6dd1f272210f38ce1242d3a666fa3c26ec6912e248680fecfa.md`; `provider-084bb98973910e6dd1f272210f38ce1242d3a666fa3c26ec6912e248680fecfa`
+- A123X独立接口：aml_module_set_multi_input: `projects/a123x/archive/provider-1e7212d0697eb126af08a9f025d0f27ba2dfa0198b55d68a1cdf6caead369962.md`; `provider-1e7212d0697eb126af08a9f025d0f27ba2dfa0198b55d68a1cdf6caead369962`
+- A123X独立接口：aml_util_disableProfile: `projects/a123x/archive/provider-ec4a1beeb9b4f0bebdf143c4d85a77f7adeea073f2c2eabcc2325c31cd0c9b24.md`; `provider-ec4a1beeb9b4f0bebdf143c4d85a77f7adeea073f2c2eabcc2325c31cd0c9b24`
+- A123X独立接口：aml_util_enableProfile: `projects/a123x/archive/provider-9dec67c905fd6a8a6bda2461f30ba24cf6a72b72dd577fbc72e8355609e51b64.md`; `provider-9dec67c905fd6a8a6bda2461f30ba24cf6a72b72dd577fbc72e8355609e51b64`
+- A123X独立接口：aml_util_flushBuffer: `projects/a123x/archive/provider-dd0008e3159470ca969df889b038124b9d5148153ea2439d44389c55c42f19e4.md`; `provider-dd0008e3159470ca969df889b038124b9d5148153ea2439d44389c55c42f19e4`
+- A123X独立接口：aml_util_flushTensorHandle: `projects/a123x/archive/provider-8d257f2c415282b496480eca1b664989c8350bebc7f69b8e25cfa61227544fb8.md`; `provider-8d257f2c415282b496480eca1b664989c8350bebc7f69b8e25cfa61227544fb8`
+- A123X独立接口：aml_util_freeAlignedBuffer: `projects/a123x/archive/provider-6494296813ce6d79eb5d6f982665b0e758f5212f36144f74d9cf3d4a144d35a0.md`; `provider-6494296813ce6d79eb5d6f982665b0e758f5212f36144f74d9cf3d4a144d35a0`
+- A123X独立接口：aml_util_freeBuffer: `projects/a123x/archive/provider-9fe447b1926945381f874e0ee9f8b7184d0ab470a151ce09b0129a16f76862de.md`; `provider-9fe447b1926945381f874e0ee9f8b7184d0ab470a151ce09b0129a16f76862de`
+- A123X独立接口：aml_util_freeTensorInfo: `projects/a123x/archive/provider-ed50859496af34363771931428fe98b7f34d8232407176b87b22a9c1b4db48c5.md`; `provider-ed50859496af34363771931428fe98b7f34d8232407176b87b22a9c1b4db48c5`
+- A123X独立接口：aml_util_getHardwareStatus: `projects/a123x/archive/provider-cbf1f91e3e9ea1dd010e1e87be351ef4fc4e3b75cdb5510774a262a616eeec14.md`; `provider-cbf1f91e3e9ea1dd010e1e87be351ef4fc4e3b75cdb5510774a262a616eeec14`
+- A123X独立接口：aml_util_getInputTensorInfo: `projects/a123x/archive/provider-9aaef1f82046ee92c58e32a8ba45ed5dd836f9a0e5e30887b23664d5a0a8ec4f.md`; `provider-9aaef1f82046ee92c58e32a8ba45ed5dd836f9a0e5e30887b23664d5a0a8ec4f`
+- A123X独立接口：aml_util_getNpuStatus: `projects/a123x/archive/provider-49086fa52d9dbcfda1f5fb271d5586f1b3d42e45cc6b72cc94dcbe5ce9f121a6.md`; `provider-49086fa52d9dbcfda1f5fb271d5586f1b3d42e45cc6b72cc94dcbe5ce9f121a6`
+- A123X独立接口：aml_util_getOutputTensorInfo: `projects/a123x/archive/provider-f6666eb19a7437b5a6f905713014da0bbeca9e7d4bb8213c571b7708128f2891.md`; `provider-f6666eb19a7437b5a6f905713014da0bbeca9e7d4bb8213c571b7708128f2891`
+- A123X独立接口：aml_util_getPlatformInfo: `projects/a123x/archive/provider-10fdb7bb9dd062088508250d2ce34621b3639a77f76beb4e3153c80ad2873724.md`; `provider-10fdb7bb9dd062088508250d2ce34621b3639a77f76beb4e3153c80ad2873724`
+- A123X独立接口：aml_util_getProfileInfo: `projects/a123x/archive/provider-bd57a8f93538cc675f883a5e1cfc0cdef4342c6cedf06273a5f7dd7cb39e8e93.md`; `provider-bd57a8f93538cc675f883a5e1cfc0cdef4342c6cedf06273a5f7dd7cb39e8e93`
+- A123X独立接口：aml_util_getTensorInfo: `projects/a123x/archive/provider-d8a206b9018532352f85459f32860f5cd2b8b56856cc684ae8cbeb79fc553d63.md`; `provider-d8a206b9018532352f85459f32860f5cd2b8b56856cc684ae8cbeb79fc553d63`
+- A123X独立接口：aml_util_mallocAlignedBuffer: `projects/a123x/archive/provider-9527ef53f5d42ae5c57bde97868e56c4a82c6c009c291394c483289af970dd09.md`; `provider-9527ef53f5d42ae5c57bde97868e56c4a82c6c009c291394c483289af970dd09`
+- A123X独立接口：aml_util_mallocBuffer: `projects/a123x/archive/provider-4c9292724e1f51b57e30270e6da7907274d7ba5d44895e1decd7c27af81e5e14.md`; `provider-4c9292724e1f51b57e30270e6da7907274d7ba5d44895e1decd7c27af81e5e14`
+- A123X独立接口：aml_util_setAutoSuspend: `projects/a123x/archive/provider-17fbe0a3be5f41d1434c9168484be1907b64ba62a74988504bd765b6ceaa0144.md`; `provider-17fbe0a3be5f41d1434c9168484be1907b64ba62a74988504bd765b6ceaa0144`
+- A123X独立接口：aml_util_setPowerPolicy: `projects/a123x/archive/provider-b4fe5ccf4287793910f2848df41f0ac5d339bd5003519cb0ace7ed6a1d785bf2.md`; `provider-b4fe5ccf4287793910f2848df41f0ac5d339bd5003519cb0ace7ed6a1d785bf2`
+- A123X独立接口：aml_util_setProfile: `projects/a123x/archive/provider-7b05304563a642ee3f6a30c4b877d008f57f62a821900717e8a5c8a3e7b77b22.md`; `provider-7b05304563a642ee3f6a30c4b877d008f57f62a821900717e8a5c8a3e7b77b22`
+- A123X独立接口：aml_util_swapExternalInputBuffer: `projects/a123x/archive/provider-08c975e2cf36d456879b856a775d2b36233cbaf52bb6302f651b3e76a600e723.md`; `provider-08c975e2cf36d456879b856a775d2b36233cbaf52bb6302f651b3e76a600e723`
+- A123X独立接口：aml_util_swapExternalOutputBuffer: `projects/a123x/archive/provider-2b671294cfa188acc07b55ab26ee34c08c6664017d6b9f44369ca98cd3220522.md`; `provider-2b671294cfa188acc07b55ab26ee34c08c6664017d6b9f44369ca98cd3220522`
+- A123X独立接口：aml_util_swapInputBuffer: `projects/a123x/archive/provider-c445612a0fa7414cb987c7cee1235144000c547e77b4856801ee1e095abdcd99.md`; `provider-c445612a0fa7414cb987c7cee1235144000c547e77b4856801ee1e095abdcd99`
+- A123X独立接口：aml_util_swapOutputBuffer: `projects/a123x/archive/provider-2c4a7ea7aa1e32e76b7ff3c5f83acf8b0ef1ceaf1ab3564ece9f778af620352e.md`; `provider-2c4a7ea7aa1e32e76b7ff3c5f83acf8b0ef1ceaf1ab3564ece9f778af620352e`
+- A123X独立接口：aml_util_switchInputBuffer: `projects/a123x/archive/provider-006bc1faaa83e093e70623f11aa130f09964c83a9eb5a3594e17e6dfcdb5ad1e.md`; `provider-006bc1faaa83e093e70623f11aa130f09964c83a9eb5a3594e17e6dfcdb5ad1e`
+- A123X独立接口：aml_util_switchOutputBuffer: `projects/a123x/archive/provider-2cb222a08402c5f6d24b19e3274251dc15ced650fce5591b62ae9599883cecdf.md`; `provider-2cb222a08402c5f6d24b19e3274251dc15ced650fce5591b62ae9599883cecdf`
+- A123X独立接口：amlnn_alloc_dma_mem: `projects/a123x/archive/provider-4299bcb07142a91c623b19c6a1008778f11fe439ebb3c773a18a36d42c2abb0a.md`; `provider-4299bcb07142a91c623b19c6a1008778f11fe439ebb3c773a18a36d42c2abb0a`
+- A123X独立接口：amlnn_bind_dma_mem: `projects/a123x/archive/provider-944f30b633ad6938201794ecbad81896abe65aa66cb458af1f9537a38c215fb0.md`; `provider-944f30b633ad6938201794ecbad81896abe65aa66cb458af1f9537a38c215fb0`
+- A123X独立接口：amlnn_destroy: `projects/a123x/archive/provider-a85a4320629f901867a39a9d107d6c56f60c925da8a4a872254cb90892cbe936.md`; `provider-a85a4320629f901867a39a9d107d6c56f60c925da8a4a872254cb90892cbe936`
+- A123X独立接口：amlnn_free_dma_mem: `projects/a123x/archive/provider-55b258717ed0c48e97bb8783f0fc3bb8d8a8cca3ee8c41cdd671d73db88f9041.md`; `provider-55b258717ed0c48e97bb8783f0fc3bb8d8a8cca3ee8c41cdd671d73db88f9041`
+- A123X独立接口：amlnn_init: `projects/a123x/archive/provider-dc966a705db571976ecb056f435927fd82adc2f7cf1ac73e6cf56f6ad9adc03d.md`; `provider-dc966a705db571976ecb056f435927fd82adc2f7cf1ac73e6cf56f6ad9adc03d`
+- A123X独立接口：amlnn_inputs_set: `projects/a123x/archive/provider-3cc584b3f1634585425f95304ce04dcfd4fc826b54d8f934c133cdc27636d63f.md`; `provider-3cc584b3f1634585425f95304ce04dcfd4fc826b54d8f934c133cdc27636d63f`
+- A123X独立接口：amlnn_outputs_get: `projects/a123x/archive/provider-71ff0bf7746b368bd2a95795340454589979907362add0c20671ef97d2dadb27.md`; `provider-71ff0bf7746b368bd2a95795340454589979907362add0c20671ef97d2dadb27`
+- A123X独立接口：amlnn_query: `projects/a123x/archive/provider-1705c1943634d7389fdce4d699e7c7e4d3af3d730ddd6dd286b3cf23a12a8330.md`; `provider-1705c1943634d7389fdce4d699e7c7e4d3af3d730ddd6dd286b3cf23a12a8330`
+- A123X独立接口：amlnn_run: `projects/a123x/archive/provider-6ff0ca4d34e2543fc8c3896f9878ad6ab3ac2388e289b7cc245aa0bb389ca72d.md`; `provider-6ff0ca4d34e2543fc8c3896f9878ad6ab3ac2388e289b7cc245aa0bb389ca72d`
+- A123X独立接口：amlnn_select_subgraph: `projects/a123x/archive/provider-6d3c4a74a62b213d4903102700803a5a5c6aeec03673a93b924c1c34a428081a.md`; `provider-6d3c4a74a62b213d4903102700803a5a5c6aeec03673a93b924c1c34a428081a`
+- A123X独立接口：amlnn_set_core_mask: `projects/a123x/archive/provider-8f0854fee1541c0f2e6e2d79a35748450a12a12fc6422b40754bccf1ddfc7f4f.md`; `provider-8f0854fee1541c0f2e6e2d79a35748450a12a12fc6422b40754bccf1ddfc7f4f`
+- A123X独立接口：amlnn_set_input_shapes: `projects/a123x/archive/provider-7ee9b1bfda05ce549311ec36c514c6a0627d4eb84602308661c2cb596ebcbd62.md`; `provider-7ee9b1bfda05ce549311ec36c514c6a0627d4eb84602308661c2cb596ebcbd62`
+- A123X独立接口：amlnn_set_softop_opt: `projects/a123x/archive/provider-a95a68895f4a47b95180370f9f144b6b47e737632434478b7096ebe88beb69cd.md`; `provider-a95a68895f4a47b95180370f9f144b6b47e737632434478b7096ebe88beb69cd`
+- A123X独立接口：amlnn_unbind_dma_mem: `projects/a123x/archive/provider-d4d1c528a5f9021ea4d6f3e14d5dde17f6fa1992434400d0c279b991f65ea3fa.md`; `provider-d4d1c528a5f9021ea4d6f3e14d5dde17f6fa1992434400d0c279b991f65ea3fa`
+- A123X：MBI_CVE_And的头文件和手册声明有什么差异: `projects/a123x/archive/provider-cd4a6cb87daeddba619e79e9991c23598b8be6b96e21e7c190f67b37a5afc306.md`; `provider-cd4a6cb87daeddba619e79e9991c23598b8be6b96e21e7c190f67b37a5afc306`
+- A123X：MBI_CVE_DMA的头文件和手册声明有什么差异: `projects/a123x/archive/provider-61e44c0e9c8a9285649b32a68fab0939b4ce247c523548a64310e99a8cc12d8c.md`; `provider-61e44c0e9c8a9285649b32a68fab0939b4ce247c523548a64310e99a8cc12d8c`
+- A123X：MBI_CVE_LKOpticalFlowPyr的头文件和手册声明有什么差异: `projects/a123x/archive/provider-b2d9bbd579e00062c6c9c5487393e7456a96b02933299416ebb4ec8a3c3e63f3.md`; `provider-b2d9bbd579e00062c6c9c5487393e7456a96b02933299416ebb4ec8a3c3e63f3`
+- A123X：MBI_CVE_MatchBgModel的头文件和手册声明有什么差异: `projects/a123x/archive/provider-c52d38b2e9367522184b5be45e67dbf315004345e971730bd6de7c0e8e8d3fbf.md`; `provider-c52d38b2e9367522184b5be45e67dbf315004345e971730bd6de7c0e8e8d3fbf`
+- A123X：MBI_CVE_RESIZE的头文件和手册声明有什么差异: `projects/a123x/archive/provider-71676aa84406e1e5e757c60c53db247dc89724ed315105a27c7deead1ca9932f.md`; `provider-71676aa84406e1e5e757c60c53db247dc89724ed315105a27c7deead1ca9932f`
+- A123X：MBI_ISP_GetChnLowmem的头文件和手册声明有什么差异: `projects/a123x/archive/provider-8c370e8bcad4d8b059d39332bb3800badabe57c52d661d4e3555c23e7d13e390.md`; `provider-8c370e8bcad4d8b059d39332bb3800badabe57c52d661d4e3555c23e7d13e390`
+- A123X：MBI_ISP_IPPDevStop的头文件和手册声明有什么差异: `projects/a123x/archive/provider-73d06ca112e818e6509673d1195a42b7717baa3685ce9b54883cc582a00dd043.md`; `provider-73d06ca112e818e6509673d1195a42b7717baa3685ce9b54883cc582a00dd043`
+- A123X：MBI_ISP_SetZoom的头文件和手册声明有什么差异: `projects/a123x/archive/provider-f0d229d342f28cbad1adca68c66e701269eeed4fa1d34f052dc71066279eacf9.md`; `provider-f0d229d342f28cbad1adca68c66e701269eeed4fa1d34f052dc71066279eacf9`
+- A123X：MBI_VBP_GetModPoolConfig的头文件和手册声明有什么差异: `projects/a123x/archive/provider-9f992a60b61f18ba1d06a011b742c00e19de32195b05222f93a158040d6798ae.md`; `provider-9f992a60b61f18ba1d06a011b742c00e19de32195b05222f93a158040d6798ae`
+- A123X：MBI_VENC_SetBufferSize的头文件和手册声明有什么差异: `projects/a123x/archive/provider-a51d4faa127f7addcaaab73415d58f32b74de83cb72581117ea7c277873b9bd7.md`; `provider-a51d4faa127f7addcaaab73415d58f32b74de83cb72581117ea7c277873b9bd7`
+- A123X：曝光和白平衡设置接口实际由哪个预编译库导出: `projects/a123x/archive/provider-1acb718684771d4ead5e7e44bc088beab76cedf262e05e01ea64a29ce69cb97f.md`; `provider-1acb718684771d4ead5e7e44bc088beab76cedf262e05e01ea64a29ce69cb97f`
+- A123X：CB400参考板与F20 EVT1能否共用已验证结论: `projects/a123x/archive/provider-ac16fa4b07387a1dd87989645749fb77ebce508f5d1fa055de3b430512587916.md`; `provider-ac16fa4b07387a1dd87989645749fb77ebce508f5d1fa055de3b430512587916`
+- A123X：具备Flash生产指南是否意味着当前产品可以量产: `projects/a123x/archive/provider-e729e87888dd9153f608c4cbc119e09901e891ef2c1dd810e3b6465a589f7b85.md`; `provider-e729e87888dd9153f608c4cbc119e09901e891ef2c1dd810e3b6465a589f7b85`
+- A123X：模拟PGA增益能否直接使用头文件的非线性档位表: `projects/a123x/archive/provider-898a75020bdd905dca61fd5202467e42d9d330e3565b6340e24d733ebc2f35ed.md`; `provider-898a75020bdd905dca61fd5202467e42d9d330e3565b6340e24d733ebc2f35ed`
+- A123X：AI数字音量档位范围与默认0dB说明是否一致: `projects/a123x/archive/provider-9d7f6852c2534d3c63d61c708fc0f121b78e0995f83555a51dd11056c4b691bd.md`; `provider-9d7f6852c2534d3c63d61c708fc0f121b78e0995f83555a51dd11056c4b691bd`
+- A123X451接口补登记及平台覆盖差额验收 2026-10-24: `projects/a123x/validation/provider-47043ce59c6404333dda48b73a4e1a453a6dce34cbb75144003c0d47a5897b61.md`; `provider-47043ce59c6404333dda48b73a4e1a453a6dce34cbb75144003c0d47a5897b61`
+- Knowledge Hub中文接口问句因知识摘要缺少中文用途而失败的诊断: `governance/product/archive/provider-f26a3014806b099e0f37af5a7bceca25586adf26d6c5e637340e75ae163cc4ec.md`; `provider-f26a3014806b099e0f37af5a7bceca25586adf26d6c5e637340e75ae163cc4ec`
+- Knowledge Hub候选归档落点与历史检索队列的语义冲突诊断: `governance/product/archive/provider-046b7cf84b51e4b2632563c000d9c5ea88bda986a80479afa1dc0dfffd30e1c4.md`; `provider-046b7cf84b51e4b2632563c000d9c5ea88bda986a80479afa1dc0dfffd30e1c4`
+- Knowledge Hub中英混合问句因缺少问号而漏启概念解析的诊断: `governance/product/archive/provider-318af7dd96ba8ba09cc2df8509621d89286f659cd780c456b35c4f4e3348acef.md`; `provider-318af7dd96ba8ba09cc2df8509621d89286f659cd780c456b35c4f4e3348acef`
+- Knowledge Hub验收失败问句进入默认语料后干扰答案检索的诊断: `governance/product/archive/provider-e4c1e23a050f4066308f01f65659b58e272bc30f69b9b06826e761b2b75e82b0.md`; `provider-e4c1e23a050f4066308f01f65659b58e272bc30f69b9b06826e761b2b75e82b0`
+- A123X独立接口：MBI_CVE_Filter: `projects/a123x/archive/provider-bb2e9234885f4aadf1d20f5a19932951bddb0c27556e0c95fa20014f272f4c2d.md`; `provider-bb2e9234885f4aadf1d20f5a19932951bddb0c27556e0c95fa20014f272f4c2d`
+- A123X独立接口：MBI_VENC_SetBufferSize: `projects/a123x/archive/provider-b3b452313e59ab1e8c0b532c2631122f073f668137c5026ad99b291eb5708aa8.md`; `provider-b3b452313e59ab1e8c0b532c2631122f073f668137c5026ad99b291eb5708aa8`
+- A123X独立接口：MBI_ISP_SetZoom: `projects/a123x/archive/provider-dde2133f4b958d193a3e8365157ae1b29d7cd376da5d686a3f175dd178d68461.md`; `provider-dde2133f4b958d193a3e8365157ae1b29d7cd376da5d686a3f175dd178d68461`
+- A123X独立接口：MBI_GE2D_Bitblit: `projects/a123x/archive/provider-8c9bf4e0c8889a93354d2602ecc723716d3423a530e680db0d9274624a5bfb25.md`; `provider-8c9bf4e0c8889a93354d2602ecc723716d3423a530e680db0d9274624a5bfb25`
+- A123X独立知识卡：DEVWIRE WiFi SDIO当前25MHz 1-bit inband配置: `projects/a123x/archive/provider-c307ddd2076fbefe954d7c86ef0cd5eead0e627c30698235d378fd16fd857c52.md`; `provider-c307ddd2076fbefe954d7c86ef0cd5eead0e627c30698235d378fd16fd857c52`
+- Knowledge Hub默认检索五项缺口修复与冻结样本验收: `governance/product/validation/provider-bd509a8fedb4f38feba779f9c0c2d6c5f23288412b427dd436595abecd57dc45.md`; `provider-bd509a8fedb4f38feba779f9c0c2d6c5f23288412b427dd436595abecd57dc45`
+- NV3006A双屏显示：接口电平不匹配与样屏适配状态: `projects/a123x/validation/provider-d08918ae739d29e53c45af2c5ed9cc5fc6e52376eb4c5d6141769e6ea943266d.md`; `provider-d08918ae739d29e53c45af2c5ed9cc5fc6e52376eb4c5d6141769e6ea943266d`
+- A123X DEVWIRE 双麦3A软件集成: `projects/a123x/validation/provider-0e0e68d08652bcec9e3552665a74cabea07d7d238f613eb60c12a920ee839c78.md`; `provider-0e0e68d08652bcec9e3552665a74cabea07d7d238f613eb60c12a920ee839c78`
+- A123X提交前门禁整改与本机复验20261026: `projects/a123x/validation/provider-b6bace5ffb2e4abb3a2ce4c9375794d996cba31a1abee3ac06e22d5847ad0afc.md`; `provider-b6bace5ffb2e4abb3a2ce4c9375794d996cba31a1abee3ac06e22d5847ad0afc`
+- A123X RC1.0 GitLab 默认分支调整完成: `projects/a123x/validation/provider-c42ada1ce0a081c4a7b48ff76a69fc00aa3d1ef8952046c21f3e58251b7de567.md`; `provider-c42ada1ce0a081c4a7b48ff76a69fc00aa3d1ef8952046c21f3e58251b7de567`
+- A123X提交前复核与新增可选包镜像门禁缺口20261026: `projects/a123x/validation/provider-8fe4fa796af2e897de8643af258079a244f7afc4466671ebff31c59c6aac1525.md`; `provider-8fe4fa796af2e897de8643af258079a244f7afc4466671ebff31c59c6aac1525`
+- A123X新增可选包镜像门禁整改20261026: `projects/a123x/validation/provider-fb4c56caa0aa3379132623855b45ea07e241023e1bade8372f2749507ad95634.md`; `provider-fb4c56caa0aa3379132623855b45ea07e241023e1bade8372f2749507ad95634`
+- A123X DEVWIRE WiFi四线源码深查与最小验证路径: `projects/a123x/archive/provider-ed7ed12f53c399d783e2a5415f10c643a4b38e919ca56181d6276b1da7d7d6d3.md`; `provider-ed7ed12f53c399d783e2a5415f10c643a4b38e919ca56181d6276b1da7d7d6d3`
+- ADK长任务收敛优化源码候选与运行采用边界: `projects/llm-agent/validation/provider-dc169fbc029c0a12cee9f4c38ac44e0316fab446baa9b21b7446dfca7eebab13.md`; `provider-dc169fbc029c0a12cee9f4c38ac44e0316fab446baa9b21b7446dfca7eebab13`
+- A123X WiFi四线诊断优化实现与定向构建验证: `projects/a123x/archive/provider-0c5a1a63ec8fcc8437a774db23f15507e7c2f5fe5608d291d04afe1644284622.md`; `provider-0c5a1a63ec8fcc8437a774db23f15507e7c2f5fe5608d291d04afe1644284622`
+- ADK 8.1.1收敛能力提交推送与本机应用结果: `projects/llm-agent/validation/provider-6dfd1ab2075cc2d27b8e7ea835de814cfb8c1bcda039758a189382467f1cc6fe.md`; `provider-6dfd1ab2075cc2d27b8e7ea835de814cfb8c1bcda039758a189382467f1cc6fe`
+- F20 EVT1 20261026原理图复审与旧问题闭环矩阵: `projects/a123x/validation/provider-25d8c81d9fbd936d0b736447b8221c1f9d00e43862e7a4ee71552e496480d7fd.md`; `provider-25d8c81d9fbd936d0b736447b8221c1f9d00e43862e7a4ee71552e496480d7fd`
+- F20 EVT1新版评审后的项目文档同步与验收边界: `projects/a123x/validation/provider-e5a05def17332a1c797d77022ec3f72525bb33e9832950c338ed4da6dcfeddf1.md`; `provider-e5a05def17332a1c797d77022ec3f72525bb33e9832950c338ed4da6dcfeddf1`
+- Sensor定时休眠截止时间修复与验证: `projects/gros/validation/provider-e5f20466ec9c3aaf61fe22456ae6f58e7b80d832b7ab35132bce40db0373b0c9.md`; `provider-e5f20466ec9c3aaf61fe22456ae6f58e7b80d832b7ab35132bce40db0373b0c9`
+- PCR02 MSPI恢复与SDIO相位定向修复及STR适用边界: `projects/pcr02-ssc305/archive/provider-1ccede3fe75d950817192d8c10aa3d232cc01b8fada4570334d83396d2f744f0.md`; `provider-1ccede3fe75d950817192d8c10aa3d232cc01b8fada4570334d83396d2f744f0`
+- A123X Agent Skill独立仓长期维护及验证边界: `projects/a123x/validation/provider-9216639318bfb93e788d32d5cf91df21595094ecd0465050ccb02e8ae3e9f3c7.md`; `provider-9216639318bfb93e788d32d5cf91df21595094ecd0465050ccb02e8ae3e9f3c7`
+- A123X仓库级知识关联边界及Provider接口缺口: `projects/a123x/validation/provider-c2e5545406a9c3c44bb4cd8ad5f4729a12e087a63dfd2ee8a566657833ddb65a.md`; `provider-c2e5545406a9c3c44bb4cd8ad5f4729a12e087a63dfd2ee8a566657833ddb65a`
+- A123X仓库级登记能力与双仓默认路由闭环: `projects/a123x/validation/provider-81ac385b55705ce33616f7bd738c2aa63b028f800c5bc93dccf213cc9e2dcdae.md`; `provider-81ac385b55705ce33616f7bd738c2aa63b028f800c5bc93dccf213cc9e2dcdae`
+- GROS workspace 示例变量与完整迁移验证: `projects/gros/validation/provider-bbc65081f388f80091fc8c312ad489e8fdf00e364908cc82bf7fb83278c305a4.md`; `provider-bbc65081f388f80091fc8c312ad489e8fdf00e364908cc82bf7fb83278c305a4`
+- GROS 迁移后投影视图字节恢复与完整验证: `projects/gros/validation/provider-95839fda2b00c074078566a52f9e8a5189bfaffffeb1e2cf6a1c575ce44ebc77.md`; `provider-95839fda2b00c074078566a52f9e8a5189bfaffffeb1e2cf6a1c575ce44ebc77`
+- GROS 与 PCR02 SSC305 知识边界和内容质量治理验证: `projects/gros/validation/provider-a0893e3a8a4a4c9465ad1539cc509bdc479dc3497931e146c08a4f7808e79fec.md`; `provider-a0893e3a8a4a4c9465ad1539cc509bdc479dc3497931e146c08a4f7808e79fec`
+- 现行五项 runtime source 登记契约复核: `governance/product/validation/provider-58aa0dc4e4ce02e8c6ecd95d00989fcd1ebf08024b88ba8bf9e080d298206d35.md`; `provider-58aa0dc4e4ce02e8c6ecd95d00989fcd1ebf08024b88ba8bf9e080d298206d35`
+- 全库245条知识到期复核确认清单: `governance/product/archive/provider-d842b132bbd8d75386f365b2836b1f64fcda992795c022ac6b6391455d627142.md`; `provider-d842b132bbd8d75386f365b2836b1f64fcda992795c022ac6b6391455d627142`
+- 全库知识 AI 语义复核：第 1—25 条: `governance/product/archive/provider-ead97a3b0593630592d7c6e641720e0ceda65cbee6cec7da30a96348cb8de937.md`; `provider-ead97a3b0593630592d7c6e641720e0ceda65cbee6cec7da30a96348cb8de937`
+- 全库知识 AI 语义复核：第 26—50 条: `governance/product/archive/provider-c8bba257cc42b0020fe59f093ff830bee6337ae78c0e1a087d6eb705ea92f96d.md`; `provider-c8bba257cc42b0020fe59f093ff830bee6337ae78c0e1a087d6eb705ea92f96d`
+- 全库知识 AI 语义复核：第 51—75 条: `governance/product/archive/provider-b8fb5bb69ec98602c09e0972c7a77e6d13ab03930a7864010288e51578ad2350.md`; `provider-b8fb5bb69ec98602c09e0972c7a77e6d13ab03930a7864010288e51578ad2350`
+- 全库知识 AI 语义复核：第 76—100 条: `governance/product/archive/provider-fe7cbaf9c8677b56d5fd000dbf9cea3d19ef1270fa3f6ef3569430814e316e4c.md`; `provider-fe7cbaf9c8677b56d5fd000dbf9cea3d19ef1270fa3f6ef3569430814e316e4c`
+- 全库知识 AI 语义复核：第 101—125 条: `governance/product/archive/provider-654b50cc73ac96d9a3ede2c01dfbef1dc7bfd2ea109db61942a297d674c919b2.md`; `provider-654b50cc73ac96d9a3ede2c01dfbef1dc7bfd2ea109db61942a297d674c919b2`
+- 全库知识 AI 语义复核：第 126—150 条: `governance/product/archive/provider-f27ae20a1266ca21bd09181d902956ff4c55467639a21d0d393325d6de44c368.md`; `provider-f27ae20a1266ca21bd09181d902956ff4c55467639a21d0d393325d6de44c368`
+- 全库知识 AI 语义复核：第 151—175 条: `governance/product/archive/provider-82c4ed5db9efb3d255876fbb7aaf63690300833941b31087d039732b5d645d02.md`; `provider-82c4ed5db9efb3d255876fbb7aaf63690300833941b31087d039732b5d645d02`
+- 全库知识 AI 语义复核：第 176—200 条: `governance/product/archive/provider-19c4d235ee77953a729d6cab0dcdff12ec6611f284cfe728f77d9ce1af03c62b.md`; `provider-19c4d235ee77953a729d6cab0dcdff12ec6611f284cfe728f77d9ce1af03c62b`
+- 全库知识 AI 语义复核：第 201—225 条: `governance/product/archive/provider-82c015b2ba4e33fb5a8212b5b0480bcc0da8dc428e66220f3d2fee96c7fc5d2a.md`; `provider-82c015b2ba4e33fb5a8212b5b0480bcc0da8dc428e66220f3d2fee96c7fc5d2a`
+- 全库知识 AI 语义复核：第 226—245 条: `governance/product/archive/provider-ae4030077aacde4aa820591a2a38148c815f933f5e55fa7b082c1a9aae8cbea6.md`; `provider-ae4030077aacde4aa820591a2a38148c815f933f5e55fa7b082c1a9aae8cbea6`
+- 全库 245 条知识自动复核及维护验收: `governance/product/archive/provider-9ebd973a4c18b4d5c0a9c432bdd24a585504676f2ec6d1e4a1bf274ae3d3162b.md`; `provider-9ebd973a4c18b4d5c0a9c432bdd24a585504676f2ec6d1e4a1bf274ae3d3162b`
+- 245 条到期告警的 owner 复核周期决定包: `governance/product/archive/provider-647513d6cbae1011b7ad4222d9efbc1c293b2a24f1c98501776c67040aa05d1a.md`; `provider-647513d6cbae1011b7ad4222d9efbc1c293b2a24f1c98501776c67040aa05d1a`
+- 245 条到期告警的 owner 复核周期决定包: `governance/product/archive/provider-5afde7d624f84f525709c7e7dd17c0c36411b61f5b00b5b4603a1b35a26570fb.md`; `provider-5afde7d624f84f525709c7e7dd17c0c36411b61f5b00b5b4603a1b35a26570fb`
+- Knowledge Hub 告警清零验收记录: `governance/product/archive/provider-d9cb86eae7f36cc284f66ecb5a7fc11eece5948fa9ca745844e7d8c0ee251a49.md`; `provider-d9cb86eae7f36cc284f66ecb5a7fc11eece5948fa9ca745844e7d8c0ee251a49`
+- 2026-11-01新增六条到期知识周期安排提案: `governance/product/validation/provider-5d9b959c4995b00d5d110c4872a1846b83398b044bc1a4e49e380d8e4dfd119f.md`; `provider-5d9b959c4995b00d5d110c4872a1846b83398b044bc1a4e49e380d8e4dfd119f`

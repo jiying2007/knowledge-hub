@@ -19,8 +19,8 @@ source:
   type: manual
   from: 2026-08-28 现场只读 ADB/SysRq/MMIO 证据与本地 SDK 源码、Git 历史交叉分析；原始日志和设备端点不归档
   source_sha256: 2ac1a69b133b7de95805111872a589982dcbc531b60f61c3e0f7e6c1ac0065fc
-review_after: '2026-09-28'
-review_status: manual-entry-pending-review
+review_after: '2026-11-07'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -40,19 +40,21 @@ evidence_refs:
 - projects/pcr02-ssc305/archive/debug/2026-08-28-pcr02-bdma-ch0-mspi-ubifs-lockup.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-08-28'
-updated_at: '2026-08-28'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-08-28'
 manual_validation_pending: true
-summary_zh: 实机 SysRq w、MMIO 与源码交叉证实：最后占用 BDMA CH0 的路径为 MIU 到 MSPI0；硬件 busy/done/IRQ pending 均为 0，但 CH0 信号量未归还，LCD 后续请求与 SPI-NAND/UBIFS
-  回写共同阻塞于 CamOsTsemDown。MSPI DMA 超时路径缺少 owner-aware stop、IRQ 同步与信号量释放；两个 25fps ST77912 的高频小包和 4KiB 像素块放大触发概率。Flash cancel
-  的迟到 IRQ 竞态保留为未证实触发候选。
+summary_zh: 依据同仓 BDMA CH0/UBIFS 历史记录形成的来源关联摘录；本条没有独立复测或确认根因，缺精确 SDK 版本、原始受控取证与修复前后 HIL，继续保持 reviewing。
 primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+quality_flags:
+- review-overdue
+- associated-source-only
+- independent-root-cause-unconfirmed
 ---
 
 # PCR02 BDMA CH0/MSPI/NAND 阻塞：来源关联与待验证排障记录

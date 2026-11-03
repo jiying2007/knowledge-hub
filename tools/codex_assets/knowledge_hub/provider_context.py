@@ -67,16 +67,18 @@ def corpus_signature(root, args, resolution):
         if total > 16 * 1024 * 1024:
             raise KnowledgeHubError("READ_BUDGET_EXCEEDED")
         rows.append([item["id"], item["path"], file_sha256(path)])
-    return digest(rows)
+    # A new selector must not reuse results produced by an older implementation.
+    return digest({'rows': rows, 'selector_sha256': file_sha256(pathlib.Path(__file__).with_name('context_assembly.py'))})
 
 
 def public_item(row):
     value = {
         key: row[key]
-        for key in ("id", "item_id", "title", "kind", "status", "path", "manual_validation_pending")
+        for key in ("id", "item_id", "title", "kind", "status", "path", "manual_validation_pending", "review_after")
         if key in row
     }
-    reasons = []
+    from .content_quality import overdue
+    reasons = ["review-overdue"] if overdue(row) else []
     for reason in row.get("why_selected", []):
         if isinstance(reason, str):
             normalized = "query-match" if reason.startswith("query") else reason
@@ -88,6 +90,7 @@ def public_item(row):
 
 
 def authority_lanes(groups):
+    from .content_quality import overdue
     lanes: Dict[str, List[str]] = {"authoritative": [], "provisional": [], "historical": [], "discovery": []}
     for group in groups:
         for item in group["items"]:
@@ -95,6 +98,8 @@ def authority_lanes(groups):
             lane = (
                 "discovery"
                 if group.get("lane") == "discovery" or not ident
+                else "historical"
+                if overdue(item)
                 else "authoritative"
                 if item.get("status") == "active" and not item.get("manual_validation_pending", False)
                 else "historical"
@@ -318,8 +323,9 @@ def _assemble(root, args):
             authorize(root, "read", scope)
             if scope["type"] == "project":
                 payload = assemble_context(root, args.cwd, args.query, args.task_type, max(1, remaining), args.context_budget, scope["id"])
-                rows = payload["search"].get("results", []) + payload["search"].get("fallback_results", [])
-                rows += payload["context"]["current"] + payload["context"]["recent"] + payload["context"]["related"]
+                governed = payload["context"]["current"] + payload["context"]["recent"] + payload["context"]["related"]
+                successors = [row for row in governed if 'successor-of-matched-historical-candidate' in row.get('why_selected', [])]
+                rows = successors + payload["search"].get("results", []) + payload["search"].get("fallback_results", []) + governed
                 # Metadata ranking must not inject private rows into project retrieval.
                 rows = [r for r in rows if r.get("visibility") != "personal-local" and not r.get("path", "").startswith("notes/personal/")]
             elif scope["type"] in {"personal", "unassigned"}:

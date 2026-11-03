@@ -10,10 +10,10 @@ status: reviewing
 owner: leiwenjun
 source:
   type: internal-project-doc
-  from: xcrz_sigmastar_demo_dev/DESIGN.md
+  from: gros/DESIGN.md
   source_sha256: ecf3a9c9df59a51077be132268c91236bfa489d78880afe2826e8224395d10b3
-review_after: '2026-10-25'
-review_status: manual-entry-pending-review
+review_after: '2026-11-07'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -31,7 +31,7 @@ evidence_refs:
 - projects/pcr02-ssc305/archive/design/2026-07-27-active-low-1-pipeline-architecture.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-27'
-updated_at: '2026-07-27'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -42,6 +42,9 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+quality_flags:
+- review-overdue
+- repository-scope-needs-review
 ---
 
 # HDI VI 组件化 Pipeline 与光敏策略设计

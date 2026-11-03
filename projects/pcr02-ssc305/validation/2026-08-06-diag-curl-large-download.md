@@ -1,4 +1,10 @@
 ---
+aliases:
+- PCR02 diag 大文件直链下载实现与构建边界验证
+related:
+- projects/pcr02-ssc305/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: pcr02-diag-curl-large-download-validation-20260806
 title: PCR02 diag 大文件直链下载实现与构建边界验证
 kind: validation
@@ -14,7 +20,7 @@ source:
   source_sha256: e5be0c5e854a7be980237f1c75a46f864f44db22b634478ea6e60180978f19e9
   temporary_source_retained: false
 review_after: '2026-11-06'
-review_status: manual-entry-pending-review
+review_status: identity-migration-pending-review
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -44,12 +50,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- PCR02 diag 大文件直链下载实现与构建边界验证
-related:
-- projects/pcr02-ssc305/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
 ---
 
 # PCR02 diag 大文件直链下载实现与构建边界验证

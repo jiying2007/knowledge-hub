@@ -17,8 +17,8 @@ source:
   type: source-project-design-document
   from: workspace://gd32l235/Docs/SOC侧Shutdown确认闭环设计.md
   source_sha256: 5785c4142f653cee6d17ae3841ed8fce84373910e29ef42b3357ba1aa9930610
-review_after: '2026-08-22'
-review_status: human-reviewed-accepted
+review_after: '2026-11-07'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -36,7 +36,7 @@ evidence_refs:
 - projects/gd32l235/archive/design/2026-07-22-soc-shutdown-confirmation-closure-design.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-22'
-updated_at: '2026-07-26'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: classified
 ai_model_or_tool: Codex
@@ -47,6 +47,13 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+successor_refs:
+- projects/gros/archive/reports/2026-07-30-pcr02-deep-sleep-pa8-long-pulse.md
+- projects/gd32l235/archive/debug/2026-08-03-power-key-exit-restart-convergence.md
+quality_flags:
+- obsolete-compatibility-draft
+searchable: false
+human_review_decision: defer
 ---
 
 # SOC 侧 Shutdown 确认闭环设计

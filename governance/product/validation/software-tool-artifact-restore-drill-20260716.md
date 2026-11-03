@@ -21,8 +21,8 @@ owner: leiwenjun
 source:
   type: lab-test
   from: workspace://llm-tools/releases
-review_after: '2026-10-16'
-review_status: human-reviewed-accepted
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -47,7 +47,7 @@ evidence_refs:
 - governance/product/validation/software-tool-evidence-audit-20260715.md
 - artifacts/manifests/llm-tools-release-evidence-20260715.jsonl
 created_at: '2026-07-16'
-updated_at: '2026-07-26'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -58,6 +58,7 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: checked
+human_review_decision: defer
 ---
 
 # 软件工具制品隔离恢复演练 2026-07-16

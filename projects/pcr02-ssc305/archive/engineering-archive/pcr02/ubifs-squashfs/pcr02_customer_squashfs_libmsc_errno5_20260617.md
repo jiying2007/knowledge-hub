@@ -7,8 +7,8 @@
 ## Source
 
 - 当前会话排障和代码修改记录，范围包括：
-  - `~/pcr02_ssc305_compile/SourceCode/sdk/verify/xcrz_sigmastar_demo/modules/ai`
-  - `~/pcr02_ssc305_compile/SourceCode/sdk/verify/xcrz_sigmastar_demo/daemon`
+  - `~/pcr02_ssc305_compile/SourceCode/sdk/verify/gros/modules/ai`
+  - `~/pcr02_ssc305_compile/SourceCode/sdk/verify/gros/daemon`
   - `~/pcr02_ssc305_compile/SourceCode/project/pcr02_customer/prog_application.sh`
   - `~/pcr02_ssc305_compile/SourceCode/kernel/drivers/sstar/flash/nand/mdrv_spinand.c`
 - 串口日志摘要：

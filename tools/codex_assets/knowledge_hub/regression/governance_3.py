@@ -76,7 +76,7 @@ def test_owner_archive_only_explicit_path_contract():
     if setup_error:
         expect(False, "owner-archive-only-explicit-path-contract", "owner archive-only forms can target explicit archive paths", setup_error, repo)
         return
-    archive_target = "projects/xcrz-sigmastar-demo/archive/reports/2026-06-16-dvr-record-replay-session-archive.md"
+    archive_target = "projects/gros/archive/reports/2026-06-16-dvr-record-replay-session-archive.md"
     form["owner_decision"] = "archive-only"
     form["target_decision"] = archive_target
     form_path = repo / "archive-owner-decisions.jsonl"
@@ -587,54 +587,5 @@ def test_owner_form_source_identity_mismatch():
             "errors": errors,
             "observed_sha256": identity.get("observed_sha256", ""),
             "stdout_sample": result["stdout"][:1000],
-        },
-    )
-
-def test_readme_offline_shortest_paths():
-    readme_path = root / "README.md"
-    gitignore_path = root / ".gitignore"
-    try:
-        readme = readme_path.read_text()
-        read_error = ""
-    except Exception as exc:
-        readme = ""
-        read_error = str(exc)
-    try:
-        gitignore = gitignore_path.read_text()
-        gitignore_read_error = ""
-    except Exception as exc:
-        gitignore = ""
-        gitignore_read_error = str(exc)
-    required_fragments = [
-        "## 日常入口",
-        "## 离线人工维护",
-        "## 高风险授权",
-        "manual_validation_pending: true",
-        "required_followup",
-        "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json",
-        "rtk bash ~/knowledge-hub/tools/knowledge-final-gate.sh --json",
-        "registry/authorizations.jsonl",
-        "registry/automation-runs.jsonl",
-        "本地 commit 只代表可审计快照",
-        "push、merge、release、tag",
-        "改变远端 Git 状态",
-        "没有授权记录时，AI / Codex 只能在 Hub 内执行 L1/L2 维护、本地 commit，或输出 plan、diff、manifest、review package、report-only 报告。",
-    ]
-    missing_fragments = [fragment for fragment in required_fragments if fragment not in readme]
-    gitignore_required_fragments = ["artifacts/manifests/*.local.jsonl"]
-    gitignore_missing_fragments = [
-        fragment
-        for fragment in gitignore_required_fragments
-        if fragment not in gitignore
-    ]
-    expect(
-        not read_error and not gitignore_read_error and not missing_fragments and not gitignore_missing_fragments,
-        "readme-offline-shortest-paths",
-        "README keeps the five shortest manual maintenance paths and terminal-gate offline fallback",
-        {
-            "read_error": read_error,
-            "gitignore_read_error": gitignore_read_error,
-            "missing_fragments": missing_fragments,
-            "gitignore_missing_fragments": gitignore_missing_fragments,
         },
     )

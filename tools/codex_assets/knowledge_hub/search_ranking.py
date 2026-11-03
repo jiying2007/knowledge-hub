@@ -53,11 +53,21 @@ def status_priority(status: str) -> int:
 
 
 def is_historical_result(item: Mapping[str, Any], relative: str) -> bool:
-    return str(item.get("status", "")) in {
+    status = str(item.get("status", ""))
+    if status in {
         "archived",
         "superseded",
         "rejected",
-    } or "/archive/" in relative
+    }:
+        return True
+    # Provider captures reviewing candidates into an archive storage lane.
+    # That location is not a historical lifecycle decision. Legacy provenance
+    # and manually maintained archive documents retain the existing fallback.
+    source = item.get("source") or {}
+    candidate = (status in {"reviewing", "draft"} and isinstance(source, Mapping)
+                 and source.get("type") == "provider-candidate-archive"
+                 and item.get("promotion") == "none")
+    return "/archive/" in relative and not candidate
 
 
 def redact_internal_endpoints(value: str) -> Tuple[str, bool]:

@@ -13,8 +13,8 @@ source:
   from: workspace://gd32l235 and workspace://pcr02-ssc305 source diffs plus local build/static-check evidence captured 2026-07-22
   source_sha256: 6a7ef05a71d8bbf8f92a44fc886db51d9a1782dbbacb0c7224c36d81eaeea0ce
   temporary_source_retained: false
-review_after: '2026-08-22'
-review_status: human-reviewed-accepted
+review_after: '2026-11-07'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -35,7 +35,7 @@ evidence_refs:
 - projects/gd32l235/archive/design/2026-07-22-soc-mcu-power-transition-owner-tcpka.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-22'
-updated_at: '2026-07-26'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex
@@ -46,6 +46,13 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+successor_refs:
+- projects/gros/archive/reports/2026-07-22-pcr02-tcpka-low-power-protocol-v1.md
+- projects/gd32l235/current/soc-low-power-contract.md
+quality_flags:
+- historical-source-route-drift
+searchable: false
+human_review_decision: defer
 ---
 
 # GD32L235 与 PCR02 SoC 电源状态、TCPKA 和关机事务协同归档

@@ -7,7 +7,7 @@ from tools.codex_assets.knowledge_hub.common import registry_items
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-README = ROOT / "projects/xcrz-sigmastar-demo/README.md"
+README = ROOT / "projects/gros/README.md"
 
 IDENTITIES = {
     "pcr02-active-low-1-profile-switch-mode-20260729":

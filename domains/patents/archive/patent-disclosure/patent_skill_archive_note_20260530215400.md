@@ -2,7 +2,7 @@
 
 ## Source
 
-- Project: `xcrz_sigmastar_demo/examples/lvgl`
+- Project: `gros/examples/lvgl`
 - Date: 2026-05-30
 - Skill reference: `https://github.com/handsomestWei/patent-disclosure-skill`
 - Local reference clone: `/tmp/patent-disclosure-skill`

@@ -5,7 +5,6 @@
 | 项目 | evidence contract | 源码定位 |
 |---|---|---|
 | [PCR02 SSC305 SDK](../projects/pcr02-ssc305/README.md) | [evidence contract](../projects/pcr02-ssc305/validation/project-readiness.md) | `local-only` |
-| [XCRZ SigmaStar Demo](../projects/xcrz-sigmastar-demo/README.md) | [evidence contract](../projects/xcrz-sigmastar-demo/validation/project-readiness.md) | `local-only` |
 | [PCR02 API Module](../projects/pcr02-api/README.md) | [evidence contract](../projects/pcr02-api/validation/project-readiness.md) | `local-only` |
 | [PCR02 App Module](../projects/pcr02-app/README.md) | [evidence contract](../projects/pcr02-app/validation/project-readiness.md) | `local-only` |
 | [PCR02 HDI Module](../projects/pcr02-hdi/README.md) | [evidence contract](../projects/pcr02-hdi/validation/project-readiness.md) | `local-only` |
@@ -41,7 +40,7 @@
 
 ## 判定边界
 
-- structural coverage：34 项目均有一份 reviewing evidence contract；group 元数据不重复计入项目数。
+- structural coverage：33 项目均有一份 reviewing evidence contract；group 元数据不重复计入项目数。
 - source discovery：运行时从未跟踪的 `local/workspaces.json` 读取；本页不固化绝对路径、HEAD 或本机映射状态。
 - evidence readiness：由 product gate 按 owner、source、manual/device/platform/release evidence 独立判定。
 - lifecycle：不得从目录、表格、Obsidian Base 或 Graph 自动推断 active。

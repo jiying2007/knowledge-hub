@@ -14,8 +14,8 @@ source:
     captured 2026-07-23
   source_sha256: 65fe87aa4655a9fcc365cbe437d4d06c4cb0be44ad87c23089056fab64de3e76
   temporary_source_retained: false
-review_after: '2026-08-23'
-review_status: human-reviewed-accepted
+review_after: '2026-11-07'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -35,7 +35,7 @@ evidence_refs:
 - projects/gd32l235/archive/design/2026-07-23-sensor-rate-contract-and-50hz-fusion.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-23'
-updated_at: '2026-07-26'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex
@@ -46,6 +46,9 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+quality_flags:
+- historical-source-route-drift
+human_review_decision: defer
 ---
 
 # PCR02 SoC 与 GD32L235 传感器频率契约及 50 Hz 融合方案

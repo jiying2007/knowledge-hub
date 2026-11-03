@@ -5,6 +5,14 @@ related:
 - projects/llm-agent/README.md
 - indexes/obsidian-home.md
 - indexes/project-readiness.md
+subject_ref:
+  id: llm-agent
+  type: project
+created_subject_ref:
+  id: llm-agent
+  type: project
+principal_id: null
+provider_operation_id: 35135d5b2a455015f830b2a2d6b1a6fb7c2af971fa22949f096973e82fc5a993
 id: provider-llm-agent-35135d5b2a455015f830b2a2
 title: M5签名执行来源修复PR194交付回执
 kind: validation
@@ -20,7 +28,7 @@ source:
   source_sha256: 51e729cf451fe19b5ea102abf236974908228d1f3e4485de23498568703795c1
   temporary_source_retained: false
 review_after: '2027-01-09'
-review_status: manual-entry-pending-review
+review_status: identity-migration-pending-review
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -47,12 +55,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-subject_ref: &id001
-  id: llm-agent
-  type: project
-created_subject_ref: *id001
-principal_id: null
-provider_operation_id: 35135d5b2a455015f830b2a2d6b1a6fb7c2af971fa22949f096973e82fc5a993
 ---
 
 # M5 签名执行来源修复 PR194 交付回执

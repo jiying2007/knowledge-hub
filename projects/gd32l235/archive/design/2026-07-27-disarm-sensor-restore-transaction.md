@@ -19,8 +19,8 @@ source:
   from: workspace://gd32l235 and workspace://pcr02-ssc305 source diffs plus local validation captured 2026-07-27
   source_sha256: a7f6cfe732fa63863e10ebaa3c38dd8ddea6ec54cd6fa437fff73d468d0a977c
   temporary_source_retained: false
-review_after: '2026-08-27'
-review_status: manual-entry-pending-review
+review_after: '2026-11-07'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -43,7 +43,7 @@ evidence_refs:
 - projects/gd32l235/archive/design/2026-07-27-disarm-sensor-restore-transaction.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-27'
-updated_at: '2026-07-27'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex
@@ -54,6 +54,8 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+quality_flags:
+- historical-source-route-drift
 ---
 
 # GD32L235 与 PCR02 SoC DISARM 和传感器恢复事务归档

@@ -20,9 +20,9 @@ source:
   type: manual
   from: field-debug
   source_sha256: 2ac1a69b133b7de95805111872a589982dcbc531b60f61c3e0f7e6c1ac0065fc
-review_after: '2026-10-14'
-review_status: human-reviewed-accepted
-content_review_status: accepted
+review_after: '2026-11-07'
+review_status: periodic-review-scheduled-pending-content
+content_review_status: pending
 evidence_validation_status: pending
 promotion: none
 promotion_decision: none; capture does not authorize active promotion or owner decision
@@ -44,7 +44,7 @@ evidence_refs:
 - 同一最新固件下移除 LCD ESD 器件后显示恢复
 - 当前显示优化工作区与两份 patch 的反向应用校验
 created_at: '2026-07-14'
-updated_at: '2026-07-19'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -56,6 +56,8 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+quality_flags:
+- review-overdue
 ---
 
 # PCR02 ST77912 黑屏与 LCD ESD 根因记录

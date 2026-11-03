@@ -22,9 +22,9 @@ source:
   type: manual
   from: 本机已登记 source 的精确 Git commit 隔离验证
   source_sha256: 8d1325277b98b58725e6c4bc7d1c14b1b6a162e9586e86201d58ac585a849653
-review_after: '2026-10-15'
-review_status: human-reviewed-accepted
-content_review_status: accepted
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
+content_review_status: pending
 evidence_validation_status: pending
 promotion: none
 promotion_decision: none; capture does not authorize active promotion or owner decision
@@ -41,7 +41,7 @@ evidence_refs:
 - projects/llm-agent/validation/2026-07-15-exact-source-quick-gate-audit.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-15'
-updated_at: '2026-07-19'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex

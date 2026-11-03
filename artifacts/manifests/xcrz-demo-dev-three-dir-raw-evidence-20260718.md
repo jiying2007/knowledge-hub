@@ -1,8 +1,8 @@
 ---
 id: xcrz-demo-dev-three-dir-raw-evidence-20260718
-title: xcrz_sigmastar_demo_dev 三目录吸收冻结原始证据
+title: gros 三目录吸收冻结原始证据
 kind: validation
-domain: projects/xcrz-sigmastar-demo
+domain: projects/gros
 path: artifacts/manifests/xcrz-demo-dev-three-dir-raw-evidence-20260718.md
 scope: project-specific
 visibility: team-internal
@@ -34,7 +34,7 @@ artifact_refs:
 - /tmp/xcrz-demo-dev-docs-knowledge-scratch-20260718.tar.gz
 target_version: ba398e5a
 test_environment: Knowledge Hub host; source read-only audit plus exact-path deletion
-summary_zh: 逐文件审计并吸收 xcrz_sigmastar_demo_dev 的 docs、knowledge、scratch，保留未覆盖项目文档、嵌套知识仓精确远端引用与 scratch 可复用结论；完成门禁和回滚备份后删除三个精确目录。
+summary_zh: 逐文件审计并吸收 gros 的 docs、knowledge、scratch，保留未覆盖项目文档、嵌套知识仓精确远端引用与 scratch 可复用结论；完成门禁和回滚备份后删除三个精确目录。
 review_status: manual-entry-pending-review
 primary_language: zh-CN
 source_language: zh-CN
@@ -55,10 +55,10 @@ review_basis: null
 manual_validation_pending: true
 manual_validation_reason: 媒体休眠板测、50 轮压力、功耗和 Sensor 构建漂移尚未闭环；本条目不把历史计划或源 frontmatter 的 active 字样提升为当前事实。
 aliases:
-- xcrz_sigmastar_demo_dev 三目录完全吸收与删除验证
+- gros 三目录完全吸收与删除验证
 ---
 
-# xcrz_sigmastar_demo_dev 三目录完全吸收与删除验证
+# gros 三目录完全吸收与删除验证
 
 ## 结论
 
@@ -68,11 +68,11 @@ aliases:
 
 ## 归档元数据
 
-- Source：当前会话用户明确要求对 `workspace://xcrz-sigmastar-demo-dev/{docs,knowledge,scratch}` 完全吸收后删除；源身份和删除结果由逐文件 manifest、授权账本及恢复演练共同绑定。
-- Topic：`source-absorption` / `project-docs-closeout` / `xcrz-sigmastar-demo-dev`。
-- Archive Candidate Path：`projects/xcrz-sigmastar-demo/validation/2026-07-18-dev-copy-three-dir-absorption-validation.md`（本条目，唯一长期正文）。
+- Source：当前会话用户明确要求对 `workspace://gros-dev/{docs,knowledge,scratch}` 完全吸收后删除；源身份和删除结果由逐文件 manifest、授权账本及恢复演练共同绑定。
+- Topic：`source-absorption` / `project-docs-closeout` / `gros-dev`。
+- Archive Candidate Path：`projects/gros/validation/2026-07-18-dev-copy-three-dir-absorption-validation.md`（本条目，唯一长期正文）。
 - Captured At：`2026-07-18`；Last Verified：`2026-07-18`。
-- Sanitization：真实用户绝对路径改为 `workspace://xcrz-sigmastar-demo-dev`；不归档 secrets、raw session、完整脏工作树、core、日志、binary、cache 或 Git object 正文。
+- Sanitization：真实用户绝对路径改为 `workspace://gros-dev`；不归档 secrets、raw session、完整脏工作树、core、日志、binary、cache 或 Git object 正文。
 - Provenance：`artifacts/manifests/xcrz-demo-dev-three-dir-absorption-20260718.jsonl`、`auth-20260718-xcrz-demo-dev-docs-knowledge-scratch-absorb-delete`、`embedded/knowledge@cadbf4d6777319c8d43b15f842cbea002cd94cef`。
 - Verification：243/243 源文件删除前 hash 一致；删除后目标不存在；tar 隔离恢复 243/243 hash 一致；Knowledge Hub 主门禁通过。
 - Memory Candidate：`no`；本轮不写 `~/.codex/memories`，历史事实继续以 Hub 条目和 manifest 为准。
@@ -83,7 +83,7 @@ aliases:
 
 | 项目 | 证据 |
 | --- | --- |
-| 源根 | `workspace://xcrz-sigmastar-demo-dev`；绑定当前会话用户提供的绝对路径，长期正文按用户路径规则脱敏 |
+| 源根 | `workspace://gros-dev`；绑定当前会话用户提供的绝对路径，长期正文按用户路径规则脱敏 |
 | 外层 Git | branch `dev/camera_suspend_resume`，HEAD `ba398e5a`；三个目录在外层工作树中不属于可依赖的已提交正文 |
 | `docs` | 44 个文件；27 个已有 Hub hash/provenance，17 个在本文附录保留完整文本 |
 | `knowledge` | 191 个非 `.git` 文件；178 个非缓存文件由 `embedded/knowledge@cadbf4d` 精确保留，13 个 `.pyc` 排除 |

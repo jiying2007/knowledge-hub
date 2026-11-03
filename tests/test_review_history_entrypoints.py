@@ -29,7 +29,7 @@ def test_governance_history_navigation_keeps_authority_separate(required):
     ("禁用格式检查", "空头文件桩", "不得用关闭门禁或伪造依赖"),
 ])
 def test_project_snippet_findings_do_not_authorize_execution(required):
-    text = (ROOT / "projects/xcrz-sigmastar-demo/README.md").read_text(encoding="utf-8")
+    text = (ROOT / "projects/gros/README.md").read_text(encoding="utf-8")
     section = text.split("### IR 与 Diag：历史示例不得直接作为当前实现", 1)[1]
     assert all(value in section for value in required)
     assert "```" not in section

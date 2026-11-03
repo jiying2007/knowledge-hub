@@ -7,7 +7,7 @@ from tools.codex_assets.knowledge_hub.tool_asset_import_cli import main
 
 def _candidate(path: Path, **overrides):
     values = {
-        "source_repo": "xcrz-sigmastar-demo",
+        "source_repo": "gros",
         "source_commit": "0123456789abcdef0123456789abcdef01234567",
         "candidate_name": "pcr02-memory-baseline",
         "candidate_source_path": "codex_assets/tools/pcr02_memory_baseline.py",
@@ -67,12 +67,12 @@ def test_tool_asset_import_plans_metadata_only_candidate(tmp_path, capsys):
     payload = json.loads(capsys.readouterr().out)
 
     assert payload["status"] == "planned"
-    assert payload["candidate"]["project_id"] == "xcrz-sigmastar-demo"
+    assert payload["candidate"]["project_id"] == "gros"
     assert payload["raw_candidate_body_archived"] is False
     assert payload["source_code_copied"] is False
     assert payload["active_promotion"] is False
     paths = {row["path"] for row in payload["transaction"]["writes"]}
-    assert "projects/xcrz-sigmastar-demo/validation/tool-asset-candidate-2026-07-31-pcr02-memory-baseline.md" in paths
+    assert "projects/gros/validation/tool-asset-candidate-2026-07-31-pcr02-memory-baseline.md" in paths
     assert "registry/items.jsonl" in paths
 
 

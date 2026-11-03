@@ -41,6 +41,34 @@ def test_repository_obsidian_views_are_idempotent(tmp_path):
     assert applied["transaction"]["changed_count"] == 0
 
 
+@pytest.mark.parametrize("changed", [False, True])
+def test_projection_preserves_proven_wrapping_but_updates_real_metadata(tmp_path, changed):
+    from tools.codex_assets.knowledge_hub.store import RepositoryTransaction
+    from tools.codex_assets.knowledge_hub.common import split_frontmatter
+
+    (tmp_path / "registry").mkdir()
+    (tmp_path / "registry/projects.json").write_text('{"projects": []}\n')
+    path = "projects/p/current/note.md"
+    source = ("---\nid: managed-note\ntitle: Note\nstatus: reviewing\nowner: original\n"
+              "path: projects/p/current/note.md\nkind: runbook\ndomain: projects/p\n"
+              "summary_zh: '第一行\n  第二行'\naliases: [Note]\nrelated: [Peer]\n"
+              "---\n\n# Note\n\n正文保留。\n")
+    item, _ = split_frontmatter(source)
+    item.update(path=path, kind="runbook", domain="projects/p")
+    if changed:
+        item["owner"] = "updated"
+    transaction = RepositoryTransaction(tmp_path)
+    obsidian_view.stage_obsidian_views(tmp_path, transaction, items=[item],
+                                      document_overrides={path: source})
+    rendered = transaction.writes[path].content.decode()
+    if changed:
+        metadata, body = split_frontmatter(rendered)
+        assert metadata["owner"] == "updated"
+        assert body == split_frontmatter(source)[1]
+    else:
+        assert rendered == source
+
+
 def test_obsidian_runtime_acceptance_requires_real_gui_evidence(tmp_path):
     (tmp_path / "local").mkdir()
     assert obsidian_runtime_acceptance(tmp_path)["status"] == "not-validated"

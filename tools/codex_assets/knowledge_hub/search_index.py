@@ -27,6 +27,7 @@ from .search_core import (
     TOKEN_CACHE_SCHEMA_VERSION,
     _PersistentTokenCache,
     _governed_items_by_path,
+    _governed_paths_from_bytes,
     _index_tokens,
     _indexed_title,
     _metadata_haystack,
@@ -55,6 +56,24 @@ class SearchIndex:
         self._concept_vocabulary: Dict[str, int] = {}
         self._concept_document_count = 0
         self._concept_roles: Dict[str, Set[str]] = {}
+        self._governed_preparation: Optional[Tuple[str, Mapping[str, Sequence[Mapping[str, Any]]]]] = None
+
+    def _signature_for_index(self, previous_states=None, stats=None, *, force=False):
+        if force:
+            return _signature(self.root, previous_states=previous_states, stats=stats)
+        try:
+            raw = read_repository_bytes_bounded(
+                self.root, 'registry/items.jsonl', SEARCH_MAX_FILE_BYTES, 'search text file')
+            from .common import bytes_sha256
+            digest = bytes_sha256(raw)
+            cached = self._governed_preparation
+            prepared = cached[1] if cached is not None and cached[0] == digest else _governed_paths_from_bytes(self.root, raw)
+            result = _signature(self.root, previous_states=previous_states, stats=stats,
+                                prepared_items_by_path=prepared, prepared_registry_sha256=digest)
+        except (KnowledgeHubError, OSError) as exc:
+            raise SearchBoundaryError(str(exc)) from exc
+        self._governed_preparation = (digest, prepared)
+        return result
 
     def concept_query(self, query: str):
         from .query_concepts import corpus_lexicon, extract_concepts, project_routes, MAX_METADATA_BYTES, MAX_ITEMS
@@ -118,7 +137,7 @@ class SearchIndex:
                 fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
     def ensure(self, force: bool = False) -> Dict[str, Any]:
-        if not force:
+        if not force and self.path.exists():
             shared_lock_started = time.monotonic()
             with self._lock(exclusive=False):
                 shared_lock_wait_duration_ms = round(
@@ -128,8 +147,7 @@ class SearchIndex:
                 signature_started = time.monotonic()
                 indexed_states = self._indexed_file_states()
                 signature_stats: Dict[str, int] = {}
-                signature, paths, file_states = _signature(
-                    self.root,
+                signature, paths, file_states = self._signature_for_index(
                     previous_states=indexed_states,
                     stats=signature_stats,
                 )
@@ -163,10 +181,10 @@ class SearchIndex:
             signature_started = time.monotonic()
             indexed_states = None if force else self._indexed_file_states()
             exclusive_signature_stats: Dict[str, int] = {}
-            signature, paths, file_states = _signature(
-                self.root,
+            signature, paths, file_states = self._signature_for_index(
                 previous_states=indexed_states,
                 stats=exclusive_signature_stats,
+                force=force,
             )
             signature_duration_ms = round((time.monotonic() - signature_started) * 1000, 2)
             if not force and self._current_signature() == signature:

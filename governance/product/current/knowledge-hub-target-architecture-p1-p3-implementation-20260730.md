@@ -19,8 +19,8 @@ source:
   type: manual
   from: manual-entry:knowledge-new.sh
   source_sha256: 68775bd5dc006985341ca28b46ed04a033e262dacbdea74efdb8973dea650896
-review_after: '2026-10-30'
-review_status: manual-entry-pending-review
+review_after: '2026-11-30'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -38,7 +38,7 @@ evidence_refs:
 - governance/product/current/knowledge-hub-target-architecture-p1-p3-implementation-20260730.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-30'
-updated_at: '2026-07-31'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex

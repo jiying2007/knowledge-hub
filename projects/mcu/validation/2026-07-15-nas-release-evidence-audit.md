@@ -23,9 +23,9 @@ source:
   type: manual
   from: current-session read-only NAS release evidence audit under auth-20260715-knowledge-hub-terminal-maturity-full-closeout
   source_sha256: 21383d3c228cbf679e64e8ec1ed7ec35de74b1486fd8cf8889b7599425569f30
-review_after: '2026-10-15'
-review_status: human-reviewed-accepted
-content_review_status: accepted
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
+content_review_status: pending
 evidence_validation_status: pending
 promotion: none
 promotion_decision: none; capture does not authorize active promotion or owner decision
@@ -43,7 +43,7 @@ evidence_refs:
 - projects/mcu/validation/2026-07-15-nas-release-evidence-audit.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-15'
-updated_at: '2026-07-19'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex

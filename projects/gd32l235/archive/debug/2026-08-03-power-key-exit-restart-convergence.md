@@ -20,8 +20,8 @@ source:
   type: manual
   from: 本次会话代码审查、测试与用户提供的板级现象构成项目内调试来源。
   source_sha256: 2ac1a69b133b7de95805111872a589982dcbc531b60f61c3e0f7e6c1ac0065fc
-review_after: '2026-09-03'
-review_status: manual-entry-pending-review
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -41,13 +41,14 @@ evidence_refs:
 - projects/gd32l235/archive/debug/2026-08-03-power-key-exit-restart-convergence.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-08-03'
-updated_at: '2026-08-03'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-08-03'
 manual_validation_pending: true
-summary_zh: 拨动开关在 SOC 应用退出期间由 OFF 拨回 ON 时，旧逻辑会过早取消关机事务，导致 SOC 保持供电但应用不重启；当前软件以发送 POWER_KEY 为提交点，并在 PA11 为 ON 时通过 PA8 长按关机后再唤醒来收敛到新 APP_READY，板级波形仍待验证。
+summary_zh: 拨动开关在 SOC 应用退出期间由 OFF 拨回 ON 时，旧逻辑会过早取消关机事务，导致 SOC 保持供电但应用不重启；当前软件以发送 POWER_KEY 为提交点，并在 PA11 为 ON 时通过 PA8 长按关机后再唤醒来收敛到新
+  APP_READY，板级波形仍待验证。
 primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required

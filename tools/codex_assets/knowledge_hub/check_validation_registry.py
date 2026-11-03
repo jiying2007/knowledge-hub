@@ -268,6 +268,11 @@ def _registry_rest_4(ctx):
         for field in ['remote_key', 'remote_kind', 'workspace_ref', 'groups', 'lifecycle', 'status']:
             if field in {'remote_key', 'remote_kind'} and repo.get('identity_kind') == 'local' and repo.get('local_identity'):
                 continue
+            if field == 'groups':
+                if field not in repo or not isinstance(repo[field], list) or any(not isinstance(group, str) or not group for group in repo[field]):
+                    ctx['errors'].append(f'repositories:{repo_id} invalid or missing groups list')
+                    ctx['route_registry_health']['invalid_reference_count'] += 1
+                continue
             if repo.get(field) in ('', None, []):
                 ctx['errors'].append(f'repositories:{repo_id} missing {field}')
                 ctx['route_registry_health']['invalid_reference_count'] += 1

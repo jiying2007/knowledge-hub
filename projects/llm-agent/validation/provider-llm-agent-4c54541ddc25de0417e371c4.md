@@ -5,6 +5,14 @@ related:
 - projects/llm-agent/README.md
 - indexes/obsidian-home.md
 - indexes/project-readiness.md
+subject_ref:
+  id: llm-agent
+  type: project
+created_subject_ref:
+  id: llm-agent
+  type: project
+principal_id: null
+provider_operation_id: 4c54541ddc25de0417e371c4af37271083f1eabebc65ad2bca6e21987242c74e
 id: provider-llm-agent-4c54541ddc25de0417e371c4
 title: M5合并与本机一次性runtime准备
 kind: validation
@@ -20,7 +28,7 @@ source:
   source_sha256: 0cc2acffd34872571551451a3cb30ccfffa0e1666b556105fa8946af70da950a
   temporary_source_retained: false
 review_after: '2027-01-09'
-review_status: manual-entry-pending-review
+review_status: identity-migration-pending-review
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -47,12 +55,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-subject_ref: &id001
-  id: llm-agent
-  type: project
-created_subject_ref: *id001
-principal_id: null
-provider_operation_id: 4c54541ddc25de0417e371c4af37271083f1eabebc65ad2bca6e21987242c74e
 ---
 
 # M5 合并与本机一次性 runtime 准备

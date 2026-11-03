@@ -74,7 +74,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - `pcr02-project-docs/runbooks/asan-debug-guide.md historical owner signoff package`: 历史 owner 签收材料，已由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md` 取代：`artifacts/manifests/pcr02-asan-owner-ready-package-20260620.md`。
 - `pcr02-project-docs/runbooks/memory-auto-curation-guide.md`: report-only 治理证据：`artifacts/manifests/memory-auto-curation-report-only-governance-20260618.md`。
 - `pcr02-project-docs/runbooks/memory-auto-curation-guide.md historical owner signoff package`: 历史 owner 签收材料，已由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md` 取代：`artifacts/manifests/pcr02-memory-auto-curation-owner-ready-package-20260620.md`。
-- `pcr02-project-docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`: DVR plan 历史收口证据：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`；终态目标为 `projects/xcrz-sigmastar-demo/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`。
+- `pcr02-project-docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`: DVR plan 历史收口证据：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`；终态目标为 `projects/gros/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`。
 - `pcr02-project-docs/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md historical owner signoff package`: 历史 owner 签收材料，已由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md` 取代：`artifacts/manifests/pcr02-dvr-plan-owner-ready-package-20260620.md`。
 - `pcr02-project-docs/reports/2026-05-29-motor-mcu-debug-record.md`: motor MCU 事实拆分和 archive-only 边界：`artifacts/manifests/pcr02-dvr-motor-closeout-targets-20260618.md`。
 - `pcr02-project-docs/reports/2026-05-29-motor-mcu-debug-record.md historical owner signoff package`: 历史 owner 签收材料，已由 `artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md` 取代：`artifacts/manifests/pcr02-motor-mcu-owner-ready-package-20260620.md`。
@@ -103,10 +103,10 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - `pcr02-project-docs owner resolution schema`: owner decision 字段、枚举和非法组合：`artifacts/manifests/pcr02-owner-resolution-schema-20260618.md`。
 - `pcr02-project-docs owner decision landing`: 7 条 owner gate 人工授权决策落地：`artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`。
 - `pcr02-project-docs source control`: Hub 内 source 主控目录：`sources/pcr02-project-docs/README.md`、`sources/pcr02-project-docs/inventory.jsonl`、`sources/pcr02-project-docs/coverage.md`、`sources/pcr02-project-docs/source-policy.md`。
-- `pcr02-project-docs ASAN owner target`: `projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md`，registry item `pcr02-asan-debug-guide-project-local-20260624`。
-- `pcr02-project-docs DVR plan owner target`: `projects/xcrz-sigmastar-demo/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`，registry item `pcr02-dvr-plan-archive-only-20260624`。
-- `pcr02-project-docs motor MCU owner target`: `projects/xcrz-sigmastar-demo/archive/reports/2026-05-29-motor-mcu-debug-record.md`，registry item `pcr02-motor-mcu-debug-record-archive-only-20260624`。
-- `pcr02-project-docs DVR session owner target`: `projects/xcrz-sigmastar-demo/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`，registry item `pcr02-dvr-session-archive-only-20260624`。
+- `pcr02-project-docs ASAN owner target`: `projects/gros/archive/historical-current/runbooks/asan-debug-guide.md`，registry item `pcr02-asan-debug-guide-project-local-20260624`。
+- `pcr02-project-docs DVR plan owner target`: `projects/gros/archive/plans/2026-06-15-dvr-record-proto-sensor-decoupling-plan.md`，registry item `pcr02-dvr-plan-archive-only-20260624`。
+- `pcr02-project-docs motor MCU owner target`: `projects/gros/archive/reports/2026-05-29-motor-mcu-debug-record.md`，registry item `pcr02-motor-mcu-debug-record-archive-only-20260624`。
+- `pcr02-project-docs DVR session owner target`: `projects/gros/archive/reports/2026-06-16-dvr-record-replay-session-archive.md`，registry item `pcr02-dvr-session-archive-only-20260624`。
 - `pcr02-project-docs governance closeout`: 可恢复 handoff：`artifacts/manifests/pcr02-governance-handoff-20260618.md`。
 - `registry/items.jsonl`、`indexes/by-*.md`: PCR02 control-plane closeout audit：`artifacts/manifests/pcr02-docs-governance-closeout-20260618.md`。
 - `codex-memories`: runtime input；不迁移 raw memory，不写 `~/.codex/memories/**`，只在 Hub 生成候选、摘要或人工复核记录。
@@ -117,7 +117,7 @@ rtk bash ~/knowledge-hub/tools/knowledge-index-plan.sh --section source --json
 - `codex-archive/control-archives` and `codex-archive/tools`: 3 个 provenance-only 旧正文已按授权删除并保留 tombstone：`artifacts/manifests/codex-archive-removal-execution-20260710.md`。
 - `codex-archive/debug-notes/20260516-222503-windows-builder-runbook.md`: 已迁移为 llm_tools Windows builder runbook 候选归档，旧正文已按授权删除并保留 tombstone；目标为 archive-only，不声明 current verified：`artifacts/manifests/codex-archive-removal-execution-20260710-migrated-extract-first.md`。
 - `codex-archive/release-governance/20260516-225144-llm-tools-release-governance-20260516.md`: 已迁移为 llm_tools release governance archive-only 历史记录，旧正文已按授权删除并保留 tombstone：`artifacts/manifests/codex-archive-removal-execution-20260710-migrated-extract-first.md`。
-- `codex-archive/research-notes/20260514-102409-dual-screen-animation-analysis.md`: 已迁移为 xcrz_sigmastar_demo dual-screen historical analysis，旧正文已按授权删除并保留 tombstone：`artifacts/manifests/codex-archive-removal-execution-20260710-migrated-extract-first.md`。
+- `codex-archive/research-notes/20260514-102409-dual-screen-animation-analysis.md`: 已迁移为 gros dual-screen historical analysis，旧正文已按授权删除并保留 tombstone：`artifacts/manifests/codex-archive-removal-execution-20260710-migrated-extract-first.md`。
 - `codex-archive/_registry/schema.md`: legacy archive schema 正文已按授权删除并保留 tombstone；当前权威是 `registry/schema.md`：`artifacts/manifests/codex-archive-removal-execution-20260710-covered-tombstone-001-003.md`。
 - `codex-archive/archive-governance/20260519-221757-archive-quality-remediation.md`: 旧 archive governance 过程记录已按授权删除并保留 tombstone-only provenance：`artifacts/manifests/codex-archive-removal-execution-20260710-covered-tombstone-001-003.md`。
 - `codex-archive/diag-architecture/20260510-000000-diag-command-architecture-v4-conclusion.md`: PCR02 diag v4 旧收口正文已按授权删除并保留 tombstone；当前设计权威是 PCR02 decision/spec：`artifacts/manifests/codex-archive-removal-execution-20260710-covered-tombstone-001-003.md`。

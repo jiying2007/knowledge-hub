@@ -24,7 +24,7 @@ ai_model_or_tool: Codex
 ai_generated_at: '2026-07-09'
 manual_validation_pending: false
 summary_zh: 压实 Codex archive phased migration/removal 台账中的三条 extract-first 记录：迁移 llm_tools Windows 构建机 runbook、llm_tools 发布治理历史记录和
-  xcrz_sigmastar_demo 双屏动画历史分析；旧 Codex archive 正文仍未删除。
+  gros 双屏动画历史分析；旧 Codex archive 正文仍未删除。
 primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
@@ -45,12 +45,12 @@ promotion_decision: explicit human lifecycle decision delegated to Codex; direct
 | --- | --- | --- |
 | `debug-notes/20260516-222503-windows-builder-runbook.md` | `projects/llm-tools/current/runbooks/windows-builder-runbook.md` | migrated-reviewing |
 | `release-governance/20260516-225144-llm-tools-release-governance-20260516.md` | `projects/llm-tools/archive/release/2026-05-16-llm-tools-release-governance.md` | migrated-archive-only |
-| `research-notes/20260514-102409-dual-screen-animation-analysis.md` | `projects/xcrz-sigmastar-demo/archive/reports/2026-05-14-dual-screen-animation-analysis.md` | migrated-archive-only |
+| `research-notes/20260514-102409-dual-screen-animation-analysis.md` | `projects/gros/archive/reports/2026-05-14-dual-screen-animation-analysis.md` | migrated-archive-only |
 
 ## 子代理证据
 
 - llm-tools 子代理结论：`projects/llm-tools` 已注册但只有 README；两条旧 llm_tools archive 未被 canonical 覆盖，应迁移后再允许旧正文进入删除前候选。
-- xcrz-sigmastar-demo 子代理结论：双屏动画分析无等价 Hub 覆盖，目标应为 `projects/xcrz-sigmastar-demo/archive/reports/`，且只能作为 historical code analysis。
+- gros 子代理结论：双屏动画分析无等价 Hub 覆盖，目标应为 `projects/gros/archive/reports/`，且只能作为 historical code analysis。
 - governance 子代理结论：当前 phased 台账不足以直接支持删除；本批只能做迁移/预检，不删除旧正文。
 
 ## 删除阻塞
@@ -70,7 +70,7 @@ promotion_decision: explicit human lifecycle decision delegated to Codex; direct
 
 - `projects/llm-tools/current/runbooks/windows-builder-runbook.md` 仍为 `reviewing`，不是 active/current verified。
 - `projects/llm-tools/archive/release/2026-05-16-llm-tools-release-governance.md` 仍为 archive-only 历史记录。
-- `projects/xcrz-sigmastar-demo/archive/reports/2026-05-14-dual-screen-animation-analysis.md` 仍为 historical code analysis。
+- `projects/gros/archive/reports/2026-05-14-dual-screen-animation-analysis.md` 仍为 historical code analysis。
 
 ## 验证计划
 
@@ -79,5 +79,5 @@ rtk jq -c . artifacts/manifests/codex-archive-migration-preflight-20260709.jsonl
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "llm_tools Windows 构建机 Runbook"
 rtk bash ~/knowledge-hub/tools/knowledge-search.sh "Sigmastar 双屏动画实现分析"
 rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run
-rtk rg -n "(?i)(password|token|cookie|private[_ -]?key|secret)\\s*[:=]" projects/llm-tools/current/runbooks/windows-builder-runbook.md projects/llm-tools/archive/release/2026-05-16-llm-tools-release-governance.md projects/xcrz-sigmastar-demo/archive/reports/2026-05-14-dual-screen-animation-analysis.md artifacts/manifests/codex-archive-migration-preflight-20260709.md artifacts/manifests/codex-archive-migration-preflight-20260709.jsonl
+rtk rg -n "(?i)(password|token|cookie|private[_ -]?key|secret)\\s*[:=]" projects/llm-tools/current/runbooks/windows-builder-runbook.md projects/llm-tools/archive/release/2026-05-16-llm-tools-release-governance.md projects/gros/archive/reports/2026-05-14-dual-screen-animation-analysis.md artifacts/manifests/codex-archive-migration-preflight-20260709.md artifacts/manifests/codex-archive-migration-preflight-20260709.jsonl
 ```

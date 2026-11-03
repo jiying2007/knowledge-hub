@@ -310,7 +310,7 @@ Done criteria:
 
 Actions:
 
-1. Decide whether IMSSV05C13 should continue with `xcrz_sigmastar_demo` priority or move to `gros`.
+1. Decide whether IMSSV05C13 should continue with `gros` priority or move to `gros`.
 2. Port application build integration and resource installation.
 3. Port `/customer/etc/version.ini` generation and install path.
 4. Port runtime path, library, debug, ADB/SSH, and I/O mitigation behavior.

@@ -28,6 +28,7 @@ MAX_HASH_BYTES = 128 * 1024 * 1024
 MAX_INVENTORY_ROWS = 10000
 MAX_INVENTORY_LINE_BYTES = 65536
 MAX_INVENTORY_FILE_BYTES = 2 * 1024 * 1024
+MAX_REGISTRY_FILE_BYTES = 16 * 1024 * 1024
 
 
 def _require_hub_file(root: pathlib.Path, path: pathlib.Path) -> None:
@@ -55,9 +56,10 @@ def _unique_metadata_object(pairs):
     return result
 
 
-def _jsonl(root: pathlib.Path, path: pathlib.Path) -> list:
+def _jsonl(root: pathlib.Path, path: pathlib.Path, maximum_bytes=None) -> list:
     _require_hub_file(root, path)
-    if path.stat().st_size > MAX_INVENTORY_FILE_BYTES:
+    limit = MAX_INVENTORY_FILE_BYTES if maximum_bytes is None else maximum_bytes
+    if path.stat().st_size > limit:
         raise KnowledgeHubError("convergence ledger file exceeds byte budget: " + path.name)
     rows = []
     total_bytes = 0
@@ -68,7 +70,7 @@ def _jsonl(root: pathlib.Path, path: pathlib.Path) -> list:
             if not raw:
                 break
             total_bytes += len(raw)
-            if total_bytes > MAX_INVENTORY_FILE_BYTES:
+            if total_bytes > limit:
                 raise KnowledgeHubError("convergence ledger file exceeds byte budget: " + path.name)
             if len(raw) > MAX_INVENTORY_LINE_BYTES:
                 raise KnowledgeHubError("convergence ledger line exceeds budget: " + path.name)
@@ -86,7 +88,7 @@ def _jsonl(root: pathlib.Path, path: pathlib.Path) -> list:
 def registry_private_roots(root: pathlib.Path) -> Set[str]:
     """Bounded registry privacy roots; never export this internal set."""
     private_roots = {"notes/personal"}
-    for row in _jsonl(root, root / "registry/items.jsonl"):
+    for row in _jsonl(root, root / "registry/items.jsonl", MAX_REGISTRY_FILE_BYTES):
         status, visibility = row.get("status"), row.get("visibility")
         if (not isinstance(status, str) or status not in ALLOWED_STATUSES
                 or visibility not in ("team-internal", "personal-local")):

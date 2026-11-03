@@ -24,7 +24,7 @@ tags:
   - report-only
 related:
   - domains/codex/README.md
-  - projects/xcrz-sigmastar-demo/archive/reports/2026-07-09-codex-history-backfill-engineering-findings.md
+  - projects/gros/archive/reports/2026-07-09-codex-history-backfill-engineering-findings.md
 validation_refs:
   - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run
   - rtk rg -n "近一个月 Codex 使用记录与可归档候选审计" artifacts/manifests/codex-usage-archive-candidate-audit-20260728.md
@@ -104,27 +104,27 @@ review_basis:
 
 | 候选 | 可复用结论 | 证据 | 风险 | Confidence | Write route | 下次为何有用 |
 | --- | --- | --- | --- | --- | --- | --- |
-| 讯飞 `libmsc.so` Lua RPC Use-After-Free core 分析 | 同步 Lua RPC 等待方提前释放 proto/同步上下文，队列消费者随后访问已释放对象；第三方库符号可信，主程序 BuildID 不匹配 | session `019f9397-6a5d-7dd0-b796-a5f9a1487b9c`；core/GDB/BuildID 定向分析 | high；不得保存 core 或完整栈，业务调用方仍待匹配构建 | high for library root cause / medium for caller | `projects/xcrz-sigmastar-demo/archive/debug/` | 后续 AI voice 随机崩溃可先核对 RPC 生命周期与 BuildID，避免误归因 glibc |
-| Agora 下行音频拥塞、SHM `STARVE` 与丢尾音 | 128 深度任务队列拥塞和 4 帧 SHM ring 强制回收分别造成断续；`STREAM_END` 后过早收尾造成尾音丢失 | session `019f5b80-6445-7440-90d2-5037ca2c2ff9`；两组运行日志与源码链路 | medium；需脱敏日志并补板级复测 | high | `projects/xcrz-sigmastar-demo/archive/debug/` | 后续音频断续、丢尾音、RTC 正常但播放异常时可快速区分队列、SHM 和结束时序 |
-| 扫码成功但界面未切换的跨模块状态机缺口 | WiFi 配网实际已开始，但二维码显示缺少确定的 `NETWORK_CONNECTING` 切换；sensor 只适合有限兜底，task/IOT 应负责业务编排 | session `019f2106-845d-72a2-94f9-3de0e6fbcd7a`；日志、源码、sensor 定向构建 | medium；task 无源码，最终 owner 边界尚未闭环 | high for observed gap / medium for final ownership | `projects/xcrz-sigmastar-demo/archive/debug/`，必要时关联 decision candidate | 下次“网络已连但 UI 未动”的概率性问题可按三条异步链路定位 |
-| 老化健康位图与 MCU/SoC 上报超时契约 | MCU 变化触发/低频保底上报与 SoC 5 秒 stale 超时冲突；普通健康项调整到 20 秒，WiFi/IR 特殊语义不能机械统一 | session `019f6ff1-9fa8-71a1-8b2a-e8019fbf1a54`；MCU 与 `app_product_test` 跨仓核对和构建 | medium；需确认源仓提交、设备回归和特殊项边界 | high | `projects/xcrz-sigmastar-demo/decisions/` 或 `archive/design/`，关联 MCU 项目 | 后续老化假失败、健康帧节流或跨 MCU/SoC 超时变更可复用同一契约 |
+| 讯飞 `libmsc.so` Lua RPC Use-After-Free core 分析 | 同步 Lua RPC 等待方提前释放 proto/同步上下文，队列消费者随后访问已释放对象；第三方库符号可信，主程序 BuildID 不匹配 | session `019f9397-6a5d-7dd0-b796-a5f9a1487b9c`；core/GDB/BuildID 定向分析 | high；不得保存 core 或完整栈，业务调用方仍待匹配构建 | high for library root cause / medium for caller | `projects/gros/archive/debug/` | 后续 AI voice 随机崩溃可先核对 RPC 生命周期与 BuildID，避免误归因 glibc |
+| Agora 下行音频拥塞、SHM `STARVE` 与丢尾音 | 128 深度任务队列拥塞和 4 帧 SHM ring 强制回收分别造成断续；`STREAM_END` 后过早收尾造成尾音丢失 | session `019f5b80-6445-7440-90d2-5037ca2c2ff9`；两组运行日志与源码链路 | medium；需脱敏日志并补板级复测 | high | `projects/gros/archive/debug/` | 后续音频断续、丢尾音、RTC 正常但播放异常时可快速区分队列、SHM 和结束时序 |
+| 扫码成功但界面未切换的跨模块状态机缺口 | WiFi 配网实际已开始，但二维码显示缺少确定的 `NETWORK_CONNECTING` 切换；sensor 只适合有限兜底，task/IOT 应负责业务编排 | session `019f2106-845d-72a2-94f9-3de0e6fbcd7a`；日志、源码、sensor 定向构建 | medium；task 无源码，最终 owner 边界尚未闭环 | high for observed gap / medium for final ownership | `projects/gros/archive/debug/`，必要时关联 decision candidate | 下次“网络已连但 UI 未动”的概率性问题可按三条异步链路定位 |
+| 老化健康位图与 MCU/SoC 上报超时契约 | MCU 变化触发/低频保底上报与 SoC 5 秒 stale 超时冲突；普通健康项调整到 20 秒，WiFi/IR 特殊语义不能机械统一 | session `019f6ff1-9fa8-71a1-8b2a-e8019fbf1a54`；MCU 与 `app_product_test` 跨仓核对和构建 | medium；需确认源仓提交、设备回归和特殊项边界 | high | `projects/gros/decisions/` 或 `archive/design/`，关联 MCU 项目 | 后续老化假失败、健康帧节流或跨 MCU/SoC 超时变更可复用同一契约 |
 
 ### P1：建议逐条复核后归档
 
 | 候选 | 可复用结论 | 证据 | 风险 | Confidence | Write route | 下次为何有用 |
 | --- | --- | --- | --- | --- | --- | --- |
-| ZMQ context 生命周期崩溃 | `ctx_t::send_command()` 在 `ctx->slots[tid]` 取 mailbox 时崩溃，优先检查 context 失效、socket 跨生命周期或 registry 复用，不应只归因 `libzmq` | session `019f217a-de44-7d63-9a26-10e51cffbcb0`；反汇编与源码只读分析 | high；缺 core、寄存器和设备 BuildID，结论是高质量推断而非最终根因 | medium | `projects/xcrz-sigmastar-demo/archive/debug/` | 后续 ZMQ 内部崩溃可复用符号可信度和 context/mailbox 排查顺序 |
-| DVR 回放 SD 热拔插异常闭环 | 物理拔卡、轮询检测、卸载/格式化、暂停唤醒、handle 关闭和 `END_ERROR` 上报已形成完整代码闭环 | session `019f63de-5667-7951-8b3e-0ce1e55c3142`；代码复审、格式和构建门禁 | medium；缺真机 PLAY/PAUSE/SEEK 热拔插矩阵 | high for code / low for hardware acceptance | `projects/xcrz-sigmastar-demo/validation/` | 后续 DVR/SD 异常回归可直接复用状态矩阵和验收缺口 |
-| AI 音频 stream 顺序与 EOF 语义 | 同一 SHM channel 正常保持 `START/DATA/END` 顺序；主要风险是丢帧、seq 跳号、新旧流交叉和缺少 `stream_id`；`Parser read failed: 1` 实为正常 EOF | sessions `019f50b9-16f3-7523-8220-0079d25fe813`、`019f5a5d-4503-7403-b644-4538bdcab3cb` | medium；需板端验证 EOF 日志消失且 drain 事件保持 | high for code semantics | `projects/xcrz-sigmastar-demo/archive/design/` 或 `validation/` | 后续音频乱序、丢帧和 EOF 告警可区分协议缺口与正常结束 |
-| 电机标定静态信息缓存语义 | `read_ok=true` 与 `status_value` 分离；成功读取“未标定”也应缓存，只重试失败侧，避免左右电机重复查询 | session `019f64ba-488c-7000-816b-c9daf687344d`；编译期断言与模块/应用构建 | medium；需设备启动和主动重标定复测 | high for code / medium overall | `projects/xcrz-sigmastar-demo/archive/design/` 或 `validation/` | 可复用到其他“读取成功但值为 false/0”的静态信息缓存设计 |
-| 产测电机 Hall 校准前置事务 | 所有 HallCalibration 调用统一执行 `ClearFault → Estop → HallCalibration`，前置失败记录诊断但不阻断校准 | session `019f93d1-d685-78d1-b6c3-c0f9ebb24564`；三处调用点扫描和联合构建 | medium；需板级确认左右/both 目标与故障态行为 | high for code / medium overall | `projects/xcrz-sigmastar-demo/validation/` | 后续产测、维修工具和交互命令可使用同一校准前置契约 |
-| QR_CODE_SN 非法字符诊断 | 长度 17 已通过但 `reason=char` 表示白名单失败；诊断应只记录非法位置和字节，不打印完整 SN | session `019fa81a-c46a-7750-917f-516e5153adb0`；日志与校验源码 | low；需核对设备 BuildID 和上位机实际 protobuf 字节 | high for validator semantics | `projects/xcrz-sigmastar-demo/archive/debug/` 或产测 runbook | 后续扫码枪结束符、大小写和混淆字符问题可快速定位且避免泄露完整 SN |
+| ZMQ context 生命周期崩溃 | `ctx_t::send_command()` 在 `ctx->slots[tid]` 取 mailbox 时崩溃，优先检查 context 失效、socket 跨生命周期或 registry 复用，不应只归因 `libzmq` | session `019f217a-de44-7d63-9a26-10e51cffbcb0`；反汇编与源码只读分析 | high；缺 core、寄存器和设备 BuildID，结论是高质量推断而非最终根因 | medium | `projects/gros/archive/debug/` | 后续 ZMQ 内部崩溃可复用符号可信度和 context/mailbox 排查顺序 |
+| DVR 回放 SD 热拔插异常闭环 | 物理拔卡、轮询检测、卸载/格式化、暂停唤醒、handle 关闭和 `END_ERROR` 上报已形成完整代码闭环 | session `019f63de-5667-7951-8b3e-0ce1e55c3142`；代码复审、格式和构建门禁 | medium；缺真机 PLAY/PAUSE/SEEK 热拔插矩阵 | high for code / low for hardware acceptance | `projects/gros/validation/` | 后续 DVR/SD 异常回归可直接复用状态矩阵和验收缺口 |
+| AI 音频 stream 顺序与 EOF 语义 | 同一 SHM channel 正常保持 `START/DATA/END` 顺序；主要风险是丢帧、seq 跳号、新旧流交叉和缺少 `stream_id`；`Parser read failed: 1` 实为正常 EOF | sessions `019f50b9-16f3-7523-8220-0079d25fe813`、`019f5a5d-4503-7403-b644-4538bdcab3cb` | medium；需板端验证 EOF 日志消失且 drain 事件保持 | high for code semantics | `projects/gros/archive/design/` 或 `validation/` | 后续音频乱序、丢帧和 EOF 告警可区分协议缺口与正常结束 |
+| 电机标定静态信息缓存语义 | `read_ok=true` 与 `status_value` 分离；成功读取“未标定”也应缓存，只重试失败侧，避免左右电机重复查询 | session `019f64ba-488c-7000-816b-c9daf687344d`；编译期断言与模块/应用构建 | medium；需设备启动和主动重标定复测 | high for code / medium overall | `projects/gros/archive/design/` 或 `validation/` | 可复用到其他“读取成功但值为 false/0”的静态信息缓存设计 |
+| 产测电机 Hall 校准前置事务 | 所有 HallCalibration 调用统一执行 `ClearFault → Estop → HallCalibration`，前置失败记录诊断但不阻断校准 | session `019f93d1-d685-78d1-b6c3-c0f9ebb24564`；三处调用点扫描和联合构建 | medium；需板级确认左右/both 目标与故障态行为 | high for code / medium overall | `projects/gros/validation/` | 后续产测、维修工具和交互命令可使用同一校准前置契约 |
+| QR_CODE_SN 非法字符诊断 | 长度 17 已通过但 `reason=char` 表示白名单失败；诊断应只记录非法位置和字节，不打印完整 SN | session `019fa81a-c46a-7750-917f-516e5153adb0`；日志与校验源码 | low；需核对设备 BuildID 和上位机实际 protobuf 字节 | high for validator semantics | `projects/gros/archive/debug/` 或产测 runbook | 后续扫码枪结束符、大小写和混淆字符问题可快速定位且避免泄露完整 SN |
 
 ## 已覆盖，不建议重复归档
 
 | 主题 | 现有覆盖 | 处理建议 |
 | --- | --- | --- |
-| QMI8658 校准、老化门禁、AI/HDI 性能 | `projects/xcrz-sigmastar-demo/archive/reports/2026-07-09-codex-history-backfill-engineering-findings.md` | 只补关联，不重写同类总览 |
+| QMI8658 校准、老化门禁、AI/HDI 性能 | `projects/gros/archive/reports/2026-07-09-codex-history-backfill-engineering-findings.md` | 只补关联，不重写同类总览 |
 | `prog_pcr02` 高负载、`cmd_server`、IMU/TOF 调度 | 2026-07-02、07-10、07-21、07-24 的 high-load/debug/validation 条目 | 新证据追加到对应时间线 |
 | 光敏、IR、1/30fps 和 ACTIVE_LOW_1 | 既有 AOV/光敏分析及 2026-07-27 至 07-28 pipeline/decision/validation 候选 | 不再从旧会话回填重复原理 |
 | MCU/SoC 低功耗、TCPKA、shutdown、WiFi wake | 2026-07-22 至 07-28 的 current/decision/archive/debug 条目 | 继续走现有 owner/HIL 门禁 |
@@ -188,20 +188,20 @@ review_basis:
 
 | Registry ID | 类型 | 落盘路径 |
 | --- | --- | --- |
-| `pcr02-libmsc-lua-rpc-use-after-free-20260724` | debug | `projects/xcrz-sigmastar-demo/archive/debug/2026-07-24-libmsc-lua-rpc-use-after-free.md` |
-| `pcr02-agora-downlink-audio-starve-tail-loss-20260713` | debug | `projects/xcrz-sigmastar-demo/archive/debug/2026-07-13-agora-downlink-audio-starve-tail-loss.md` |
-| `pcr02-wifi-provision-display-state-gap-20260702` | debug | `projects/xcrz-sigmastar-demo/archive/debug/2026-07-02-wifi-provision-display-state-gap.md` |
-| `pcr02-aging-health-report-timeout-contract-20260717` | architecture | `projects/xcrz-sigmastar-demo/archive/design/2026-07-17-aging-health-report-timeout-contract.md` |
-| `pcr02-zmq-context-mailbox-lifecycle-crash-20260702` | debug | `projects/xcrz-sigmastar-demo/archive/debug/2026-07-02-zmq-context-mailbox-lifecycle-crash.md` |
-| `pcr02-dvr-replay-sd-hot-unplug-closure-20260715` | validation | `projects/xcrz-sigmastar-demo/validation/2026-07-15-dvr-replay-sd-hot-unplug-closure.md` |
-| `pcr02-ai-audio-stream-order-eof-contract-20260713` | architecture | `projects/xcrz-sigmastar-demo/archive/design/2026-07-13-ai-audio-stream-order-eof-contract.md` |
-| `pcr02-motor-calibration-static-info-cache-20260715` | validation | `projects/xcrz-sigmastar-demo/validation/2026-07-15-motor-calibration-static-info-cache.md` |
-| `pcr02-motor-hall-calibration-prestart-transaction-20260724` | validation | `projects/xcrz-sigmastar-demo/validation/2026-07-24-motor-hall-calibration-prestart-transaction.md` |
-| `pcr02-qr-code-sn-character-validation-20260728` | debug | `projects/xcrz-sigmastar-demo/archive/debug/2026-07-28-qr-code-sn-character-validation.md` |
+| `pcr02-libmsc-lua-rpc-use-after-free-20260724` | debug | `projects/gros/archive/debug/2026-07-24-libmsc-lua-rpc-use-after-free.md` |
+| `pcr02-agora-downlink-audio-starve-tail-loss-20260713` | debug | `projects/gros/archive/debug/2026-07-13-agora-downlink-audio-starve-tail-loss.md` |
+| `pcr02-wifi-provision-display-state-gap-20260702` | debug | `projects/gros/archive/debug/2026-07-02-wifi-provision-display-state-gap.md` |
+| `pcr02-aging-health-report-timeout-contract-20260717` | architecture | `projects/gros/archive/design/2026-07-17-aging-health-report-timeout-contract.md` |
+| `pcr02-zmq-context-mailbox-lifecycle-crash-20260702` | debug | `projects/gros/archive/debug/2026-07-02-zmq-context-mailbox-lifecycle-crash.md` |
+| `pcr02-dvr-replay-sd-hot-unplug-closure-20260715` | validation | `projects/gros/validation/2026-07-15-dvr-replay-sd-hot-unplug-closure.md` |
+| `pcr02-ai-audio-stream-order-eof-contract-20260713` | architecture | `projects/gros/archive/design/2026-07-13-ai-audio-stream-order-eof-contract.md` |
+| `pcr02-motor-calibration-static-info-cache-20260715` | validation | `projects/gros/validation/2026-07-15-motor-calibration-static-info-cache.md` |
+| `pcr02-motor-hall-calibration-prestart-transaction-20260724` | validation | `projects/gros/validation/2026-07-24-motor-hall-calibration-prestart-transaction.md` |
+| `pcr02-qr-code-sn-character-validation-20260728` | debug | `projects/gros/archive/debug/2026-07-28-qr-code-sn-character-validation.md` |
 
 治理工具拒绝以 `project-archive` 类型直接创建条目，因为该类型需要经过授权的 lifecycle transition。两项设计契约因此按实际内容类型登记为 `architecture`，仍保持 `reviewing`；未绕过归档生命周期门禁。
 
-定向校验已确认 10 个 registry id 与路径唯一、正文无 diff whitespace 错误，且未发现凭证模式、本机绝对用户路径或完整设备标识。全库 `knowledge-check --dry-run` 仍被一个本次任务开始前已存在、且不属于上述 10 个条目的用户路径边界问题阻塞：`projects/xcrz-sigmastar-demo/current/decisions/active-low-1-warm-switch-experiment.md`。因此本次新增条目可判定为定向验证通过，但不能声称全库门禁全绿。
+定向校验已确认 10 个 registry id 与路径唯一、正文无 diff whitespace 错误，且未发现凭证模式、本机绝对用户路径或完整设备标识。全库 `knowledge-check --dry-run` 仍被一个本次任务开始前已存在、且不属于上述 10 个条目的用户路径边界问题阻塞：`projects/gros/current/decisions/active-low-1-warm-switch-experiment.md`。因此本次新增条目可判定为定向验证通过，但不能声称全库门禁全绿。
 
 ## 后续执行顺序
 

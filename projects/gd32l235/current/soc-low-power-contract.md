@@ -22,8 +22,8 @@ source:
   from: 当前 MCU/SOC 源码与 workspace://gd32l235/Docs/串口通信协议规范.md
   source_sha256: 73988fdebe08174c6a92f8bc6ec877f2fa73087bc72533eab451064e6b7f8b57
   temporary_source_retained: false
-review_after: '2026-08-22'
-review_status: human-reviewed-accepted
+review_after: '2026-11-07'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -42,17 +42,24 @@ evidence_refs:
 - projects/gd32l235/current/soc-low-power-contract.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-22'
-updated_at: '2026-07-26'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-22'
 manual_validation_pending: true
-summary_zh: 汇总 GD32L235 MCU 与 PCR02 SoC 的 RUNNING、STANDBY、SLEEP、DEEP_SLEEP 状态职责、唤醒源、RTC、串口同步及诊断边界；reviewing 期间以源码和协议规范为权威。
+summary_zh: 低功耗契约历史汇总，正文 PA15 切电/WiFi-only 口径与后续 PA8 长脉冲、深睡恢复充电条件不同；本条暂不作为当前契约入口，应核对关联后继及实际源码，HIL 仍待验证。
 primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+human_review_decision: defer
+successor_refs:
+- projects/gros/archive/reports/2026-07-30-pcr02-deep-sleep-pa8-long-pulse.md
+- projects/gd32l235/archive/session/2026-08-04-power-switch-uart-handoff-implementation.md
+quality_flags:
+- current-contract-drift
+searchable: false
 ---
 
 # GD32L235 与 PCR02 SoC 低功耗协同当前契约候选
@@ -124,8 +131,8 @@ SoC resume 后必须获得确认的 wake source：SoC RTC 记为 TIMER；非 RTC
 - MCU 状态机：`workspace://gd32l235/App/wakeup.c`
 - MCU 协议定义：`workspace://gd32l235/App/protocol.h`
 - MCU shutdown：`workspace://gd32l235/App/protocol_handlers/system_handler.c`、`workspace://gd32l235/App/bsp.c`
-- SoC 报文：`workspace://xcrz_sigmastar_demo/modules/app/include/app_uart_packet.h`、`workspace://xcrz_sigmastar_demo/modules/app/src/app_uart/app_uart_packet.c`
-- SoC 低功耗：`workspace://xcrz_sigmastar_demo/modules/sensor/main/sensor_entry.cpp`、`workspace://xcrz_sigmastar_demo/modules/sensor/serial/sensor_serial.cpp`
+- SoC 报文：`workspace://gros/modules/app/include/app_uart_packet.h`、`workspace://gros/modules/app/src/app_uart/app_uart_packet.c`
+- SoC 低功耗：`workspace://gros/modules/sensor/main/sensor_entry.cpp`、`workspace://gros/modules/sensor/serial/sensor_serial.cpp`
 - 设计归档：`projects/gd32l235/archive/design/2026-07-22-soc-mcu-power-transition-owner-tcpka.md`
 
 ## 验证状态与风险

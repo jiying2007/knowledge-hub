@@ -19,8 +19,8 @@ source:
   type: session-derived-debug-summary
   from: 2026-07-17 user-provided board observation and logs plus workspace://gd32l235 source review
   source_sha256: dbf0d6f236f97b15b79d72f139702db9214e2d01f5081277311e99de38845e5d
-review_after: '2026-10-17'
-review_status: human-reviewed-accepted
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -45,7 +45,7 @@ evidence_refs:
 - App/power.c 与 App/bsp.c 的 PA11/PA15、低电量和负载上电路径只读核对
 - v1.1.35 到 v1.1.37 的相关源码差异核对
 created_at: '2026-07-17'
-updated_at: '2026-07-26'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -57,6 +57,7 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+human_review_decision: defer
 ---
 
 # GD32L235 电池供电跳变与 MCU 循环重启排障记录

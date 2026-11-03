@@ -183,6 +183,21 @@ def test_long_source_jsonl_line_fails_before_unbounded_allocation(tmp_path):
         _scan(tmp_path, paths)
 
 
+def test_registry_privacy_has_separate_bounded_capacity(tmp_path, monkeypatch):
+    path = tmp_path / 'registry/items.jsonl'
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps({'id': 'body', 'path': 'projects/sample/record.md',
+                                'status': 'reviewing', 'visibility': 'team-internal'}) + '\n')
+    monkeypatch.setattr(convergence, 'MAX_INVENTORY_FILE_BYTES', 32)
+    monkeypatch.setattr(convergence, 'MAX_REGISTRY_FILE_BYTES', 4096)
+    assert convergence.registry_private_roots(tmp_path) == {'notes/personal'}
+    with pytest.raises(KnowledgeHubError, match='file exceeds byte budget'):
+        convergence._jsonl(tmp_path, path)
+    monkeypatch.setattr(convergence, 'MAX_REGISTRY_FILE_BYTES', 32)
+    with pytest.raises(KnowledgeHubError, match='file exceeds byte budget'):
+        convergence.registry_private_roots(tmp_path)
+
+
 def test_source_jsonl_total_file_byte_budget(tmp_path, monkeypatch):
     _fixture(tmp_path)
     inventory = tmp_path / "sources/runtime-input/inventory.jsonl"

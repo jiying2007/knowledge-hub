@@ -1,4 +1,10 @@
 ---
+aliases:
+- ADK/Codex/Hub Token 与门禁优化 v2
+related:
+- projects/agent-dev-kit/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: agent-dev-kit-token-context-governance-v2-20260801
 title: ADK/Codex/Hub Token 与门禁优化 v2
 kind: validation
@@ -13,8 +19,8 @@ source:
   from: cross-repo implementation evidence
   source_sha256: c3d5ad5069dab1378c4bdd854400f315cf9967be145ceb15dbd3f647bf20435a
   temporary_source_retained: false
-review_after: '2026-08-15'
-review_status: manual-entry-pending-review
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -31,7 +37,7 @@ evidence_refs:
 - projects/agent-dev-kit/validation/2026-08-01-token-context-governance-v2.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-08-01'
-updated_at: '2026-08-01'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -42,12 +48,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- ADK/Codex/Hub Token 与门禁优化 v2
-related:
-- projects/agent-dev-kit/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
 ---
 
 # ADK / Codex / Knowledge Hub Token 与门禁优化 v2

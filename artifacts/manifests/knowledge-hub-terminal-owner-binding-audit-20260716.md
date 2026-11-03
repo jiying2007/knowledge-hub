@@ -26,7 +26,7 @@ Owner attestation 已按授权机械落地：120/120 个 readiness registry/fron
 | Project | Decision Item | Before SHA256 | After SHA256 | Result |
 | --- | --- | --- | --- | --- |
 | `pcr02-ssc305` | `pcr02-ssc305-readiness-decision-20260713` | `ed6b5b673c7dbbcf25d3ec30674e50edfdfca24fe49d251259c5df1d85e7dc4d` | `01822bdc20f2db918a85eb1b3238110e67988b7d8b28ebdf66ca97cc7d45afee` | pass |
-| `xcrz-sigmastar-demo` | `xcrz-sigmastar-demo-readiness-decision-20260713` | `4982e690875369d31879232a15f1ee9e3e0bf3b2125f49cab6695c809269947c` | `141fe4686a75026425509716926ce88df542e5d5809609f9ad4f184114f98a17` | pass |
+| `gros` | `gros-readiness-decision-20260713` | `4982e690875369d31879232a15f1ee9e3e0bf3b2125f49cab6695c809269947c` | `141fe4686a75026425509716926ce88df542e5d5809609f9ad4f184114f98a17` | pass |
 | `pcr02-api` | `pcr02-api-readiness-decision-20260713` | `66133b9d154af7258c730262f34940128c02c8ad9d81943a1707e4d7301d9025` | `c13c8388ef8d9d1d1894939e262b75c80776a9ec994a0348f7671622a3292882` | pass |
 | `pcr02-app` | `pcr02-app-readiness-decision-20260713` | `143e0770f34f0adf5699b0331832ee40f0fffb05d8191d68ede986039dbc9350` | `84a28efee7ce993989b22ab642c368fcae4be9d8bb5556b6adf52a2804162cb1` | pass |
 | `pcr02-hdi` | `pcr02-hdi-readiness-decision-20260713` | `cf42467112974c885a64f1558dc22fd344bc1b82a47d4f37ded94d27a76d89b7` | `890423886f8d64ba3d756b9495b613041aa081c260eac046f648280bf496864a` | pass |

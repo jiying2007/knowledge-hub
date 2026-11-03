@@ -19,23 +19,6 @@
       "evidence_profile": "embedded-target"
     },
     {
-      "id": "xcrz-sigmastar-demo",
-      "name": "XCRZ SigmaStar Demo",
-      "type": "git-repository",
-      "domain": "projects/xcrz-sigmastar-demo",
-      "entry": "projects/xcrz-sigmastar-demo/README.md",
-      "current": "projects/xcrz-sigmastar-demo/current",
-      "archive": "projects/xcrz-sigmastar-demo/archive",
-      "decisions": "projects/xcrz-sigmastar-demo/decisions",
-      "validation": "projects/xcrz-sigmastar-demo/validation",
-      "groups": [
-        "pcr02"
-      ],
-      "repo_boundary": "primary",
-      "status": "registered",
-      "evidence_profile": "embedded-target"
-    },
-    {
       "id": "pcr02-api",
       "name": "PCR02 API Module",
       "type": "git-repository",
@@ -570,20 +553,22 @@
     {
       "id": "gros",
       "name": "GROS",
-      "type": "knowledge-project",
+      "type": "git-repository",
       "domain": "projects/gros",
       "entry": "projects/gros/README.md",
       "current": "projects/gros/current",
       "archive": "projects/gros/archive",
       "decisions": "projects/gros/decisions",
       "validation": "projects/gros/validation",
-      "groups": [],
-      "repo_boundary": "none",
+      "groups": [
+        "pcr02"
+      ],
+      "repo_boundary": "primary",
       "status": "registered",
       "workspace_refs": [
         "workspace://gros"
       ],
-      "evidence_profile": "knowledge-project"
+      "evidence_profile": "embedded-target"
     }
   ]
 }

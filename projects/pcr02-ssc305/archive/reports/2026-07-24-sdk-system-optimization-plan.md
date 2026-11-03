@@ -14,8 +14,8 @@ source:
     Knowledge Hub evidence; endpoints, raw logs and binaries excluded
   source_sha256: 13b3575bf50c4f6fc1dae33de9c8fc2631680030219fa9d1e26214bc52961d55
   temporary_source_retained: false
-review_after: '2026-10-24'
-review_status: human-reviewed-accepted
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -36,7 +36,7 @@ evidence_refs:
 - projects/pcr02-ssc305/archive/reports/2026-07-24-sdk-system-optimization-plan.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-24'
-updated_at: '2026-07-26'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex
@@ -47,6 +47,9 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+human_review_decision: defer
+quality_flags:
+- review-overdue
 ---
 
 # PCR02 SSC305 SDK 系统优化实施计划
@@ -64,7 +67,7 @@ terminology_status: pending-review
 ### 范围
 
 - PCR02 SSC305 当前 SDK 编译工作区对应的 Kernel、Boot、rootfs、customer、miservice 和 image 构建。
-- 嵌套 `xcrz_sigmastar_demo` 的应用编译、链接依赖、启动关键路径和运行时 CPU/线程结构。
+- 嵌套 `gros` 的应用编译、链接依赖、启动关键路径和运行时 CPU/线程结构。
 - 双核 Cortex-A32 上 IMU 100 Hz、TOF 15 Hz、视频、音频、AI、Agora、导航和显示的组合负载。
 - production、service、factory 三类制品及其验证、符号和恢复边界。
 
@@ -276,9 +279,9 @@ DVFS 分两条路线：
 - captured_at：2026-07-24。
 - source：PCR02 SSC305 当前编译树静态检查、与本地制品匹配的目标板只读运行摘要、SigmaStar 本地资料和已有 Knowledge Hub 规划/验证条目。
 - related evidence：
-  - `projects/xcrz-sigmastar-demo/validation/2026-07-24-pcr02-ssc305-runtime-resource-baseline.md`
+  - `projects/pcr02-ssc305/validation/2026-07-24-pcr02-ssc305-runtime-resource-baseline.md`
   - `projects/pcr02-ssc305/current/runbooks/thirdparty-build-optimization-baseline.md`
-- successor candidate：本文是 `projects/xcrz-sigmastar-demo/archive/reports/2026-07-24-pcr02-ssc305-sdk-trimming-optimization-plan.md` 的正确项目路由和运行基线更新版。旧条目暂作历史来源；未执行 retire/supersede 生命周期变更。
+- successor candidate：本文是 `projects/pcr02-ssc305/archive/reports/2026-07-24-sdk-trimming-historical-plan.md` 的正确项目路由和运行基线更新版。旧条目暂作历史来源；未执行 retire/supersede 生命周期变更。
 - sanitization：已移除设备地址、内网端点、raw log、二进制和临时调试过程，只保留可复用汇总。
 - verification：静态配置、ELF 属性、制品匹配和运行摘要已只读核对；优化实施、功耗仪、30 次冷启动、长期老化、1000 次 suspend/resume 和 OTA 回归仍待完成。
 - memory candidate：否。

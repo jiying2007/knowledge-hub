@@ -114,7 +114,7 @@ fb5994d31 refactor(build): 统一构建与发布流程
 
 关键边界：
 
-- 普通构建当时优先选择 `xcrz_sigmastar_demo`，缺失时再使用 `gros`。
+- 普通构建当时优先选择 `gros`，缺失时再使用 `gros`。
 - `modules-status` 和 `modules-sync` 为 GROS 专用命令。
 - 工具链不固化进主仓，使用本地 `.toolchains/` 承载外部工具链仓拉取结果。
 - 自动化构建不隐式 checkout/pull；由 CI 或发布操作者先同步源码。
@@ -151,9 +151,9 @@ rtk bash -lc 'make modules/hdi_obj_clean; make modules/hdi_obj_all -j20'
 ## 相关覆盖
 
 - `projects/pcr02-ssc305/archive/engineering-archive/pcr02/source-audit/pcr02_imssv05c13_sdk_migration_plan_20260530.md`
-- `projects/xcrz-sigmastar-demo/current/runbooks/project-build-and-deploy-guide.md`
-- `projects/xcrz-sigmastar-demo/current/architecture/hdi-api-app-functional-overview.md`
-- `projects/xcrz-sigmastar-demo/current/architecture/module-catalog.md`
+- `projects/gros/archive/historical-current/runbooks/project-build-and-deploy-guide.md`
+- `projects/gros/archive/historical-current/architecture/hdi-api-app-functional-overview.md`
+- `projects/gros/archive/historical-current/architecture/module-catalog.md`
 - `artifacts/manifests/codex-archive-extract-first-preflight-20260710.jsonl#CAEF-20260710-021..023`
 
 ## 删除记录

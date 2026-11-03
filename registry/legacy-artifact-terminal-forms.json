@@ -6,11 +6,32 @@
     "terminal_form": "immutable-historical-exception-with-owner-and-reason",
     "coverage_mode": "exact-reference-set-sha256",
     "scope": "artifacts/manifests/**/*.jsonl",
-    "source_revision": "5e43739e97f47b6c26eee3f503f97ba5cf2fc1bf",
+    "source_revision": "6b58e730a4660bc5b707b024c8251a777e8bf6c0",
     "legacy_reference_count": 315,
-    "legacy_reference_set_sha256": "154996b5b1f334b13db2133f8372066387dce0dd316c02bb8ff5498debc895d2",
+    "legacy_reference_set_sha256": "37922ebf38f493d314e2b4f6402f40b44e03149f9b5e09958936c1f239c9d1e1",
     "owner": "knowledge-hub-maintainers",
     "reason": "Pre-v1 artifact references are preserved as immutable historical provenance. The exact legacy-reference set is cryptographically frozen; any addition, deletion, or mutation must fail governance until migrated to strict v1 or explicitly re-ratcheted with review evidence.",
     "automatic_delete": false
-  }
+  },
+  "reviewed_normalizations": [
+    {
+      "date": "2026-10-31",
+      "kind": "explicit-reviewed-canonical-source-root-normalization",
+      "previous_source_revision": "5e43739e97f47b6c26eee3f503f97ba5cf2fc1bf",
+      "previous_legacy_reference_count": 315,
+      "previous_legacy_reference_set_sha256": "154996b5b1f334b13db2133f8372066387dce0dd316c02bb8ff5498debc895d2",
+      "current_legacy_reference_count": 315,
+      "current_legacy_reference_set_sha256": "37922ebf38f493d314e2b4f6402f40b44e03149f9b5e09958936c1f239c9d1e1",
+      "unchanged_reference_count": 181,
+      "source_root_only_change_count": 134,
+      "changed_manifest_count": 4,
+      "changed_fields": ["source_root"],
+      "unchanged_fields": ["sha256", "size", "uri", "source_path", "checked_at", "owner", "status"],
+      "migration_evidence": "artifacts/manifests/project-migration-df59e0df1e3e18ba1d5d74a7e44fdeb279e58fb29dfbed2768c06fbce091ae0a.json",
+      "independent_review_sha256": "6d7849283e66148ac79e68f2913f766d0225590ccda761c45cc9b880df49b701",
+      "reviewer": "Codex independent AI review_middle",
+      "authorization_basis": "user-directed complete canonical repository migration and reviewed publication",
+      "qualification_boundary": "source_root is a canonical locator normalization; historical artifact bytes, dates and device evidence were not revalidated"
+    }
+  ]
 }

@@ -401,7 +401,8 @@ def _rank_item(
     source_ids: Set[str],
     route_selected: bool,
 ) -> Tuple[int, List[str]]:
-    if item.get("visibility") == "personal-local":
+    from .search_core import _item_is_default_searchable
+    if not _item_is_default_searchable(item):
         return 0, []
     haystack = "\n".join(
         str(value)
@@ -467,11 +468,15 @@ def _public_item(score: int, item: Mapping[str, Any], reasons: Sequence[str]) ->
         "tags": item.get("tags", []),
         "evidence_strength": item.get("evidence_strength", ""),
         "manual_validation_pending": bool(item.get("manual_validation_pending", False)),
+        "review_after": item.get("review_after"),
         "why_selected": list(reasons),
     }
 
 
 def _current_exclusion_reason(row: Mapping[str, Any]) -> str:
+    from .content_quality import overdue
+    if overdue(row):
+        return "review-overdue"
     status = str(row.get("status", ""))
     if status in {"archived", "superseded", "rejected"}:
         return "terminal-status"

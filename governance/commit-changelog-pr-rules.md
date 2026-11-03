@@ -16,13 +16,16 @@ scope: team-general
 visibility: team-internal
 status: active
 owner: leiwenjun
-review_after: '2026-09-18'
-review_status: human-reviewed-accepted
+review_after: '2026-11-07'
+review_status: periodic-review-scheduled-pending-content
 promotion: none
 aliases:
 - 中文 Commit Changelog PR 规范
 related:
 - indexes/obsidian-home.md
+updated_at: '2026-10-31'
+manual_validation_pending: true
+content_review_status: accepted
 ---
 
 # 中文 Commit、Changelog 与 PR 规范

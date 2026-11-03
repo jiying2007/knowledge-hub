@@ -15,7 +15,7 @@ from .template_integrity import (
 from .schema_subset import validate_contract_subset
 from .query_concepts import ConceptQuery, FIELD_VALUES, exact_concept_match
 from .query_scope import candidate_concepts
-from .query_matching import ConceptMatcher, Match, document_matcher
+from .query_matching import ConceptMatcher, TermMatcher, Match, document_matcher
 from .query_focus import focus_bonus
 from .search_score_evidence import concept_evidence_score, distinctive_evidence_score, select_distinctive_terms
 from .search_ranking import is_historical_result as _historical_result, path_priority as _path_priority, redact_internal_endpoints as _redact_internal_endpoints, status_priority as _status_priority
@@ -61,13 +61,16 @@ def _matched_query_terms(
     item: Mapping[str, Any],
     exact: bool = False,
     matcher: Optional[Match] = None,
+    body_haystack: Optional[str] = None,
 ) -> List[str]:
     """Return query terms matched by a row without exposing matched body text."""
 
-    body = _topic_body(body)
-    combined = (_metadata_haystack(item) if item else "") + "\n" + body.lower()
-    topical = '\n'.join((str(item.get('title', '')), str(item.get('summary_zh', '')),
-                         ' '.join(str(tag) for tag in item.get('tags', [])), body)).lower()
+    if body_haystack is None:
+        body_haystack = _topic_body(body).lower()
+    combined = (_metadata_haystack(item) if item else "") + "\n" + body_haystack
+    topical_metadata = '\n'.join((str(item.get('title', '')), str(item.get('summary_zh', '')),
+                                  ' '.join(str(tag) for tag in item.get('tags', [])))).lower()
+    topical = topical_metadata + '\n' + body_haystack if any(term in FIELD_VALUES for term in terms) else ''
     matcher = matcher or (_concept_matches if exact else _term_matches)
     return [term for term in terms if matcher(term, topical if term in FIELD_VALUES else combined)]
 
@@ -339,6 +342,25 @@ def _preview(
     return line_no, preview, True, redacted
 
 
+def _prepare_score_fields(relative, item, indexed_title, terms, query, matches, body_haystack):
+    """Prepare pure document evidence once before unused score contributions."""
+    title = (str(item.get("title", "")) if item else indexed_title).lower()
+    item_id = str(item.get("id", "")).lower() if item else ""
+    path_text = str(item.get("path", relative)).lower() if item else relative.lower()
+    summary = str(item.get("summary_zh", "")).lower() if item else ""
+    tags = " ".join(str(value).lower() for value in item.get("tags", [])) if item and isinstance(item.get("tags"), list) else ""
+    normalized_query = query.lower().strip()
+    distinctive_terms = select_distinctive_terms(terms)
+    metadata_fields = "\n".join((title, item_id, tags, summary, path_text))
+    topic_fields = '\n'.join((title, tags, summary))
+    def evidence_text(term: str) -> str:
+        return topic_fields if term in FIELD_VALUES else metadata_fields
+    distinctive_score = distinctive_evidence_score(distinctive_terms, matches, evidence_text, body_haystack,
+                                                   normalized_query, topic_fields)
+    return (title, item_id, path_text, summary, tags, normalized_query, distinctive_terms,
+            metadata_fields, topic_fields, evidence_text, distinctive_score)
+
+
 def _score(
     relative: str,
     suffix: str,
@@ -360,8 +382,13 @@ def _score(
     body = _topic_body(body)
     body_haystack = body.lower()
     natural = bool(concept_plan and concept_plan.enabled)
-    matches = document_matcher((query_matcher or ConceptMatcher(terms)) if natural else _term_matches)
-    matched_terms = _matched_query_terms(terms, body, item, exact=natural, matcher=matches)
+    matches = document_matcher(query_matcher or (ConceptMatcher(terms) if natural else TermMatcher(terms)))
+    (title, item_id, path_text, summary, tags, normalized_query, distinctive_terms,
+     metadata_fields, topic_fields, evidence_text, distinctive_score) = _prepare_score_fields(
+         relative, item, indexed_title, terms, query, matches, body_haystack)
+    if isinstance(item.get('tags', []), list) and distinctive_score is None:
+        return None
+    matched_terms = _matched_query_terms(terms, body, item, exact=natural, matcher=matches, body_haystack=body_haystack)
     if not matched_terms:
         return None
     coverage = len(matched_terms) / float(max(1, len(terms)))
@@ -374,12 +401,8 @@ def _score(
         status = str(item.get("status", ""))
         score += 300 + _status_priority(status)
         reasons.extend(["registry-backed", "status:{}".format(status)])
-    title = (str(item.get("title", "")) if item else indexed_title).lower()
-    item_id = str(item.get("id", "")).lower() if item else ""
-    path_text = str(item.get("path", relative)).lower() if item else relative.lower()
-    summary = str(item.get("summary_zh", "")).lower() if item else ""
-    tags = " ".join(str(value).lower() for value in item.get("tags", [])) if item and isinstance(item.get("tags"), list) else ""
-    normalized_query = query.lower().strip()
+    if distinctive_score is None:
+        return None
     if normalized_query and normalized_query in title:
         score += 190
         reasons.append("exact-title")
@@ -401,29 +424,20 @@ def _score(
         if hits:
             score += hits * weight
             reasons.append(reason)
-    distinctive_terms = select_distinctive_terms(terms)
     if distinctive_terms and normalized_query and normalized_query in summary:
         # A complete question in a curated summary is stronger evidence than
         # a title sharing only CJK ngrams. Generic-only queries gain no bonus.
         summary_token_score = 40 * sum(matches(term, summary) for term in terms)
         score += max(0, min(120, 180 - summary_token_score))
         reasons.append('exact-summary')
-    metadata_fields = "\n".join((title, item_id, tags, summary, path_text))
-    topic_fields = '\n'.join((title, tags, summary))
     full_document = metadata_fields + '\n' + body_haystack
     topic_document = topic_fields + '\n' + body_haystack
-    def evidence_text(term: str) -> str:
-        return topic_fields if term in FIELD_VALUES else metadata_fields
     concept_score = concept_evidence_score(concept_plan, natural, terms, matches, full_document,
                                            topic_document, metadata_fields, evidence_text, item)
     if concept_score is None:
         return None
     score += concept_score[0]
     reasons.extend(concept_score[1])
-    distinctive_score = distinctive_evidence_score(distinctive_terms, matches, evidence_text, body_haystack,
-                                                   normalized_query, topic_fields)
-    if distinctive_score is None:
-        return None
     score += distinctive_score[0]
     reasons.extend(distinctive_score[1])
     metadata_term_match = any(

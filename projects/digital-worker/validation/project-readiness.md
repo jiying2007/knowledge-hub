@@ -12,8 +12,8 @@ source:
   type: generated-control-plane
   from: registry/projects.json + registry/repositories.json + existing registry items
   fact_scope: registered-metadata-and-existing-hub-evidence-only
-review_after: '2026-10-13'
-review_status: owner-boundary-accepted-real-validation-pending
+review_after: '2026-11-30'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -38,7 +38,7 @@ evidence_refs:
 - registry/projects.json
 - registry/repositories.json
 created_at: '2026-07-13'
-updated_at: '2026-09-27'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex

@@ -4,7 +4,7 @@ aliases:
 authorization_ref: auth-20260715-pcr02-canonical-hardcut
 related:
 - projects/pcr02-ssc305/README.md
-- projects/xcrz-sigmastar-demo/README.md
+- projects/gros/README.md
 - registry/project-groups.json
 - registry/project-routes.json
 id: pcr02-ssc305-canonical-hardcut-20260715
@@ -19,9 +19,9 @@ owner: leiwenjun
 source:
   type: user-directed-hub-maintenance
   from: current-session canonical project-group boundary consolidation
-review_after: '2026-10-15'
-review_status: human-reviewed-accepted
-content_review_status: accepted
+review_after: '2026-11-30'
+review_status: periodic-review-scheduled-pending-content
+content_review_status: pending
 evidence_validation_status: pending
 promotion: none
 promotion_decision: none; canonical project-group boundary candidate only, no active promotion or owner decision
@@ -45,18 +45,20 @@ evidence_refs:
 - rtk bash tools/knowledge-check.sh --dry-run --json --diagnostics --as-of 2026-07-15
 - rtk bash tools/knowledge-final-gate.sh --json --final-profile product --regression-suite full --as-of 2026-07-15
 created_at: '2026-07-15'
-updated_at: '2026-07-19'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
 ai_generated_at: '2026-07-15'
-manual_validation_pending: false
+manual_validation_pending: true
 decision_owner: unassigned
-summary_zh: 定义 PCR02 项目组唯一当前知识入口与仓库归属：SSC305 平台事实进入 pcr02-ssc305，应用事实进入 xcrz-sigmastar-demo，pcr02 仅作为项目组关系标识。
+summary_zh: 定义 PCR02 项目组唯一当前知识入口与仓库归属：SSC305 平台事实进入 pcr02-ssc305，应用事实进入 gros，pcr02 仅作为项目组关系标识。
 primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+quality_flags:
+- review-overdue
 ---
 
 # PCR02 项目组规范入口边界决策候选
@@ -66,7 +68,7 @@ terminology_status: pending-review
 本决策候选定义 PCR02 项目组在 Knowledge Hub 中的唯一当前边界：
 
 - `projects/pcr02-ssc305/` 是 `robot/pcr02_ssc305` SDK、kernel、boot、镜像、OTA、存储、板级硬件和产品集成事实的唯一项目入口。
-- `projects/xcrz-sigmastar-demo/` 承接 `robot/xcrz_sigmastar_demo` 应用、诊断、媒体、显示应用层、模块集成和相关会话证据。
+- `projects/gros/` 承接 `airobot/gros` 应用、诊断、媒体、显示应用层、模块集成和相关会话证据。
 - `pcr02` 只作为 `registry/project-groups.json` 中的 group 标识和检索关系，不是 `registry/projects.json` 项目、live route 或正文目录。
 - 独立模块仓继续使用各自项目入口；跨仓记录只维护一份正文，通过 `related`、registry 和索引关联，不复制主文档。
 
@@ -77,7 +79,7 @@ terminology_status: pending-review
 | 入口 | 唯一职责 |
 |---|---|
 | `projects/pcr02-ssc305/` | SDK、kernel、boot、镜像、OTA、存储、板级硬件、平台决策与工程归档 |
-| `projects/xcrz-sigmastar-demo/` | 应用架构、诊断、媒体、显示应用层、模块集成、计划与应用排障 |
+| `projects/gros/` | 应用架构、诊断、媒体、显示应用层、模块集成、计划与应用排障 |
 | `projects/pcr02-*` 独立模块 | 各自 Git 仓对应的项目事实、决策、验证与归档 |
 | `pcr02` group | 跨项目检索、成员关系和产品组导航，不承载正文 |
 
@@ -105,7 +107,7 @@ terminology_status: pending-review
 |---|---|---|
 | canonical 唯一性 | 通过 | project registry、route registry、当前索引与默认工具输出只暴露 canonical project entry；`pcr02` 仅为 group 关系 |
 | 项目与 readiness | 通过 | 30/30 项目、30/30 route、120/120 readiness slot，生成漂移为 0；`pcr02` 仅保留为 1 个产品组关系 |
-| 路由语义 | 通过 | `robot/pcr02_ssc305` 与 ST77912 查询路由到 `pcr02-ssc305`；`robot/xcrz_sigmastar_demo` 路由到 `xcrz-sigmastar-demo` |
+| 路由语义 | 通过 | `robot/pcr02_ssc305` 与 ST77912 查询路由到 `pcr02-ssc305`；`airobot/gros` 路由到 `gros` |
 | Hub 一致性 | 通过 | `knowledge-check`、strict link audit、orphan/body coverage、project readiness 与 `git diff --check` 均通过 |
 | 单元测试 | 通过 | 当前测试集全部通过 |
 | 完整治理回归 | 通过 | `140/140`，默认 `jobs=4`，失败 ID 为空 |

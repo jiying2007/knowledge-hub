@@ -41,37 +41,6 @@
       "route_key_policy": "git-remote-first"
     },
     {
-      "project_id": "xcrz-sigmastar-demo",
-      "name": "XCRZ SigmaStar Demo",
-      "type": "project",
-      "route_scope": "project",
-      "group_id": "pcr02",
-      "aliases": [
-        "xcrz-sigmastar-demo",
-        "XCRZ SigmaStar Demo",
-        "xcrz_sigmastar_demo"
-      ],
-      "topic_aliases": [],
-      "repo_refs": [
-        "xcrz-sigmastar-demo"
-      ],
-      "workspace_refs": [
-        "workspace://xcrz-sigmastar-demo"
-      ],
-      "hub_entry": "projects/xcrz-sigmastar-demo/README.md",
-      "current_path": "projects/xcrz-sigmastar-demo/current",
-      "archive_path": "projects/xcrz-sigmastar-demo/archive",
-      "decisions_path": "projects/xcrz-sigmastar-demo/decisions",
-      "validation_path": "projects/xcrz-sigmastar-demo/validation",
-      "domain_refs": [
-        "projects/xcrz-sigmastar-demo"
-      ],
-      "default_source_ids": [
-        "codex-raw-sessions"
-      ],
-      "route_key_policy": "git-remote-first"
-    },
-    {
       "project_id": "pcr02-api",
       "name": "PCR02 API Module",
       "type": "project",
@@ -1002,7 +971,10 @@
         "a123x"
       ],
       "topic_aliases": [],
-      "repo_refs": [],
+      "repo_refs": [
+        "a123x-integration",
+        "a123x-project"
+      ],
       "workspace_refs": [
         "workspace://a123x"
       ],
@@ -1022,12 +994,14 @@
       "name": "GROS",
       "type": "project",
       "route_scope": "project",
-      "group_id": "",
+      "group_id": "pcr02",
       "aliases": [
         "gros"
       ],
       "topic_aliases": [],
-      "repo_refs": [],
+      "repo_refs": [
+        "gros"
+      ],
       "workspace_refs": [
         "workspace://gros"
       ],
@@ -1039,8 +1013,10 @@
       "domain_refs": [
         "projects/gros"
       ],
-      "default_source_ids": [],
-      "route_key_policy": "subject-workspace"
+      "default_source_ids": [
+        "codex-raw-sessions"
+      ],
+      "route_key_policy": "git-remote-first"
     }
   ]
 }

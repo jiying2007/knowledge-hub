@@ -1,4 +1,10 @@
 ---
+aliases:
+- PCR02 active 媒体 CPU 与 VENC 等待优化验证
+related:
+- projects/pcr02-ssc305/README.md
+- indexes/obsidian-home.md
+- indexes/project-readiness.md
 id: pcr02-ssc305-active-media-cpu-venc-timeout-20260731
 title: PCR02 active 媒体 CPU 与 VENC 等待优化验证
 kind: validation
@@ -12,8 +18,8 @@ source:
   type: project-document
   from: PCR02 source project validation note
   source_sha256: 328a5c1c81a8029ed5d339a33994362c70d35b30874c83c61f335881f5cb23a2
-review_after: '2026-10-31'
-review_status: manual-entry-pending-review
+review_after: '2026-11-15'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -31,7 +37,7 @@ evidence_refs:
 - projects/pcr02-ssc305/validation/2026-07-31-active-media-cpu-venc-timeout.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-31'
-updated_at: '2026-07-31'
+updated_at: '2026-11-01'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -42,12 +48,6 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
-aliases:
-- PCR02 active 媒体 CPU 与 VENC 等待优化验证
-related:
-- projects/pcr02-ssc305/README.md
-- indexes/obsidian-home.md
-- indexes/project-readiness.md
 ---
 
 # PCR02 active 媒体负载 CPU 热点与 HDI 取流等待优化
@@ -160,7 +160,7 @@ RTC/RTSA 入会入口。真实 RTC A/B 必须由业务侧提供合法会话和�
 
 ## 修改与制品
 
-文件：`SourceCode/sdk/verify/xcrz_sigmastar_demo/modules/hdi/src/hdi_video/hdi_vi.c`
+文件：`SourceCode/sdk/verify/gros/modules/hdi/src/hdi_video/hdi_vi.c`
 
 - raw preview `SSPLAT_SYS_GetOutputPacket()` timeout：10 ms → 30 ms；
 - VENC `SSPLAT_VENC_GetPacket()` timeout：10 ms → 30 ms；

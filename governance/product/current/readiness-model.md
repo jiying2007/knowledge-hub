@@ -15,8 +15,8 @@ scope: team-general
 visibility: team-internal
 status: reviewing
 owner: leiwenjun
-review_after: '2026-10-18'
-review_status: manual-entry-pending-review
+review_after: '2026-11-30'
+review_status: periodic-review-scheduled-pending-content
 promotion: none
 generated_by_ai: true
 ai_role: drafted
@@ -27,6 +27,9 @@ aliases:
 related:
 - governance/product/validation/project-readiness.md
 - registry/terminal-closure.json
+updated_at: '2026-10-31'
+manual_validation_pending: true
+content_review_status: pending
 ---
 
 # Knowledge Hub 当前 Readiness 模型

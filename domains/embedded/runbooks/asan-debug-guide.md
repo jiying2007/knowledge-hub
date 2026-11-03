@@ -24,8 +24,8 @@ source:
   provenance_manifest: artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl
   from: split-approved ASAN candidate rewritten without PCR02-specific paths; active promotion authorized on 2026-06-29; PCR02
     source path is evidence provenance, not active source binding
-review_after: '2026-09-29'
-review_status: human-reviewed-accepted
+review_after: '2026-11-07'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: accepted
 evidence_validation_status: verified
 promotion: none
@@ -54,14 +54,14 @@ evidence_strength: user-authorization-plus-owner-decision-split-boundary-and-dep
 evidence_refs:
 - artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.jsonl
 - artifacts/manifests/pcr02-asan-split-targets-20260618.md
-- projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md
+- projects/gros/archive/historical-current/runbooks/asan-debug-guide.md
 - domains/embedded/runbooks/asan-debug-guide.md
 - artifacts/manifests/embedded-asan-debug-guide-team-rewrite-20260629.jsonl
 - artifacts/manifests/embedded-asan-team-owner-ready-package-20260629.jsonl
 - artifacts/manifests/embedded-asan-active-promotion-20260629.jsonl
 - registry/authorizations.jsonl
 created_at: '2026-06-29'
-updated_at: '2026-07-19'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -72,6 +72,7 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+manual_validation_pending: true
 ---
 
 # ASAN 调试方法论（团队级）
@@ -84,7 +85,7 @@ terminology_status: pending-review
 
 项目特例参考：
 
-- PCR02 项目本地 ASAN runbook：`projects/xcrz-sigmastar-demo/current/runbooks/asan-debug-guide.md`
+- PCR02 项目本地 ASAN runbook：`projects/gros/archive/historical-current/runbooks/asan-debug-guide.md`
 - PCR02 owner decision 边界：`artifacts/manifests/pcr02-project-docs-owner-decision-landing-20260623.md`
 
 上述 PCR02 文档只能作为项目特例参考，不作为团队默认命令或路径。

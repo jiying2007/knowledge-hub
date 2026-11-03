@@ -586,33 +586,14 @@ def test_owner_evidence_readiness():
 
 def test_owner_inbox_contract():
     repo = copy_repo_with_open_owner_gates("owner-inbox-contract")
-    result = run_cmd(
-        repo,
-        [
-            "rtk",
-            "bash",
-            "tools/knowledge-owner-gates.sh",
-            "--source-id",
-            "pcr02-project-docs",
-            "--owner",
-            "project-owner",
-            "--owner-inbox",
-            "--json",
-        ],
-    )
-    text_result = run_cmd(
-        repo,
-        [
-            "rtk",
-            "bash",
-            "tools/knowledge-owner-gates.sh",
-            "--source-id",
-            "pcr02-project-docs",
-            "--owner",
-            "project-owner",
-            "--owner-inbox",
-        ],
-    )
+    result = run_cmd(repo, [
+        "rtk", "bash", "tools/knowledge-owner-gates.sh", "--source-id", "pcr02-project-docs",
+        "--owner", "project-owner", "--owner-inbox", "--json",
+    ])
+    text_result = run_cmd(repo, [
+        "rtk", "bash", "tools/knowledge-owner-gates.sh", "--source-id", "pcr02-project-docs",
+        "--owner", "project-owner", "--owner-inbox",
+    ])
     parsed = {}
     try:
         parsed = json.loads(result["stdout"])

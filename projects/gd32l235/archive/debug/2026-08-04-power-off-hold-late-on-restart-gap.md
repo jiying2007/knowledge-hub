@@ -10,11 +10,11 @@ status: reviewing
 owner: leiwenjun
 source:
   type: session-derived-debug-summary
-  from: user board observation + workspace://gd32l235 + workspace://xcrz-sigmastar-demo/daemon source audit
+  from: user board observation + workspace://gd32l235 + workspace://gros/daemon source audit
   source_sha256: 798fbe011810244a6bdeb179f7fa190358043fcb03dffcfa9a7c9831d3934907
   temporary_source_retained: false
-review_after: '2026-09-04'
-review_status: manual-entry-pending-review
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -34,7 +34,7 @@ evidence_refs:
 - projects/gd32l235/archive/debug/2026-08-04-power-off-hold-late-on-restart-gap.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-08-04'
-updated_at: '2026-08-04'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex
@@ -52,7 +52,7 @@ terminology_status: pending-review
 ## 现象与范围
 
 - Captured at: 2026-08-04（Asia/Hong_Kong）。
-- Source: 用户板级现象、`workspace://gd32l235` MCU 状态机、`workspace://xcrz-sigmastar-demo/daemon` UART handoff 实现与契约测试。
+- Source: 用户板级现象、`workspace://gd32l235` MCU 状态机、`workspace://gros/daemon` UART handoff 实现与契约测试。
 - Repro sequence: 拨动开关由 ON 到 OFF；应用完成安全退出；MCU/daemon 已按 OFF 目标完成 `APP_EXITED(flags=0)`；随后用户拨回 ON。现场表现为 SOC 似乎掉电但未及时重启。
 - Sanitization: 不保存原始串口日志、二进制、设备标识、凭据或私有端点。
 

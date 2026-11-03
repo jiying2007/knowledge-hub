@@ -1,3 +1,11 @@
+---
+review_after: '2027-01-29'
+updated_at: '2026-10-31'
+manual_validation_pending: true
+content_review_status: pending
+review_status: periodic-review-scheduled-pending-content
+---
+
 # PCR02 owner-ready validation paths 2026-07-13
 
 ## 边界

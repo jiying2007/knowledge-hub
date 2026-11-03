@@ -12,9 +12,9 @@ source:
   type: local-static-debug
   from: workspace://pcr02-ssc305
   source_sha256: b41a593df0ca570516609903b1e7d73a215dced411d23a4cedccccb0d70d7667
-review_after: '2026-10-13'
-review_status: human-reviewed-accepted
-content_review_status: accepted
+review_after: '2027-01-29'
+review_status: periodic-review-scheduled-pending-content
+content_review_status: pending
 evidence_validation_status: pending
 promotion: none
 promotion_decision: none; capture does not authorize active promotion or owner decision
@@ -32,7 +32,7 @@ evidence_refs:
 - projects/pcr02-ssc305/archive/debug/2026-07-15-camera-mi-abi-rollback.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-07-15'
-updated_at: '2026-07-19'
+updated_at: '2026-10-31'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: Codex
@@ -43,6 +43,8 @@ primary_language: zh-CN
 source_language: zh-CN
 translation_status: not-required
 terminology_status: pending-review
+quality_flags:
+- review-overdue
 ---
 
 # PCR02 新摄像头栈混装 ABI 故障与回退记录
