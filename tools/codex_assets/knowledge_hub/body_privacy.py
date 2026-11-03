@@ -138,9 +138,8 @@ def _classify_header(data: bytes) -> bool:
     text = data.decode("utf-8")
     if "\ufeff" in text:
         raise BodyPrivacyError("ambiguous-header-byte-order-mark")
-    loader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
     depth = aliases = 0
-    for count, event in enumerate(yaml.parse(text, Loader=loader), 1):
+    for count, event in enumerate(yaml.parse(text, Loader=yaml.SafeLoader), 1):
         aliases += isinstance(event, AliasEvent)
         if count > MAX_HEADER_EVENTS or aliases > MAX_HEADER_ALIASES:
             raise BodyPrivacyError("header-event-or-alias-budget")
@@ -150,7 +149,7 @@ def _classify_header(data: bytes) -> bool:
                 raise BodyPrivacyError("header-depth-budget")
         elif isinstance(event, CollectionEndEvent):
             depth -= 1
-    node = yaml.compose(text, Loader=loader)
+    node = yaml.compose(text, Loader=yaml.SafeLoader)
     if node is None:
         return False
     if not isinstance(node, MappingNode):

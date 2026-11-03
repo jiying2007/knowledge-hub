@@ -4,6 +4,8 @@ import hashlib
 import json
 import pathlib
 import sys
+from .common import registry_items
+from .maintenance_lineage import historical_target
 
 root = pathlib.Path(sys.argv[1]).resolve()
 argv = sys.argv[2:]
@@ -40,6 +42,7 @@ landing_rows = load_landing_rows()
 targets = [
     {
         "worksheet_id": "pcr02-owner-decision-worksheet-003",
+        "item_id": "pcr02-asan-debug-guide-project-local-20260624",
         "source_path": "runbooks/asan-debug-guide.md",
         "target_path": "projects/gros/current/runbooks/asan-debug-guide.md",
         "title": "PCR02 ASAN 调试指导",
@@ -76,19 +79,46 @@ targets = [
     },
 ]
 
+
+def read_target(item):
+    """Navigate proved history for reads; never grant a new materialization."""
+    original = item['target_path']
+    item_id = item.get('item_id')
+    matches = [row.get('path', '') for row in registry_items(root)
+               if row.get('id') == item_id] if item_id else [original]
+    if len(matches) != 1 or not matches[0]:
+        return '', True
+    canonical = matches[0]
+    if canonical != original:
+        history = historical_target(root, original)
+        return (history if history == canonical else ''), True
+    if (root / original).is_file():
+        return original, False
+    history = historical_target(root, original)
+    if item_id and history and history != canonical:
+        return '', True
+    return (history, True) if history else (original, False)
+
 results = []
 blocked = []
 for item in targets:
     source_file = source_root / item["source_path"]
-    target_file = root / item["target_path"]
+    resolved_target, relocated = read_target(item)
+    target_file = root / resolved_target if resolved_target else None
     source_exists = source_file.exists()
     landing_row = landing_rows.get(item["worksheet_id"], {})
     source_hash = str(landing_row.get("source_sha256", ""))
     source_size = landing_row.get("source_size", 0)
     source_text = ""
+    can_materialize = bool(args.apply and source_exists and not relocated)
 
     if args.apply:
-        if not source_exists:
+        if relocated:
+            blocked.append({
+                'worksheet_id': item['worksheet_id'], 'source_path': item['source_path'],
+                'reason': 'registered target relocated or unresolved; re-materialization is forbidden',
+            })
+        elif not source_exists:
             blocked.append({
                 "worksheet_id": item["worksheet_id"],
                 "source_path": item["source_path"],
@@ -100,7 +130,7 @@ for item in targets:
             source_hash = hashlib.sha256(source_bytes).hexdigest()
             source_size = len(source_bytes)
 
-    if args.apply and source_exists:
+    if can_materialize:
         header = f"""---
 title: {item['title']}
 doc_type: owner-approved-target
@@ -135,21 +165,24 @@ generated_at: {today}
 
 """
         content = header + source_text.rstrip() + "\n"
-    exists_before = target_file.exists()
-    if args.apply and source_exists:
+    exists_before = bool(target_file and target_file.exists())
+    if can_materialize:
+        target_file = root / item['target_path']
         target_file.parent.mkdir(parents=True, exist_ok=True)
         target_file.write_text(content)
     results.append({
         "worksheet_id": item["worksheet_id"],
         "source_path": item["source_path"],
         "target_path": item["target_path"],
+        "resolved_target_path": resolved_target,
+        "target_resolution_source": 'maintenance-manifest' if relocated and resolved_target else 'owner-decision-landing-manifest',
         "exists_before": exists_before,
-        "target_exists": target_file.exists(),
-        "written": bool(args.apply and source_exists),
+        "target_exists": bool(target_file and target_file.exists()),
+        "written": can_materialize,
         "source_available": source_exists,
         "source_sha256": source_hash,
         "source_size": source_size,
-        "source_identity_source": "runtime-source-file" if args.apply and source_exists else "owner-decision-landing-manifest",
+        "source_identity_source": "runtime-source-file" if can_materialize else "owner-decision-landing-manifest",
     })
 
 payload = {

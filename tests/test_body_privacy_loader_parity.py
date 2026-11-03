@@ -1,4 +1,4 @@
-"""Security parity for the optional C parser; no real private corpus is read."""
+"""Keep Python parser rejection and privacy guards even when C is available."""
 
 import hashlib
 
@@ -27,6 +27,25 @@ HEADERS = [
 ]
 
 
+@pytest.mark.parametrize('missing_c', [False, True])
+@pytest.mark.parametrize('header', [
+    b'visibility:\tpublic\n', b'status:\treviewing\n', b'a: b\tc\n',
+])
+def test_original_python_rejected_syntax_never_gets_public_hash(tmp_path, monkeypatch, missing_c, header):
+    if missing_c:
+        monkeypatch.delattr(yaml, 'CSafeLoader', raising=False)
+    with pytest.raises(yaml.YAMLError):
+        privacy._classify_header(header)
+    data = b'---\n' + header + b'---\nSYNTHETIC_BODY\n'
+    path = tmp_path / 'identifying-syntax-canary.md'
+    path.write_bytes(data)
+    with pytest.raises(privacy.BodyPrivacyError, match='^unavailable-or-ambiguous-body-metadata$'):
+        privacy.declared_private(tmp_path, path.name)
+    with pytest.raises(privacy.BodyPrivacyError, match='^unsafe-or-changing-public-body$'):
+        privacy.digest_public_body(tmp_path, path.name, len(data))
+    assert path.read_bytes() == data
+
+
 def classify(header):
     try:
         return ('result', privacy._classify_header(header))
@@ -38,17 +57,17 @@ def classify(header):
 
 
 @pytest.mark.parametrize('header', HEADERS)
-def test_optional_c_and_missing_c_have_identical_classification(header, monkeypatch):
+def test_c_availability_does_not_change_python_classification(header, monkeypatch):
     actual = classify(header)
     monkeypatch.delattr(yaml, 'CSafeLoader', raising=False)
     assert classify(header) == actual
 
 
 @pytest.mark.parametrize('missing_c', [False, True])
-def test_parse_and_compose_share_the_selected_safe_loader(monkeypatch, missing_c):
+def test_parse_and_compose_always_share_python_safe_loader(monkeypatch, missing_c):
     if missing_c:
         monkeypatch.delattr(yaml, 'CSafeLoader', raising=False)
-    selected = getattr(yaml, 'CSafeLoader', yaml.SafeLoader)
+    selected = yaml.SafeLoader
     calls = []
     parse, compose = yaml.parse, yaml.compose
 
