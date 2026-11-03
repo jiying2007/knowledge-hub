@@ -24,6 +24,7 @@ HEADERS = [
     b'visibility: [public]\n', b'visibility: !!bool true\n',
     b'visibility: future-policy\n', b'a: [unclosed\n',
     b'status: active\x00\n', b'\xef\xbb\xbfvisibility: public\n',
+    b'a: &same one\nb: &same two\n\tinvalid: tab\n',
 ]
 
 
@@ -64,7 +65,7 @@ def test_c_availability_does_not_change_python_classification(header, monkeypatc
 
 
 @pytest.mark.parametrize('missing_c', [False, True])
-def test_parse_and_compose_always_share_python_safe_loader(monkeypatch, missing_c):
+def test_single_budgeted_composition_uses_original_python_safe_loader(monkeypatch, missing_c):
     if missing_c:
         monkeypatch.delattr(yaml, 'CSafeLoader', raising=False)
     selected = yaml.SafeLoader
@@ -82,7 +83,8 @@ def test_parse_and_compose_always_share_python_safe_loader(monkeypatch, missing_
     monkeypatch.setattr(yaml, 'parse', checked_parse)
     monkeypatch.setattr(yaml, 'compose', checked_compose)
     assert privacy._classify_header(b'visibility: public\n') is False
-    assert calls == [('parse', selected), ('compose', selected)]
+    assert len(calls) == 1 and calls[0][0] == 'compose'
+    assert issubclass(calls[0][1], selected)
 
 
 def boundary_header(budget, number):

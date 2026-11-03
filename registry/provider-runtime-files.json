@@ -33,7 +33,7 @@
     "tools/codex_assets/knowledge_hub/artifact_terminal_forms.py": "51ea2df7843d6624e4b11f7274f127d794d335f3943efca80e0d028cab65e235",
     "tools/codex_assets/knowledge_hub/attestation.py": "7b3c807b8a6f3105897459af7c12ea169f6115430d4db45dbad1754383f56e6a",
     "tools/codex_assets/knowledge_hub/authorization.py": "b1ce7f3a70feda0d586bd3a0e1f353511ec6e2f8ce171f1eb7de70257bfc774c",
-    "tools/codex_assets/knowledge_hub/body_privacy.py": "1ddfb8b41cbedff5154ed97e57b719d4368b9b4c5a9d6da4a30fc5bc71d40fae",
+    "tools/codex_assets/knowledge_hub/body_privacy.py": "b4b887bc42c0742582e08574ea2e8dffec6c197c571d99a2118f397bf8801cfb",
     "tools/codex_assets/knowledge_hub/bounded_process.py": "86ed4e2becc4fc33449d5482a8124397fa7947eb8ca6256cad4d3c2bafedfd5f",
     "tools/codex_assets/knowledge_hub/candidate_duplicates.py": "10f8567252cdbe29dee95cfb50a07de740e599c367b47edc088d4ce675f7908a",
     "tools/codex_assets/knowledge_hub/check_cli.py": "88a645c45f21e172391cd1331de46b359a627dc693da71326f16442e860dda65",
