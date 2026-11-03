@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "maintenance_kind": "owner-cycle-execution-authorization",
+  "exact_execution_scope": {
+    "actor": "local-user",
+    "action": "schedule-review",
+    "proposal_sha256": "cf21ef737a1a62792e7753b0dd72c4bf5983f529f50d6f20d37ff03d00ceb1fc",
+    "item_ids": [
+      "daemon-ota-uart-lease-validation-2026-08-04",
+      "pcr02-schematic-first-batch-optimization-20260802",
+      "pcr02-schematic-second-batch-static-optimization-20260802",
+      "pcr02-unused-io-ble-kernel-policy-20260802"
+    ],
+    "confirmation_sha256": "3f15b1e7ebc485cabb66af213b1c81aac443e91dc6ae05c687810d6f3c20aa3a",
+    "visibility_change": false,
+    "expected_hash": "ae5dfa7a9cec58268fc69b36ff29ae04070e97421ebb4062f56a0a7cc1631358"
+  },
+  "owner_cycle_decision": {
+    "kind": "owner-cycle-decision",
+    "confirmed_by": "leiwenjun",
+    "authorized_owners": [
+      "leiwenjun"
+    ],
+    "confirmation_token": "KH-SCHEDULE-CF21EF737A1A62792E7753B0",
+    "source_ref": "codex-thread:01a18d5d-eb3d-77c2-a480-6ae362e0336c/user-confirmation-and-identity",
+    "identity_basis": "explicit-human-declaration",
+    "human_identity_independently_verified": false,
+    "executor": "Codex",
+    "statements": [
+      {
+        "order": 1,
+        "source_ref": "codex-thread:01a18d5d-eb3d-77c2-a480-6ae362e0336c/user-confirmation-and-identity/decision",
+        "statement": "原始native用户回复（question字段被客户端截断，保留原样）：\n<send_user_message_question_reply>\n[{\"answer\":\"确认本包4条周期及受限执行\",\"question\":\"新增4条周期提案已通过Provider归档为reviewing候选（包 KH-SCHEDULE-CF21EF737A1A62792E7753B0），四条建议日期均为2026-11-17：PCR02无接口/BLE内核策略、原理图首批优化、原理图第二批静态优化、daemon与prog_ota UART租约。Provider的周期合同要求逐包明确决定，旧245条及6条批准均不覆盖本包。是否确认：确认周期安排 KH-SCHEDULE-CF21EF737A1A62792E7753B0；批准包中4条所列日期与pending/defer处理，保留内容、证据\",\"questionItemId\":\"[\\\"request_user_input_async\\\",\\\"call_73c81f9f62564c6581f8067fa9b61ff3\\\",0]\"}]\n</send_user_message_question_reply>\n该questionItemId对应的原始提问全文（上下文，非新增用户原文）：\n新增4条周期提案已通过Provider归档为reviewing候选（包 KH-SCHEDULE-CF21EF737A1A62792E7753B0），四条建议日期均为2026-11-17：PCR02无接口/BLE内核策略、原理图首批优化、原理图第二批静态优化、daemon与prog_ota UART租约。Provider的周期合同要求逐包明确决定，旧245条及6条批准均不覆盖本包。是否确认：确认周期安排 KH-SCHEDULE-CF21EF737A1A62792E7753B0；批准包中4条所列日期与pending/defer处理，保留内容、证据及责任待办；仅授权周期安排及其受限执行，不构成内容、设备或发布批准？",
+        "sha256": "a7c3c7add179eb5c3adbfbfd0db7a911e092b7ebd4f34ab077788172643d544d"
+      },
+      {
+        "order": 2,
+        "source_ref": "codex-thread:01a18d5d-eb3d-77c2-a480-6ae362e0336c/user-confirmation-and-identity/identity",
+        "statement": "负责人身份：leiwenjun；权限范围：所有周期复核；",
+        "sha256": "7614d151520f0662dab17c6e9217bf3d6428fb39ddfa22e6a5ab7343b664a8dc"
+      }
+    ],
+    "content_approval_performed": false,
+    "human_content_review_performed": false
+  },
+  "expected_hash": "fbdc806099f9805fac7f84c7cbe00f54caba87704ae3885fdceb68ea6631b052",
+  "application_expected_hash": "ae5dfa7a9cec58268fc69b36ff29ae04070e97421ebb4062f56a0a7cc1631358",
+  "original_execution_request_sha256": "5c465a7970f53de48cd3405b03ea0b1d667c854a2ef3725f94a7ff1bcb49941f",
+  "original_execution_intake_attestation_sha256": "4888d71fade6d92fce90a52a6b05b1f52eeb40ffb10585a3b39dc15582a534ec",
+  "active_promoted": false,
+  "owner_review_performed": false
+}

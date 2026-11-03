@@ -1580,3 +1580,4 @@
 - 245 条到期告警的 owner 复核周期决定包: `governance/product/archive/provider-5afde7d624f84f525709c7e7dd17c0c36411b61f5b00b5b4603a1b35a26570fb.md`; `provider-5afde7d624f84f525709c7e7dd17c0c36411b61f5b00b5b4603a1b35a26570fb`
 - Knowledge Hub 告警清零验收记录: `governance/product/archive/provider-d9cb86eae7f36cc284f66ecb5a7fc11eece5948fa9ca745844e7d8c0ee251a49.md`; `provider-d9cb86eae7f36cc284f66ecb5a7fc11eece5948fa9ca745844e7d8c0ee251a49`
 - 2026-11-01新增六条到期知识周期安排提案: `governance/product/validation/provider-5d9b959c4995b00d5d110c4872a1846b83398b044bc1a4e49e380d8e4dfd119f.md`; `provider-5d9b959c4995b00d5d110c4872a1846b83398b044bc1a4e49e380d8e4dfd119f`
+- 2026-11-03 新增四条到期知识周期提案: `governance/product/archive/provider-e0afccd3984b0cd06f114be3be3c7a21e2ed390e33b23405de33baedb87457e7.md`; `provider-e0afccd3984b0cd06f114be3be3c7a21e2ed390e33b23405de33baedb87457e7`
