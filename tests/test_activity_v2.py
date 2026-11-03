@@ -1,4 +1,5 @@
 import datetime as dt
+import hashlib
 import json
 import pathlib
 import subprocess
@@ -15,7 +16,7 @@ from tools.codex_assets.knowledge_hub.activity import (
     record_item,
     report_period,
 )
-from tools.codex_assets.knowledge_hub.common import KnowledgeHubError
+from tools.codex_assets.knowledge_hub.common import KnowledgeHubError, pretty_json
 
 
 def _hub(root: pathlib.Path, *, configured: bool = True) -> pathlib.Path:
@@ -149,6 +150,32 @@ def test_capture_dry_run_then_apply_and_generate_hash_bound_report(tmp_path):
     assert report_path.is_file() and facts_path.is_file()
     assert "已完成" in report_path.read_text(encoding="utf-8")
     assert json.loads(facts_path.read_text(encoding="utf-8"))["schema_version"] == 2
+    assert receipt["facts"] is None
+    assert hashlib.sha256(facts_path.read_bytes()).hexdigest() == receipt["facts_sha256"]
+
+
+def test_readonly_report_returns_same_hash_bound_facts_without_writes(tmp_path):
+    root = _hub(tmp_path / "hub")
+    source = tmp_path / "item.json"
+    source.write_text(json.dumps(_item()), encoding="utf-8")
+    capture_item(root, source, apply=True)
+    before = {str(path.relative_to(root)): path.read_bytes() for path in root.rglob("*") if path.is_file()}
+    receipt = generate_report(
+        root, period="weekly", scope="personal", as_of=dt.date(2026, 8, 21),
+        start=None, end=None, subject_id="", project_id="", codex_root=tmp_path / "codex",
+        detail="normal", output_root=root / ".tmp/activity", write=False,
+    )
+    facts = receipt["facts"]
+    assert facts["schema_version"] == 2
+    assert facts["subject"]["id"] == "developer-a"
+    assert facts["privacy"]["identity_inferred_from_git"] is False
+    assert facts["git_activity"] == []
+    assert facts["registry_activity"] == []
+    assert facts["summary"] == receipt["summary"]
+    assert hashlib.sha256((pretty_json(facts) + "\n").encode()).hexdigest() == receipt["facts_sha256"]
+    assert receipt["written"] is False
+    assert receipt["report_path"] == receipt["facts_path"] == ""
+    assert before == {str(path.relative_to(root)): path.read_bytes() for path in root.rglob("*") if path.is_file()}
 
 
 def test_capture_session_receipt_persists_under_hub_and_is_collectable(tmp_path):

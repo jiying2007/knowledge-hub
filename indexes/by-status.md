@@ -484,16 +484,12 @@
 - draft: `pcr02-video-virtual-stream-cpu-optimization-20260722`
 - draft: `knowledge-hub-real-evidence-feedback-wave-20260726`
 - personal: `txt-reader-product-and-technical-plan-20260801`
-- reviewing: `pcr02-unused-io-ble-kernel-policy-20260802`
-- reviewing: `pcr02-schematic-first-batch-optimization-20260802`
-- reviewing: `pcr02-schematic-second-batch-static-optimization-20260802`
 - reviewing: `pcr02-debug-release-rootfs-policy-20260803`
 - reviewing: `pcr02-sensor-wifi-multi-network-design-20260803`
 - reviewing: `pcr02-release-network-boot-analysis-20260803`
 - reviewing: `pcr02-release-production-hardening-scope-20260803`
 - reviewing: `pcr02-customer-ubi-startup-optimization-20260803`
 - reviewing: `pcr02-customer-ubi-startup-optimization-review-20260804`
-- reviewing: `daemon-ota-uart-lease-validation-2026-08-04`
 - reviewing: `pcr02-no-clean-debug-image-build-20260804`
 - reviewing: `pcr02-ai-video-output-fps-integration-20260804`
 - reviewing: `embedded-x5-evb-v2p0-first-boot-20260805`
@@ -1787,3 +1783,8 @@
 - reviewing: `pcr02-prog-pcr02-memory-growth-monitoring-20260731`
 - reviewing: `pcr02-sensor-audio-queue-ao-retry-20260731`
 - reviewing: `pcr02-release-nfs-client-retention-20260804`
+- reviewing: `provider-e0afccd3984b0cd06f114be3be3c7a21e2ed390e33b23405de33baedb87457e7`
+- reviewing: `pcr02-unused-io-ble-kernel-policy-20260802`
+- reviewing: `pcr02-schematic-first-batch-optimization-20260802`
+- reviewing: `pcr02-schematic-second-batch-static-optimization-20260802`
+- reviewing: `daemon-ota-uart-lease-validation-2026-08-04`

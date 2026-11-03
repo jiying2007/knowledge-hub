@@ -222,15 +222,12 @@
 - `pcr02-video-virtual-stream-cpu-optimization-20260722`
 - `knowledge-hub-real-evidence-feedback-wave-20260726`
 - `txt-reader-product-and-technical-plan-20260801`
-- `pcr02-unused-io-ble-kernel-policy-20260802`
-- `pcr02-schematic-second-batch-static-optimization-20260802`
 - `pcr02-debug-release-rootfs-policy-20260803`
 - `pcr02-sensor-wifi-multi-network-design-20260803`
 - `pcr02-release-network-boot-analysis-20260803`
 - `pcr02-release-production-hardening-scope-20260803`
 - `pcr02-customer-ubi-startup-optimization-20260803`
 - `pcr02-customer-ubi-startup-optimization-review-20260804`
-- `daemon-ota-uart-lease-validation-2026-08-04`
 - `pcr02-no-clean-debug-image-build-20260804`
 - `pcr02-ai-video-output-fps-integration-20260804`
 - `firmware-toolchains-x5-ai-toolchain-download-validation-20260805`
@@ -1463,6 +1460,11 @@
 - `pcr02-prog-pcr02-memory-growth-monitoring-20260731`
 - `pcr02-sensor-audio-queue-ao-retry-20260731`
 - `pcr02-release-nfs-client-retention-20260804`
+- `provider-e0afccd3984b0cd06f114be3be3c7a21e2ed390e33b23405de33baedb87457e7`
+- `pcr02-unused-io-ble-kernel-policy-20260802`
+- `pcr02-schematic-first-batch-optimization-20260802`
+- `pcr02-schematic-second-batch-static-optimization-20260802`
+- `daemon-ota-uart-lease-validation-2026-08-04`
 
 ## pcr02-registry-owner
 
@@ -1547,7 +1549,6 @@
 - `codex-archive-removal-execution-20260711-final-bodies`
 - `codex-archive-corpus-deletion-readiness-20260711`
 - `knowledge-hub-operational-tooling-hardening-20260711`
-- `pcr02-schematic-first-batch-optimization-20260802`
 - `embedded-x5-evb-v2p0-first-boot-20260805`
 - `embedded-x5-sdk-download-20260805`
 - `embedded-x5-sdk-v1-1-2-source-build-20260806`

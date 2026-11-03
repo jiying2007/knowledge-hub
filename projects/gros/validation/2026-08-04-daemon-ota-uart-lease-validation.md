@@ -19,8 +19,8 @@ source:
   from: gros
   source_sha256: b323638d52eb93a313a829a8d972d35420d8692b1a739cdb282663fce08415ae
   temporary_source_retained: false
-review_after: '2026-11-02'
-review_status: identity-migration-pending-review
+review_after: '2026-11-17'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -37,7 +37,7 @@ evidence_refs:
 - projects/gros/validation/2026-08-04-daemon-ota-uart-lease-validation.md
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 created_at: '2026-08-04'
-updated_at: '2026-08-04'
+updated_at: '2026-11-03'
 generated_by_ai: true
 ai_role: summarized
 ai_model_or_tool: codex
