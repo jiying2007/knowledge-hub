@@ -20,7 +20,7 @@
     "tools/codex_assets/isolated_runtime.py": "5094763c76a898228b7c221a7f5d5ade2d3d5ebd6ca0a8560f78f9bcdcfa4cf3",
     "tools/codex_assets/knowledge_hub/__init__.py": "885ffc21688365390f7ae7fcdd6f644ae0b075bcbc457b17b7db432300a1e56c",
     "tools/codex_assets/knowledge_hub/action_check_cli.py": "af7d69a8cdc8db759026f7d2102bc3545a27bf4e6c55c3bd0a149a8c0fa27739",
-    "tools/codex_assets/knowledge_hub/activity.py": "0b64c667ec99aadc3e051ad97fa893ef4f2cad875f51014dcdec1a894b8bfc8e",
+    "tools/codex_assets/knowledge_hub/activity.py": "d6a4aeb44988dfcd8275b8d6e4b49a197248a2c5e71e90bc9dd8628c76e58b44",
     "tools/codex_assets/knowledge_hub/activity_cli.py": "c3582f0b10c0055dfe3ceb58278368bc2b78e02741bac8d3c6663055902efacc",
     "tools/codex_assets/knowledge_hub/activity_reconcile.py": "04a5d788fc41b5ea6ff476b6c9361e54e10922bdde959057e36c8b7ee09aa2d6",
     "tools/codex_assets/knowledge_hub/activity_versions.py": "ecde0c719c423888013f82b8577aea2888391545cede09cdbdddf71e77b66522",
