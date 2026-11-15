@@ -1,3 +1,4 @@
+from .progress import emit_case_progress
 from .support_runtime import (  # noqa: F401
     argparse,
     args,
@@ -374,6 +375,7 @@ def cleanup_temp_roots():
 
 def run_test(fn):
     started_at = time.monotonic()
+    emit_case_progress(fn.__name__, "start")
     test_context.records = []
     test_context.temp_roots = []
     try:
@@ -407,6 +409,10 @@ def run_test(fn):
             result["duration_sec"] = duration_sec
             result["test_fn"] = fn.__name__
         cleanup_temp_roots()
+        emit_case_progress(
+            fn.__name__, "end", duration_sec=duration_sec,
+            failed=sum(row.get("status") != "pass" for row in records),
+        )
         test_context.records = []
         test_context.temp_roots = []
     return records

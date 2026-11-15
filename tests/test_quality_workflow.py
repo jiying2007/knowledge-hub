@@ -192,3 +192,10 @@ def test_quality_exposes_stable_aggregate_gate_for_branch_ruleset():
     assert step["name"] == "Require all Quality jobs"
     assert 'test "${result}" = "success"' in step["run"]
 
+def test_system_python_runs_on_supported_ubuntu_image():
+    """Keep Python 3.8/3.9 coverage when ubuntu-latest advances."""
+    system = _workflow()["jobs"]["system-runtime"]
+    assert system["runs-on"] == "ubuntu-24.04"
+    matrix = system["strategy"]["matrix"]["python-version"]
+    assert '"3.8"' in matrix and '"3.9"' in matrix
+    assert "fail-fast" in system["strategy"]
