@@ -1,0 +1,59 @@
+name: One-shot Digital Worker registry retirement patch
+
+on:
+  push:
+    branches: [ops/retire-digital-worker-registry-once-20261118]
+
+permissions:
+  contents: write
+
+jobs:
+  update-index:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: refactor/remove-digital-worker-live-consumer-20261118
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Require the exact reviewed target branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "b6ac0e10365963cb3165e84e016253fa9f831961"
+      - name: Remove one retired readiness entry and two generated index rows
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          root = Path.cwd()
+          target = "digital-worker-readiness-validation-20260713"
+          source = root / "registry/items.jsonl"
+          lines = source.read_text(encoding="utf-8").splitlines(keepends=True)
+          hits = [ln for ln in lines if f'"id":"{target}"' in ln]
+          assert len(hits) == 1, f"expected one retired registry item, found {len(hits)}"
+          source.write_text("".join(ln for ln in lines if f'"id":"{target}"' not in ln), encoding="utf-8")
+
+          for name in ("indexes/by-project.md", "indexes/by-topic.md"):
+              path = root / name
+              text = path.read_text(encoding="utf-8")
+              rows = text.splitlines(keepends=True)
+              hits = [ln for ln in rows if target in ln]
+              assert len(hits) == 1, f"{name} expected one index row, found {len(hits)}"
+              path.write_text("".join(ln for ln in rows if target not in ln), encoding="utf-8")
+          print("Removed exact retired knowledge item and its two generated index rows")
+          PY
+      - name: Commit exact data change on existing PR branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- registry/items.jsonl indexes/by-project.md indexes/by-topic.md
+          git diff --cached --check
+          test "$(git diff --cached --name-only | wc -l)" -eq 3
+          git commit -m "fix(registry): remove retired Digital Worker item and index references"
+          git push origin HEAD:refs/heads/refactor/remove-digital-worker-live-consumer-20261118
