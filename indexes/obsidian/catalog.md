@@ -899,9 +899,6 @@
 
 - [PCR02 Tool App readiness validation](../../projects/app-tool/validation/project-readiness.md) · `reviewing` · `app-tool-readiness-validation-20260713`
 
-## projects/digital-worker
-
-
 ## projects/firmware-release-tools
 
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing` · `firmware-release-tools-readiness-validation-20260713`
