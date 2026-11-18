@@ -46,7 +46,6 @@
 - [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
-- [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
 
 ## ai-generated (39)
@@ -55,7 +54,6 @@
 - [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
-- [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
 
 ## owner-review-pending (35)
@@ -64,7 +62,6 @@
 - [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
-- [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
 
 ## project-readiness (34)
@@ -73,7 +70,6 @@
 - [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
-- [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
 
 ## knowledge-hub (16)
@@ -1036,7 +1032,6 @@
 
 ## digital-worker (1)
 
-- [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing`
 
 ## draft (1)
 

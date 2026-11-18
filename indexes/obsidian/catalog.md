@@ -901,7 +901,6 @@
 
 ## projects/digital-worker
 
-- [Digital Worker readiness validation](../../projects/digital-worker/validation/project-readiness.md) · `reviewing` · `digital-worker-readiness-validation-20260713`
 
 ## projects/firmware-release-tools
 
