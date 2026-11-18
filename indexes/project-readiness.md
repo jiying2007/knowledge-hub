@@ -39,7 +39,7 @@
 
 ## 判定边界
 
-- structural coverage：33 项目均有一份 reviewing evidence contract；group 元数据不重复计入项目数。
+- structural coverage：32 项目均有一份 reviewing evidence contract；group 元数据不重复计入项目数。
 - source discovery：运行时从未跟踪的 `local/workspaces.json` 读取；本页不固化绝对路径、HEAD 或本机映射状态。
 - evidence readiness：由 product gate 按 owner、source、manual/device/platform/release evidence 独立判定。
 - lifecycle：不得从目录、表格、Obsidian Base 或 Graph 自动推断 active。
