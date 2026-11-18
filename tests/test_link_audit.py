@@ -104,7 +104,15 @@ def test_link_audit_fails_closed_when_markdown_exceeds_byte_budget(tmp_path, mon
 def test_repository_readiness_links_and_bases_are_valid():
     root = repository_root()
     payload = audit_links(root)
-    assert payload["status"] == "pass"
+    assert payload["status"] == "pass", {
+        "blocking_broken": payload.get("blocking_broken", [])[:10],
+        "readiness_without_inbound": payload.get("readiness_without_inbound", [])[:10],
+        "base_failures": payload.get("base_failures", [])[:10],
+        "managed_property_errors": payload.get("managed_property_errors", [])[:10],
+        "project_moc_orphans": payload.get("project_moc_orphans", [])[:10],
+        "missing_mocs": payload.get("missing_mocs", [])[:10],
+        "private_config_ignored": payload.get("private_config_ignored"),
+    }
     projects = project_rows(root)
     canonical_paths = {str(project["validation"]).rstrip("/") + "/project-readiness.md" for project in projects}
     assert len(canonical_paths) == len(projects)
