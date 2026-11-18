@@ -599,7 +599,6 @@
 
 ## Digital Worker
 
-- Digital Worker readiness validation: `projects/digital-worker/validation/project-readiness.md`; `digital-worker-readiness-validation-20260713`
 
 ## A123X
 
