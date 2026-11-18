@@ -377,7 +377,8 @@ def test_readiness_documents_are_count_neutral_and_profile_aligned():
 def test_validation_expectations_follow_evidence_profile_not_repo_topology():
     root = repository_root()
     projects = {row["id"]: row for row in project_rows(root)}
-    for project_id in ("llm-agent", "agent-dev-kit", "digital-worker"):
+    # Retired repositories are not active readiness fixtures.
+    for project_id in ("llm-agent", "agent-dev-kit"):
         project = projects[project_id]
         assert project["evidence_profile"] == "software-tool"
         text = (root / _project_paths(project)["validation"]).read_text(encoding="utf-8")

@@ -1445,7 +1445,6 @@
 - `gd32l235-pcr02-thermal-charge-motor-maintenance-v116-20260822`
 - `pcr02-bdma-ch0-mspi-ubifs-lockup-20260828`
 - `pcr02-ds2-ai-shm-session-archive-20260710`
-- `digital-worker-readiness-validation-20260713`
 - `knowledge-hub-data-lifecycle-growth-v1`
 - `knowledge-hub-hosting-posture-v1`
 - `knowledge-hub-contract-evolution-v1`

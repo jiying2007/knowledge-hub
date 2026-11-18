@@ -451,25 +451,6 @@
       "status": "registered"
     },
     {
-      "repo_id": "digital-worker",
-      "project_id": "digital-worker",
-      "remote_key": {
-        "provider_id": "github.com",
-        "repository_path": "jiying2007/digital-worker"
-      },
-      "remote_kind": "github",
-      "workspace_ref": "workspace://digital-worker",
-      "groups": [
-        "agent-tools"
-      ],
-      "aliases": [
-        "digital-worker",
-        "digital worker"
-      ],
-      "lifecycle": "first-party",
-      "status": "registered"
-    },
-    {
       "repo_id": "llm-tools",
       "project_id": "llm-tools",
       "remote_key": {

@@ -535,7 +535,6 @@
 - 四仓 AI 资产跨平台边界修正候选: `projects/gros/decisions/module-ai-platform-boundary-20260906.md`; `module-ai-platform-boundary-20260906`
 - Sensor C++17规范与LLVM Tooling门禁归档: `projects/gros/archive/reports/2026-09-07-sensor-cpp17-standard-tooling-closure.md`; `pcr02-sensor-cpp17-standard-tooling-closure-20260907`
 - PCR02 DVR 调度落后与 ring-frame 零拷贝 lease 修复记录: `projects/gros/archive/debug/2026-09-08-pcr02-dvr-ringframe-lease-closure.md`; `pcr02-dvr-ringframe-lease-closure-20260908`
-- Digital Worker readiness validation: `projects/digital-worker/validation/project-readiness.md`; `digital-worker-readiness-validation-20260713`
 - llm_agent / agent-dev-kit 长期资产架构结论候选: `projects/llm-agent/architecture/llm-agent-adk-target-architecture.md`; `llm-agent-adk-target-architecture`
 - PCR02 公开 WiFi 跨 API 安全类型契约验证: `projects/gros/archive/incomplete/2026-09-14-public-wifi-security-contract.md`; `pcr02-public-wifi-security-contract-20260914`
 - PCR02 公开 WiFi 凭据安全类型有界扫描验证: `projects/gros/archive/incomplete/2026-09-14-public-wifi-bounded-security-scan.md`; `pcr02-public-wifi-bounded-security-scan-20260914`
