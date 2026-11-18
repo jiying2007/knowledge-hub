@@ -1738,7 +1738,6 @@
 - reviewing: `pcr02-camera-whiteout-ae-exposure-analysis-20260703`
 - reviewing: `pcr02-ds2-ai-shm-session-archive-20260710`
 - reviewing: `pcr02-gros-single-track-cross-platform-build-hard-cut-20260830-v1`
-- reviewing: `digital-worker-readiness-validation-20260713`
 - reviewing: `knowledge-hub-data-lifecycle-growth-v1`
 - reviewing: `knowledge-hub-hosting-posture-v1`
 - reviewing: `knowledge-hub-contract-evolution-v1`

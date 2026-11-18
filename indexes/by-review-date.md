@@ -1552,7 +1552,6 @@
 - 2026-11-14: `pcr02-camera-whiteout-ae-exposure-analysis-20260703`
 - 2026-11-14: `pcr02-ds2-ai-shm-session-archive-20260710`
 - 2027-01-29: `pcr02-gros-single-track-cross-platform-build-hard-cut-20260830-v1`
-- 2026-11-30: `digital-worker-readiness-validation-20260713`
 - 2026-11-30: `knowledge-hub-data-lifecycle-growth-v1`
 - 2026-11-30: `knowledge-hub-hosting-posture-v1`
 - 2026-11-30: `knowledge-hub-contract-evolution-v1`
