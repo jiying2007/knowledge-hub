@@ -4,7 +4,7 @@
 
 - [完整主题派生索引](../by-topic.md)
 
-## validation (228)
+## validation (227)
 
 - [证据写法规范](../../governance/evidence-rules.md) · `active`
 - [2026-11-01新增六条到期知识周期安排提案](../../governance/product/validation/provider-5d9b959c4995b00d5d110c4872a1846b83398b044bc1a4e49e380d8e4dfd119f.md) · `reviewing`
@@ -22,15 +22,6 @@
 - [A123X DEVWIRE 双麦3A软件集成](../../projects/a123x/validation/provider-0e0e68d08652bcec9e3552665a74cabea07d7d238f613eb60c12a920ee839c78.md) · `reviewing`
 - [A123X RC1.0 GitLab 默认分支调整完成](../../projects/a123x/validation/provider-c42ada1ce0a081c4a7b48ff76a69fc00aa3d1ef8952046c21f3e58251b7de567.md) · `reviewing`
 
-## manual-validation-pending (56)
-
-- [llm_agent / agent-dev-kit 长期资产架构结论候选](../../projects/llm-agent/architecture/llm-agent-adk-target-architecture.md) · `active`
-- [A123X readiness validation](../../projects/a123x/validation/project-readiness.md) · `reviewing`
-- [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
-- [ADK 与 Codex 四仓来源和运行资产门禁验证](../../domains/codex/validation/adk-four-repo-source-live-2026-09-27.md) · `reviewing`
-- [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
-- [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
-
 ## pcr02 (56)
 
 - [Knowledge Hub 全局路径路由规则](../../governance/path-routing.md) · `active`
@@ -40,37 +31,50 @@
 - [Diag、Observability 与 Maintenance 跨平台平面决策候选](../../projects/gros/decisions/diag-observability-maintenance-cross-platform-plane-20260813.md) · `reviewing`
 - [GD32L235 与 PCR02 SoC 低功耗协同当前契约候选](../../projects/gd32l235/current/soc-low-power-contract.md) · `reviewing`
 
-## no-active-promotion (45)
+## manual-validation-pending (55)
+
+- [llm_agent / agent-dev-kit 长期资产架构结论候选](../../projects/llm-agent/architecture/llm-agent-adk-target-architecture.md) · `active`
+- [A123X readiness validation](../../projects/a123x/validation/project-readiness.md) · `reviewing`
+- [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
+- [ADK 与 Codex 四仓来源和运行资产门禁验证](../../domains/codex/validation/adk-four-repo-source-live-2026-09-27.md) · `reviewing`
+- [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
+- [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
+
+## no-active-promotion (44)
 
 - [A123X readiness validation](../../projects/a123x/validation/project-readiness.md) · `reviewing`
 - [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
+- [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
 
-## ai-generated (39)
-
-- [A123X readiness validation](../../projects/a123x/validation/project-readiness.md) · `reviewing`
-- [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
-- [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
-- [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
-- [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
-
-## owner-review-pending (35)
+## ai-generated (38)
 
 - [A123X readiness validation](../../projects/a123x/validation/project-readiness.md) · `reviewing`
 - [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
+- [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
 
-## project-readiness (34)
+## owner-review-pending (34)
 
 - [A123X readiness validation](../../projects/a123x/validation/project-readiness.md) · `reviewing`
 - [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
 - [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
 - [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
 - [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
+- [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
+
+## project-readiness (33)
+
+- [A123X readiness validation](../../projects/a123x/validation/project-readiness.md) · `reviewing`
+- [A123X 知识入口](../../projects/a123x/README.md) · `reviewing`
+- [Agent Dev Kit readiness validation](../../projects/agent-dev-kit/validation/project-readiness.md) · `reviewing`
+- [Codex Local Runtime Assets readiness validation](../../domains/codex/validation/project-readiness.md) · `reviewing`
+- [Firmware Release Tools readiness validation](../../projects/firmware-release-tools/validation/project-readiness.md) · `reviewing`
+- [Firmware Toolchains readiness validation](../../projects/firmware-toolchains/validation/project-readiness.md) · `reviewing`
 
 ## knowledge-hub (16)
 
@@ -1029,9 +1033,6 @@
 ## device-tree (1)
 
 - [PCR02 原理图第二批静态优化决策](../../projects/pcr02-ssc305/decisions/pcr02-schematic-second-batch-static-optimization-20260802.md) · `reviewing`
-
-## digital-worker (1)
-
 
 ## draft (1)
 
