@@ -12,8 +12,8 @@ source:
   type: schematic-and-implementation
   from: PCR02_MAIN_V2.0_20251211.pdf and pcr02_ssc305_compile
   source_sha256: dfaf9d47470314bb1ea65dd7a5805f714bd084bfc09e950a3f6c74f99e4f7f34
-review_after: '2026-11-02'
-review_status: manual-entry-pending-review
+review_after: '2026-11-17'
+review_status: periodic-review-scheduled-pending-content
 content_review_status: pending
 evidence_validation_status: pending
 promotion: none
@@ -32,7 +32,7 @@ validation_refs:
 - rtk bash ~/knowledge-hub/tools/knowledge-check.sh --dry-run --json --diagnostics
 evidence_strength: schematic-plus-source-build-image-hil-pending
 created_at: '2026-08-02'
-updated_at: '2026-08-02'
+updated_at: '2026-11-03'
 generated_by_ai: true
 ai_role: drafted
 ai_model_or_tool: Codex

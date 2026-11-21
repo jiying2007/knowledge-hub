@@ -41,6 +41,7 @@
 - [排障记录规范](../../governance/debug-record-rules.md) · `active` · `knowledge-hub-debug-record-rules`
 - [证据写法规范](../../governance/evidence-rules.md) · `active` · `knowledge-hub-evidence-rules`
 - [2026-11-01新增六条到期知识周期安排提案](../../governance/product/validation/provider-5d9b959c4995b00d5d110c4872a1846b83398b044bc1a4e49e380d8e4dfd119f.md) · `reviewing` · `provider-5d9b959c4995b00d5d110c4872a1846b83398b044bc1a4e49e380d8e4dfd119f`
+- [2026-11-03 新增四条到期知识周期提案](../../governance/product/archive/provider-e0afccd3984b0cd06f114be3be3c7a21e2ed390e33b23405de33baedb87457e7.md) · `reviewing` · `provider-e0afccd3984b0cd06f114be3be3c7a21e2ed390e33b23405de33baedb87457e7`
 - [245 条到期告警的 owner 复核周期决定包](../../governance/product/archive/provider-5afde7d624f84f525709c7e7dd17c0c36411b61f5b00b5b4603a1b35a26570fb.md) · `reviewing` · `provider-5afde7d624f84f525709c7e7dd17c0c36411b61f5b00b5b4603a1b35a26570fb`
 - [245 条到期告警的 owner 复核周期决定包](../../governance/product/archive/provider-647513d6cbae1011b7ad4222d9efbc1c293b2a24f1c98501776c67040aa05d1a.md) · `reviewing` · `provider-647513d6cbae1011b7ad4222d9efbc1c293b2a24f1c98501776c67040aa05d1a`
 - [AI 内容预审批次与自动收口边界](../../governance/product/validation/provider-knowledge-hub-84f3e5f2ba074e0098caa2a7.md) · `reviewing` · `provider-knowledge-hub-84f3e5f2ba074e0098caa2a7`

@@ -572,6 +572,7 @@ def generate_report(
         "warnings": facts["warnings"],
         "privacy": facts["privacy"],
         "markdown": markdown if not write else "",
+        "facts": facts if not write else None,
     }
 
 
